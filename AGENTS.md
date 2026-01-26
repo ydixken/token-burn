@@ -32,19 +32,20 @@ Token-Burn is a sophisticated chatbot testing platform designed to stress-test c
 
 ---
 
-## Critical: Git Commit Requirements
+## Critical: Git Commit and Push Requirements
 
-**MANDATORY COMMIT POLICY**
+**MANDATORY COMMIT AND PUSH POLICY**
 
-Agents and contributors MUST commit changes to git after completing each milestone. This is a **CRITICAL REQUIREMENT** that MUST NOT be skipped.
+Agents and contributors MUST commit changes to git AND push to the remote repository after completing each milestone. This is a **CRITICAL REQUIREMENT** that MUST NOT be skipped.
 
-### Commit Rules
+### Commit and Push Rules
 
 1. **Milestone Completion Commits**
    - MUST commit immediately after completing each milestone
    - Commit message MUST follow format: `feat: complete milestone N - <milestone name>`
    - MUST include all relevant files in the commit
    - MUST NOT skip commits between milestones
+   - MUST push to remote repository after committing
 
 2. **Commit Message Format**
    ```
@@ -63,12 +64,14 @@ Agents and contributors MUST commit changes to git after completing each milesto
    - `refactor:` - Code refactoring
    - `chore:` - Maintenance tasks
 
-4. **Verification**
-   - MUST verify commit succeeded with `git log`
+4. **Verification and Push**
+   - MUST verify commit succeeded with `git log --oneline -1`
    - MUST ensure all files are tracked
    - MUST check git status is clean after commit
+   - MUST push to remote with `git push`
+   - MUST verify push succeeded
 
-### Example Commit Flow
+### Example Commit and Push Flow
 
 ```bash
 # After completing Milestone 1
@@ -90,6 +93,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 EOF
 )"
 git log --oneline -1  # Verify commit
+git push              # Push to remote
 ```
 
 ---
