@@ -9,31 +9,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         <nav className="mt-6">
           <a
-            href="/(dashboard)"
+            href="/"
             className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             Dashboard
           </a>
           <a
-            href="/(dashboard)/targets"
+            href="/targets"
             className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             Targets
           </a>
           <a
-            href="/(dashboard)/scenarios"
+            href="/scenarios"
             className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             Scenarios
           </a>
           <a
-            href="/(dashboard)/sessions"
+            href="/sessions"
             className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             Sessions
           </a>
           <a
-            href="/(dashboard)/metrics"
+            href="/metrics"
             className="block px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             Metrics

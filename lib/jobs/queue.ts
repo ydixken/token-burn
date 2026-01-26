@@ -54,7 +54,7 @@ export const metricsQueueEvents = new QueueEvents("metrics-aggregation", {
 export interface SessionJobData {
   sessionId: string;
   targetId: string;
-  scenarioId?: string;
+  scenarioId: string | null;
   executionConfig: ExecutionConfig;
 }
 
@@ -63,20 +63,13 @@ export interface MetricsJobData {
 }
 
 export interface ExecutionConfig {
-  flow: FlowStep[];
-  repetitions: number;
-  concurrency: number;
-  delayBetweenMs: number;
-  verbosityLevel: number;
-  targetConfig: {
-    connectorType: string;
-    endpoint: string;
-    authType: string;
-    authConfig: Record<string, unknown>;
-    requestTemplate: Record<string, unknown>;
-    responseTemplate: Record<string, unknown>;
-    protocolConfig?: Record<string, unknown>;
-  };
+  flowConfig?: FlowStep[];
+  customMessages?: string[];
+  repetitions?: number;
+  concurrency?: number;
+  delayBetweenMs?: number;
+  verbosityLevel?: "normal" | "verbose" | "extreme";
+  messageTemplates?: Record<string, unknown>;
 }
 
 export interface FlowStep {
