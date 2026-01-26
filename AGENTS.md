@@ -1,725 +1,502 @@
-# Token-Burn Agent Behavior Guidelines
+# AGENTS.md - Token-Burn Development Guidelines
 
-This document defines **how automated agents and human contributors MUST behave** when working in this codebase. This is the single source of truth for agent behavior.
-
----
-
-## RFC 2119 Language
-
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
-
-**Compliance with this document is REQUIRED for all automated agents and contributors.**
+This document defines mandatory behavior for automated agents and human contributors working in the Token-Burn codebase.
 
 ---
 
-## Repository Overview
+## 1. Repository / Product Overview
 
-### Purpose
-Token-Burn is a sophisticated chatbot testing platform designed to stress-test conversational AI systems through realistic, high-volume conversation flows with repetitive, verbose prompts.
+**Token-Burn** is a sophisticated chatbot testing platform designed for stress-testing conversational AI systems through realistic, high-volume conversation flows. It serves QA engineers, DevOps teams, and AI developers who need to validate chatbot performance, reliability, and token consumption under various load conditions.
 
-### Target Users
-- QA Engineers testing chatbot implementations
-- ML Engineers evaluating model performance
-- Product Teams validating chatbot behavior
-- DevOps Teams monitoring chatbot infrastructure
+### Core Responsibilities
 
-### Core Goals
-1. **Reliability**: Platform MUST execute tests consistently and accurately
-2. **Security**: Credentials and sensitive data MUST be protected at all times
-3. **Extensibility**: System MUST support adding new protocols and connectors
-4. **Performance**: Tests MUST run efficiently without degrading target systems
-5. **Maintainability**: Code MUST be clear, well-documented, and testable
+- Execute high-volume test scenarios against chatbot endpoints
+- Support multiple communication protocols (HTTP/REST, WebSocket, gRPC, SSE)
+- Collect comprehensive metrics (response times, token usage, error rates)
+- Provide real-time monitoring and visualization
+- Enable scheduled and automated testing workflows
 
----
+### Key Non-Functional Goals
 
-## Critical: Git Commit and Push Requirements
-
-**MANDATORY COMMIT AND PUSH POLICY**
-
-Agents and contributors MUST commit changes to git AND push to the remote repository after completing each milestone. This is a **CRITICAL REQUIREMENT** that MUST NOT be skipped.
-
-### Commit and Push Rules
-
-1. **Milestone Completion Commits**
-   - MUST commit immediately after completing each milestone
-   - Commit message MUST follow format: `feat: complete milestone N - <milestone name>`
-   - MUST include all relevant files in the commit
-   - MUST NOT skip commits between milestones
-   - MUST push to remote repository after committing
-
-2. **Commit Message Format**
-   ```
-   <type>: <subject>
-
-   <optional body>
-
-   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-   ```
-
-3. **Commit Types**
-   - `feat:` - New feature or milestone completion
-   - `fix:` - Bug fixes
-   - `docs:` - Documentation updates
-   - `test:` - Test additions or modifications
-   - `refactor:` - Code refactoring
-   - `chore:` - Maintenance tasks
-
-4. **Verification and Push**
-   - MUST verify commit succeeded with `git log --oneline -1`
-   - MUST ensure all files are tracked
-   - MUST check git status is clean after commit
-   - MUST push to remote with `git push`
-   - MUST verify push succeeded
-
-### Example Commit and Push Flow
-
-```bash
-# After completing Milestone 1
-git add .
-git commit -m "$(cat <<'EOF'
-feat: complete milestone 1 - foundation
-
-- Initialize Next.js 16.1.4 with TypeScript and Tailwind CSS
-- Configure Prisma with PostgreSQL schema
-- Set up Redis and BullMQ
-- Implement BaseConnector and HTTPConnector
-- Create Docker Compose stack
-- Add Taskfile for operations
-- Implement health check endpoint
-- Create mock chatbot server
-- Add unit tests (8/10 passing)
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
-EOF
-)"
-git log --oneline -1  # Verify commit
-git push              # Push to remote
-```
+- **Security**: Encrypt credentials at rest, validate all inputs, prevent injection attacks
+- **Performance**: Handle high message volumes with minimal overhead via file-based logging
+- **Reliability**: Graceful error handling, automatic reconnection, data integrity
+- **Maintainability**: Clear separation of concerns, comprehensive documentation, testable architecture
+- **Scalability**: Horizontal worker scaling, efficient queue management, connection pooling
 
 ---
 
-## Docker Container Management
+## 2. RFC 2119 Language
 
-**AGENTS HAVE FULL AUTONOMY TO MANAGE DOCKER CONTAINERS AS NEEDED.**
+This document uses RFC 2119 keywords to indicate requirement levels:
 
-Docker is running and agents MUST use it for testing and development. Agents have full permissions to start, stop, restart, and rebuild containers without asking for user approval.
+- **MUST** / **REQUIRED** / **SHALL**: Absolute requirement
+- **MUST NOT** / **SHALL NOT**: Absolute prohibition
+- **SHOULD** / **RECOMMENDED**: Strong recommendation (may be ignored with valid justification)
+- **SHOULD NOT** / **NOT RECOMMENDED**: Strong discouragement
+- **MAY** / **OPTIONAL**: Truly optional, left to implementer discretion
 
-### Container Management Commands
-
-Agents MUST use these commands to manage the Docker environment:
-
-1. **Start containers**: `task docker:up` or `docker-compose up -d`
-2. **Stop containers**: `task docker:down` or `docker-compose down`
-3. **Restart containers**: `task docker:restart` or `docker-compose restart`
-4. **Rebuild containers**: `task docker:build` or `docker-compose build`
-5. **View logs**: `docker-compose logs -f [service]` or `task docker:logs`
-6. **Check status**: `docker-compose ps`
-7. **Reset volumes**: `docker-compose down -v` (use with caution)
-
-### When to Manage Containers
-
-Agents MUST start containers:
-
-- Before running integration tests that require PostgreSQL or Redis
-- Before testing the complete end-to-end flow
-- After making infrastructure changes (Dockerfile, docker-compose.yml)
-- When database migrations need to be applied
-
-Agents SHOULD restart containers:
-
-- When services are not responding properly
-- After significant code changes to workers or background jobs
-- When debugging connection issues
-
-Agents SHOULD rebuild containers:
-
-- After modifying Dockerfile or docker-compose.yml
-- When dependencies are updated in package.json
-- When environment variables are changed
-
-### Service Information
-
-The Docker Compose stack includes:
-
-- **PostgreSQL**: Port 5432 - Database for persistent data
-- **Redis**: Port 6379 - Cache and job queue
-- **Redis Commander**: Port 8081 - Redis UI for debugging
-
-### Testing Requirements
-
-Agents MUST ensure containers are running before:
-
-- Running integration tests (`tests/integration/`)
-- Executing E2E tests
-- Running database migrations (`task db:migrate`)
-- Testing the session executor worker
-- Testing the /api/execute endpoint
-
-Agents SHOULD verify container health:
-
-```bash
-docker-compose ps  # Check all containers are "Up"
-task health:check  # Test application health endpoint
-```
-
-### Container Data Management
-
-- Containers persist data in Docker volumes
-- Database data survives container restarts
-- To reset database completely: `docker-compose down -v && task docker:up && task db:migrate`
-- Logs directory (`logs/sessions/`) is mounted as a bind volume
+All agents and contributors MUST adhere to MUST/REQUIRED/SHALL statements without exception.
 
 ---
 
-## Implementation Milestones
+## 3. Documentation & External References
 
-**CRITICAL: READ MILESTONES.md FOR COMPLETE IMPLEMENTATION PLAN**
+### Authoritative Sources
 
-The file [MILESTONES.md](MILESTONES.md) is the authoritative source for:
+Agents MUST consult official documentation before making assumptions:
 
-1. **All 6 Milestones**: Detailed tasks, deliverables, and verification criteria
-2. **Progress Tracking**: Current status of each milestone
-3. **Technical Requirements**: Specifications for each feature
-4. **Success Criteria**: How to verify milestone completion
-5. **Git Commit Requirements**: Reminders for each milestone
+1. **Next.js 16.1.4**: https://nextjs.org/docs
+   - App Router conventions
+   - API Routes structure
+   - Server-Sent Events handling
 
-### When to Consult MILESTONES.md
+2. **Prisma ORM**: https://www.prisma.io/docs
+   - Schema syntax
+   - Migration workflows
+   - Client generation
 
-Agents MUST read MILESTONES.md when:
-- Starting work on a new milestone
-- Unsure what needs to be built next
-- Context has been compacted/summarized
-- Verifying milestone completion criteria
-- Planning work sequence
+3. **BullMQ**: https://docs.bullmq.io
+   - Queue configuration
+   - Worker concurrency
+   - Job patterns
 
-### Milestone Status Tracking
+4. **Protocol Specifications**:
+   - WebSocket (RFC 6455)
+   - gRPC (https://grpc.io/docs/)
+   - Server-Sent Events (W3C spec)
 
-Current progress is maintained in MILESTONES.md:
-- ✅ Milestone 1: Foundation - **COMPLETED** (commit: 3c69255)
-- 🔄 Milestone 2: Core Features - **IN PROGRESS**
-- 📋 Milestone 3-6: Pending
+### Verification Requirements
 
-Always check the progress tracking table in MILESTONES.md for current status.
-
-### Critical Files for Context Recovery
-
-If context needs to be compacted, these files MUST be retained:
-- **MILESTONES.md** - Complete implementation plan
-- **AGENTS.md** - This file (behavior guidelines)
-- **CLAUDE.md** - Agent instructions
-- **README.md** - Current state documentation
-- **prisma/schema.prisma** - Data models
+- Agents MUST verify protocol specifications before implementing connectors
+- Agents SHOULD test against mock endpoints before claiming functionality works
+- Agents MUST NOT guess authentication schemes; MUST reference target API documentation
+- Agents SHOULD validate Prisma schema changes with `pris ma validate` before committing
 
 ---
 
-## Documentation & External References
+## 4. Project Structure & Architecture
 
-### Required Documentation Consultation
-
-Agents MUST consult official documentation before implementing features:
-
-1. **Next.js 16.1.4**
-   - MUST verify App Router patterns against official docs
-   - MUST check API route specifications
-   - MUST validate middleware usage
-   - Source: https://nextjs.org/docs
-
-2. **Prisma ORM**
-   - MUST verify schema syntax
-   - MUST check migration commands
-   - MUST validate client generation
-   - Source: https://www.prisma.io/docs
-
-3. **BullMQ**
-   - MUST verify queue configuration
-   - MUST check worker patterns
-   - MUST validate job options
-   - Source: https://docs.bullmq.io
-
-4. **Protocol Specifications**
-   - HTTP/REST: MUST follow HTTP/1.1 and HTTP/2 specs
-   - WebSocket: MUST follow RFC 6455
-   - gRPC: MUST follow gRPC protocol specification
-   - SSE: MUST follow W3C Server-Sent Events spec
-
-### Rules for Assumptions vs Verification
-
-- Agents MUST NOT assume API behavior without testing
-- Agents MUST verify dependency compatibility before installation
-- Agents MUST test connector implementations against mock servers
-- Agents MUST validate database schema changes with migrations
-
----
-
-## Project Structure & Architecture
-
-### Directory Layout (ENFORCED)
+### Required Directory Layout
 
 ```
 token-burn/
-├── app/                      # Next.js App Router (MUST use for routes)
-│   ├── (dashboard)/          # Route groups MUST use parentheses
-│   ├── api/                  # API routes MUST go here
-│   └── globals.css           # Global styles only
-├── components/               # React components only
-│   ├── ui/                   # shadcn/ui components
-│   └── [feature]/            # Feature-specific components
-├── lib/                      # Core library code
-│   ├── connectors/           # Protocol implementations ONLY
-│   ├── jobs/                 # Queue workers ONLY
-│   ├── db/                   # Database client ONLY
-│   ├── storage/              # File operations ONLY
-│   └── utils/                # Shared utilities
-├── prisma/                   # Database schema and migrations
-├── tests/                    # All tests (unit, integration, e2e)
-├── infra/                    # Infrastructure configs
-└── docs/                     # Additional documentation
+├── app/                    # Next.js App Router (MUST use for all routes)
+│   ├── (dashboard)/        # Route group (parentheses for organization only)
+│   ├── api/                # API routes (MUST follow RESTful conventions)
+│   └── globals.css
+├── components/             # React components (MUST be client-side unless marked)
+│   ├── ui/                 # Reusable UI primitives
+│   ├── targets/            # Feature-specific components
+│   └── ...
+├── lib/                    # Core library code
+│   ├── connectors/         # Protocol implementations (MUST extend BaseConnector)
+│   ├── jobs/               # BullMQ workers
+│   ├── db/                 # Prisma client
+│   ├── cache/              # Redis client
+│   ├── scenarios/          # Scenario templates
+│   └── utils/              # Utilities
+├── prisma/
+│   └── schema.prisma       # Single source of truth for data models
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── mocks/
+├── infra/                  # Docker Compose configurations
+└── docs/                   # Additional documentation
 ```
 
-### Architectural Boundaries (ENFORCED)
+### Architectural Boundaries
 
-1. **Separation of Concerns**
-   - Connectors MUST NOT import from UI components
-   - UI components MUST NOT import from job workers
-   - Database logic MUST stay in `lib/db/`
-   - File I/O MUST stay in `lib/storage/`
+- **Connectors** MUST be protocol-agnostic; business logic MUST NOT leak into connector layer
+- **API routes** MUST validate inputs with Zod schemas before processing
+- **Workers** MUST be idempotent; retries MUST NOT cause duplicate side effects
+- **Components** SHOULD be under 300 lines; larger components SHOULD be decomposed
+- **Database access** MUST go through Prisma; raw SQL is NOT RECOMMENDED
 
-2. **Generated Code**
-   - Prisma client is generated code - MUST NOT edit manually
-   - Type definitions from Prisma MUST be used as source of truth
-   - `.next/` directory MUST be treated as build artifact
+### Generated Code
 
----
-
-## Integration Rules
-
-### Connector Development
-
-**MANDATORY REQUIREMENTS for all connector implementations:**
-
-1. **Inheritance**
-   - New connectors MUST extend `BaseConnector` abstract class
-   - MUST implement ALL abstract methods
-   - MUST NOT override protected helper methods unless necessary
-
-2. **Registration**
-   - Connectors MUST be registered in `ConnectorRegistry`
-   - Registration MUST happen at module initialization
-   - MUST include connector type enum
-
-3. **Testing**
-   - Each connector MUST have integration tests
-   - Tests MUST use mock servers, not live endpoints
-   - Tests MUST cover: connect, disconnect, sendMessage, healthCheck
-   - Test coverage MUST be >= 80%
-
-4. **Error Handling**
-   - Connectors MUST throw `ConnectorError` for all errors
-   - MUST include original error in `ConnectorError`
-   - MUST NOT swallow errors silently
-
-5. **Documentation**
-   - Each connector MUST document protocol-specific quirks
-   - MUST include example configuration
-   - MUST document authentication methods supported
-
-### Example: Adding a New Connector
-
-```typescript
-// lib/connectors/websocket.ts
-import { BaseConnector, ConnectorConfig } from "./base";
-
-export class WebSocketConnector extends BaseConnector {
-  // Implementation...
-}
-
-// lib/connectors/registry.ts
-import { WebSocketConnector } from "./websocket";
-
-connectorRegistry.register("WEBSOCKET", WebSocketConnector);
-
-// tests/integration/connectors/websocket.test.ts
-describe("WebSocketConnector", () => {
-  // Tests...
-});
-```
+- `prisma/generated/` is generated code; agents MUST NOT edit directly
+- `.next/` is build output; agents MUST NOT commit
+- Agents MUST run `pnpm prisma generate` after schema changes
 
 ---
 
-## Security Requirements
+## 5. Integrations & External Systems
 
-### Credential Handling (CRITICAL)
+### Connector System
 
-1. **Encryption at Rest**
-   - Credentials MUST be encrypted using AES-256-GCM
-   - Encryption key MUST be stored in environment variables
-   - MUST use `lib/utils/crypto.ts` for all encryption/decryption
-   - MUST NOT store plaintext credentials in database
+All protocol implementations MUST:
 
-2. **Logging and Exposure**
-   - Credentials MUST NOT appear in logs
-   - Auth headers MUST NOT be logged (even in development)
-   - API responses MUST NOT include sensitive data
-   - Error messages MUST NOT leak credential information
+1. Extend `BaseConnector` abstract class
+2. Implement all required methods:
+   - `connect(): Promise<void>`
+   - `disconnect(): Promise<void>`
+   - `sendMessage(message: string): Promise<ConnectorResponse>`
+   - `healthCheck(): Promise<HealthStatus>`
+   - `supportsStreaming(): boolean`
+3. Register with `ConnectorRegistry.register(type, ConnectorClass)`
+4. Handle authentication via `authConfig` property
+5. Apply request/response templates via base class methods
 
-3. **Transmission**
-   - Credentials MUST be transmitted over HTTPS only
-   - WebSocket connections MUST use WSS (secure)
-   - MUST validate SSL/TLS certificates
+### Adding New Connectors
 
-### Input Validation (REQUIRED)
+When adding a new connector, agents MUST:
 
-1. **All User Inputs**
-   - MUST validate with Zod schemas before processing
-   - MUST sanitize strings for SQL injection (Prisma handles this)
-   - MUST sanitize for XSS (React handles this)
-   - MUST validate URL formats before making requests
+1. Create file in `lib/connectors/[protocol].ts`
+2. Extend `BaseConnector` with protocol-specific implementation
+3. Add auto-registration call at end of file
+4. Update `lib/connectors/index.ts` to import the new connector
+5. Add `ConnectorType` enum value to Prisma schema if needed
+6. Write integration tests in `tests/integration/connectors/[protocol].test.ts`
+7. Document connector-specific configuration in API docs
 
-2. **API Endpoints**
-   - MUST validate request body against schema
-   - MUST return 400 for invalid inputs
-   - MUST include validation error details
-   - MUST NOT process invalid data
-
-### Example: Input Validation
-
-```typescript
-import { z } from "zod";
-
-const TargetCreateSchema = z.object({
-  name: z.string().min(1).max(100),
-  endpoint: z.string().url(),
-  authType: z.enum(["NONE", "BEARER_TOKEN", "API_KEY"]),
-  authConfig: z.record(z.string()),
-});
-
-// In API route
-export async function POST(request: Request) {
-  const body = await request.json();
-
-  // MUST validate
-  const validated = TargetCreateSchema.parse(body);
-
-  // Now safe to use
-  const target = await prisma.target.create({ data: validated });
-  return NextResponse.json(target);
-}
-```
+Agents MUST NOT:
+- Bypass the connector abstraction layer
+- Mix business logic with protocol implementation
+- Share state between connector instances
 
 ---
 
-## Coding Conventions
+## 6. Security, Privacy & Safety
 
-### TypeScript (ENFORCED)
+### Credential Management
 
-1. **Strict Mode**
-   - TypeScript strict mode MUST be enabled
-   - MUST NOT use `any` type (use `unknown` instead)
-   - MUST define interfaces for all data structures
-   - MUST use type inference where possible
+- Agents MUST encrypt all credentials using AES-256-GCM before storing in database
+- Agents MUST use the `ENCRYPTION_KEY` environment variable for encryption
+- Agents MUST NOT log credentials in plaintext (in console, files, or error messages)
+- Agents MUST NOT expose credentials in API responses
+- Agents SHOULD use environment variables for all secrets
 
-2. **Naming Conventions**
-   - Interfaces MUST use PascalCase
-   - Functions MUST use camelCase
-   - Constants MUST use SCREAMING_SNAKE_CASE
-   - Files MUST use kebab-case
+### Input Validation
 
-3. **Code Organization**
-   - One component per file (except small helper components)
-   - Component files MUST be <= 300 lines
-   - Complex functions MUST be extracted and tested separately
-   - MUST export types alongside implementations
+- Agents MUST validate all API inputs with Zod schemas
+- Agents MUST sanitize user-provided content before display (XSS prevention)
+- Agents MUST use Prisma parameterized queries (SQL injection prevention)
+- Agents MUST validate cron expressions before scheduling jobs
+- Agents SHOULD reject oversized payloads (implement size limits)
 
-### React & Next.js (ENFORCED)
+### Data Safety
 
-1. **Component Structure**
-   - Server Components by default
-   - Use 'use client' directive ONLY when necessary
-   - MUST define prop types explicitly
-   - MUST use TypeScript, not PropTypes
+- Agents MUST NOT run destructive database operations without migrations
+- Agents MUST back up data before major schema changes in production
+- Agents MUST implement graceful degradation when external services fail
+- Agents SHOULD use database transactions for multi-step operations
 
-2. **API Routes**
-   - MUST use Next.js 16.1.4 App Router patterns
-   - MUST type request/response
-   - MUST handle errors with try-catch
-   - MUST return appropriate status codes
+### Secret Management
 
-### Database (ENFORCED)
-
-1. **Migrations**
-   - MUST create migration for all schema changes
-   - MUST test migrations in development first
-   - MUST NOT edit migrations after they're run in production
-   - Migration names MUST be descriptive
-
-2. **Queries**
-   - MUST use Prisma client (never raw SQL)
-   - MUST handle unique constraint violations
-   - MUST use transactions for multi-step operations
-   - MUST include error handling
+Files that MUST NOT be committed:
+- `.env` (contains secrets)
+- `.env.local`
+- `credentials.json`
+- Any file containing API keys, tokens, or passwords
 
 ---
 
-## Dependency Management
+## 7. Coding Style & Conventions
 
-### Package Installation Rules
+### TypeScript
 
-1. **Before Adding Dependencies**
-   - MUST check if functionality exists in current dependencies
-   - MUST verify package is actively maintained (updated in last 6 months)
-   - MUST check npm weekly downloads (prefer > 100k)
-   - MUST audit package for security vulnerabilities
+- Agents MUST enable TypeScript strict mode
+- Agents MUST type all function parameters and return values
+- Agents MUST NOT use `any` except in Prisma JSON fields or validated external data
+- Agents SHOULD use discriminated unions for polymorphic data
+- Agents SHOULD prefer `interface` over `type` for object shapes
 
-2. **Installation Process**
-   ```bash
-   # MUST use pnpm exclusively
-   pnpm add <package>
+### Naming Conventions
 
-   # For dev dependencies
-   pnpm add -D <package>
+- Files: `kebab-case.ts` (e.g., `session-logger.ts`)
+- Components: `PascalCase.tsx` (e.g., `LogViewer.tsx`)
+- Functions: `camelCase` (e.g., `executeSession`)
+- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRIES`)
+- Database models: `PascalCase` (e.g., `Session`, `ScheduledJob`)
 
-   # MUST verify installation
-   pnpm list <package>
-   ```
+### Component Guidelines
 
-3. **Version Pinning**
-   - Major dependencies SHOULD use exact versions
-   - Minor dependencies MAY use caret (^)
-   - MUST document why major dependencies are pinned
+- Client components MUST have `"use client"` directive at top
+- Server components MUST NOT use hooks or browser APIs
+- Components MUST receive props via typed interfaces
+- Components SHOULD be pure (same props → same output)
+- Event handlers SHOULD use arrow functions to maintain `this` context
 
-4. **Dependency Audits**
-   - MUST run `pnpm audit` before adding new packages
-   - MUST NOT add packages with critical vulnerabilities
-   - MUST document accepted vulnerabilities with justification
+### API Routes
 
-### Approved Major Dependencies
+- Routes MUST return `NextResponse.json()`
+- Routes MUST handle errors with try-catch
+- Routes MUST validate inputs with Zod
+- Routes SHOULD return consistent response shape: `{ success: boolean, data?: any, error?: string }`
+- Routes MUST set appropriate HTTP status codes
 
-- `next@16.1.4` - Web framework
-- `react@^19.0.0` - UI library
-- `@prisma/client@^6.2.0` - Database ORM
-- `bullmq@^5.34.0` - Job queue
-- `ioredis@^5.4.2` - Redis client
-- `zod@^3.24.1` - Validation
-- `axios@^1.7.9` - HTTP client
+### Logging
 
-New major dependencies MUST be approved and documented.
+- Agents MUST use structured logging for production
+- Agents MUST include correlation IDs for tracing
+- Agents MUST NOT log sensitive data (passwords, tokens, PII)
+- Log levels: error (failures), warn (degraded), info (significant events), debug (troubleshooting)
+
+### File Complexity
+
+- Files SHOULD be under 500 lines
+- Functions SHOULD be under 50 lines
+- Agents MUST extract logic into separate files when limits are exceeded
 
 ---
 
-## Workflow & Planning
+## 8. Dependency & Package Management
+
+### Package Manager
+
+- Agents MUST use `pnpm` exclusively (not npm or yarn)
+- Agents MUST commit `pnpm-lock.yaml`
+- Agents MUST run `pnpm install --frozen-lockfile` in CI
+
+### Adding Dependencies
+
+Before adding a dependency, agents MUST:
+
+1. Verify it's actively maintained (commits within last 6 months)
+2. Check for known security vulnerabilities (`pnpm audit`)
+3. Evaluate bundle size impact
+4. Confirm license compatibility
+5. Document reason in commit message
+
+Agents MUST NOT:
+- Add dependencies with critical vulnerabilities
+- Add unmaintained packages (>1 year since last update)
+- Add packages that duplicate existing functionality
+
+### Approved Core Dependencies
+
+- **Framework**: Next.js 16.1.4, React 19.2.4
+- **Database**: Prisma ORM, PostgreSQL client
+- **Queue**: BullMQ, Redis client (ioredis)
+- **Validation**: Zod
+- **Testing**: Vitest, Testing Library
+- **UI**: Tailwind CSS, Chart.js
+- **Utilities**: date-fns, lodash-es
+
+---
+
+## 9. Workflow, Milestones & Planning
 
 ### Milestone-Based Development
 
-1. **Milestone Structure**
-   - Work MUST be organized into clear milestones
-   - Each milestone MUST have defined deliverables
-   - Milestones MUST be completed sequentially
-   - **MUST commit after completing each milestone**
+This project follows a 6-milestone structure. Agents MUST:
 
-2. **Milestone Completion Criteria**
-   - All deliverables implemented
-   - Tests written and passing
-   - Documentation updated
-   - **Git commit created**
-   - No critical bugs
+- Complete all tasks within a milestone before moving to the next
+- Update README.md milestone checklist upon completion
+- Write comprehensive tests for each milestone
+- Commit and push after each milestone completion
 
-3. **Documentation Updates**
-   - Architecture changes MUST update docs/ARCHITECTURE.md
-   - API changes MUST update docs/API.md
-   - New features MUST update README.md
-   - Breaking changes MUST update CHANGELOG.md
+### Git Workflow
 
-### Testing Requirements
+#### Commit Requirements
 
-1. **Test Coverage**
-   - Critical paths MUST have >= 90% coverage
-   - Connectors MUST have integration tests
-   - API routes SHOULD have integration tests
-   - UI components MAY have unit tests
+- Agents MUST write descriptive commit messages following Conventional Commits
+- Format: `type(scope): description`
+- Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+- Example: `feat(connectors): add WebSocket connector with auto-reconnect`
+- Agents MUST include Co-Author line: `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
 
-2. **Test Organization**
-   ```
-   tests/
-   ├── unit/              # Fast, isolated tests
-   ├── integration/       # Tests with external dependencies
-   ├── e2e/              # End-to-end user flows
-   └── mocks/            # Mock servers and data
-   ```
+#### Branch Strategy
+
+- `main` branch is protected
+- Agents SHOULD create feature branches for major work
+- Agents MUST NOT force-push to shared branches
+- Agents MUST rebase before merging to keep history clean
+
+#### What to Commit
+
+Agents MUST commit:
+- Source code changes
+- Configuration files
+- Documentation updates
+- Migration files
+- Test files
+
+Agents MUST NOT commit:
+- `.env` files
+- `node_modules/`
+- `.next/` build output
+- Log files (`logs/`)
+- `prisma/generated/`
 
 ---
 
-## Agent Expectations
+## 10. Docker Container Management
+
+Agents HAVE FULL AUTONOMY to manage Docker containers for testing and development.
+
+### Allowed Operations
+
+Agents MAY:
+- Start containers: `docker compose up -d`
+- Stop containers: `docker compose down`
+- Restart containers: `docker compose restart [service]`
+- Rebuild images: `docker compose build`
+- View logs: `docker compose logs -f [service]`
+- Check status: `docker compose ps`
+
+### Services
+
+- **postgres** (port 5432): PostgreSQL 16 database
+- **redis** (port 6379): Redis 7 cache/queue
+- **redis-commander** (port 8081): Redis UI
+
+### Container Management Guidelines
+
+Agents SHOULD:
+- Restart containers after configuration changes
+- Check logs when services fail to start
+- Clean volumes with `docker compose down -v` only when explicitly needed
+- Rebuild images after dependency changes
+
+---
+
+## 11. Agent Expectations
 
 ### Expertise Level
 
-Agents working in this codebase are expected to operate at a **staff-level software engineer** capacity:
+Agents are expected to operate at a **staff-level software engineering** standard:
 
-1. **Autonomous Decision Making**
-   - Make architectural decisions within established patterns
-   - Choose appropriate libraries and tools
-   - Resolve ambiguities using best practices
-   - Identify and fix technical debt
+- Deep understanding of Next.js App Router patterns
+- Proficiency with TypeScript advanced types
+- Experience with distributed systems and message queues
+- Knowledge of database schema design and migrations
+- Familiarity with Docker and containerization
 
-2. **Code Quality**
-   - Write production-ready code
-   - Follow SOLID principles
-   - Refactor duplicated code proactively
-   - Optimize for readability and maintainability
+### Proactive Responsibilities
 
-3. **Problem Solving**
-   - Debug issues systematically
-   - Research solutions before asking
-   - Consider edge cases and error scenarios
-   - Think about scalability and performance
+Agents SHOULD:
 
-### Refactoring Responsibilities
+1. **Refactor duplicated code** into reusable utilities
+2. **Identify architectural concerns** and report them
+3. **Optimize performance** when bottlenecks are detected
+4. **Improve error messages** to aid debugging
+5. **Add missing tests** for critical paths
+6. **Update documentation** when behavior changes
 
-Agents SHOULD refactor code when:
-- Duplication is detected (DRY principle)
-- Functions exceed 50 lines
-- Cyclomatic complexity is high
-- Code smells are present
+### Design Principles
 
 Agents MUST:
-- Write tests before refactoring
-- Ensure tests pass after refactoring
-- Document breaking changes
-- **Commit refactorings separately from feature work**
 
-### Reporting and Communication
+- **Favor simplicity** over premature optimization
+- **Write self-documenting code** with clear names
+- **Design for testability** (dependency injection, pure functions)
+- **Handle errors gracefully** (don't crash the process)
+- **Log actionable information** (what went wrong, how to fix)
 
-When encountering issues:
-1. Document the problem clearly
-2. Research potential solutions
-3. Implement the best solution
-4. Update documentation
-5. Report decision in commit message
+### Communication
 
-For architectural concerns:
-- Document the concern
-- Propose alternatives
-- Recommend approach with justification
-- Implement after approval
+When agents encounter:
+- **Ambiguous requirements**: Ask for clarification rather than guessing
+- **Multiple valid approaches**: Present options with trade-offs
+- **Breaking changes**: Document migration path for users
+- **Security concerns**: Flag immediately and propose mitigations
 
 ---
 
-## Explicit Out-of-Scope Actions
+## 12. Out-of-Scope Actions
 
-### MUST NOT Actions
+Agents MUST NOT take the following actions without explicit user approval:
 
-Agents MUST NOT perform these actions without explicit approval:
+### Database Operations
 
-1. **Database Operations**
-   - MUST NOT modify Prisma schema without creating migration
-   - MUST NOT run destructive migrations in production
-   - MUST NOT delete data without backup verification
+- MUST NOT drop tables in production
+- MUST NOT run migrations marked as `--skip-seed`
+- MUST NOT modify `schema.prisma` without creating a migration
+- MUST NOT truncate tables with user data
 
-2. **Version Control**
-   - MUST NOT push directly to main branch
-   - MUST NOT force push to shared branches
-   - MUST NOT rewrite public history
-   - MUST NOT skip commit after milestone completion
+### Deployment Operations
 
-3. **Deployment**
-   - MUST NOT deploy to production without approval
-   - MUST NOT modify production environment variables
-   - MUST NOT restart production services
+- MUST NOT push directly to `main` branch (use pull requests)
+- MUST NOT deploy to production without approval
+- MUST NOT modify production environment variables
+- MUST NOT restart production services without coordination
 
-4. **Security**
-   - MUST NOT commit secrets to git
-   - MUST NOT disable security features
-   - MUST NOT expose internal APIs publicly
+### Destructive Operations
 
-5. **Dependencies**
-   - MUST NOT add packages with known vulnerabilities
-   - MUST NOT upgrade major versions without testing
-   - MUST NOT remove dependencies without impact analysis
+- MUST NOT delete log files needed for debugging
+- MUST NOT remove Docker volumes without confirmation
+- MUST NOT force-push to shared branches
+- MUST NOT bypass CI/CD pipeline
 
-### Handoff Points Requiring Human Confirmation
+### Security Operations
 
-These require human approval before proceeding:
-- Major architectural changes
-- Breaking API changes
-- Database schema changes affecting existing data
-- Third-party service integrations
-- Production deployments
-- Security-related modifications
+- MUST NOT disable authentication or authorization
+- MUST NOT expose internal APIs publicly
+- MUST NOT commit secrets or credentials
+- MUST NOT weaken encryption or validation
+
+### Dependency Operations
+
+- MUST NOT upgrade major versions without testing
+- MUST NOT add dependencies with known CVEs
+- MUST NOT remove dependencies still in use
+- MUST NOT change package manager (always use pnpm)
 
 ---
 
-## Development Workflow
+## 13. Testing Requirements
 
-### Standard Development Process
+### Test Coverage
 
-1. **Start Work**
-   ```bash
-   task docker:up      # Start infrastructure
-   task db:generate    # Generate Prisma client
-   task dev            # Start development server
-   ```
+- Agents MUST write tests for new connectors (integration tests)
+- Agents SHOULD achieve >80% coverage for critical paths
+- Agents MUST test error scenarios, not just happy paths
+- Agents SHOULD use the mock chatbot server for integration tests
 
-2. **Make Changes**
-   - Write code following conventions
-   - Add/update tests
-   - Verify with `task lint` and `task type-check`
+### Test Organization
 
-3. **Test Changes**
-   ```bash
-   task test           # Run tests
-   task build          # Verify build succeeds
-   ```
+- Unit tests: `tests/unit/[module].test.ts`
+- Integration tests: `tests/integration/[feature].test.ts`
+- Mocks: `tests/mocks/[service].ts`
 
-4. **Commit Changes** (CRITICAL)
-   ```bash
-   git add .
-   git commit -m "feat: <description>
+### Running Tests
 
-   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-   ```
+```bash
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage report
+```
 
-5. **Verify Commit**
-   ```bash
-   git log --oneline -1
-   git status
-   ```
+---
 
-### When to Commit
+## 14. Performance Considerations
 
-**MUST commit after:**
-- Completing each milestone
-- Implementing major features
-- Fixing critical bugs
-- Refactoring significant code
+### Optimization Guidelines
 
-**SHOULD commit after:**
-- Adding new components
-- Updating documentation
-- Completing test suites
+- Agents SHOULD use file-based logging for high-volume message data
+- Agents SHOULD batch database operations when possible
+- Agents SHOULD implement pagination for large result sets
+- Agents SHOULD use Redis caching for frequently accessed data
+- Agents SHOULD close database connections properly
 
-**MAY commit after:**
-- Small fixes
-- Minor style changes
+### Monitoring
+
+- Agents SHOULD add health check endpoints for all services
+- Agents SHOULD track worker queue sizes
+- Agents SHOULD log performance metrics (response times, throughput)
+
+---
+
+## 15. Accessibility & Usability
+
+- UI components SHOULD follow WCAG 2.1 Level AA guidelines
+- Forms MUST have proper labels and error messages
+- Loading states MUST be indicated clearly
+- Error messages MUST be actionable (tell user how to fix)
 
 ---
 
 ## Summary
 
-This document establishes the rules and expectations for all work in the Token-Burn codebase. Compliance is **REQUIRED**, not optional.
+This document establishes the rules and expectations for all work on Token-Burn. By following these guidelines, agents ensure:
 
-Key requirements:
-1. ✅ **Commit after every milestone** (CRITICAL)
-2. ✅ Extend BaseConnector for new protocols
-3. ✅ Register all connectors in ConnectorRegistry
-4. ✅ Encrypt credentials at rest
-5. ✅ Validate all inputs with Zod
-6. ✅ Write tests for all critical paths
-7. ✅ Use TypeScript strict mode
-8. ✅ Follow established architecture
-9. ✅ Document all changes
-10. ✅ Consult official documentation
+- **Consistent quality** across all contributions
+- **Secure handling** of sensitive data
+- **Maintainable architecture** that scales
+- **Reliable functionality** backed by tests
+- **Clear communication** with users and contributors
 
----
-
-**Version**: 1.0.0
-**Last Updated**: 2026-01-26
-**Maintained By**: Token-Burn Development Team
+Agents MUST treat MUST/SHALL/REQUIRED statements as mandatory. Deviations require explicit justification and approval.
