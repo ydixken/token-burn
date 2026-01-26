@@ -1,0 +1,181 @@
+version: '3'
+
+vars:
+  APP_NAME: token-burn
+  DOCKER_COMPOSE_FILE: infra/docker-compose.yml
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list-all
+
+  # Development
+  install:
+    desc: Install project dependencies
+    cmds:
+      - pnpm install
+
+  dev:
+    desc: Start development server
+    cmds:
+      - pnpm dev
+
+  build:
+    desc: Build Next.js application for production
+    cmds:
+      - pnpm build
+
+  start:
+    desc: Start production server
+    cmds:
+      - pnpm start
+
+  type-check:
+    desc: Run TypeScript type checking
+    cmds:
+      - pnpm type-check
+
+  lint:
+    desc: Run ESLint
+    cmds:
+      - pnpm lint
+
+  format:
+    desc: Format code with Prettier
+    cmds:
+      - pnpm format
+
+  # Database
+  db:generate:
+    desc: Generate Prisma client
+    cmds:
+      - pnpm db:generate
+
+  db:push:
+    desc: Push schema changes to database
+    cmds:
+      - pnpm db:push
+
+  db:migrate:
+    desc: Run database migrations (production)
+    cmds:
+      - pnpm db:migrate
+
+  db:migrate:dev:
+    desc: Create and run a new migration (development)
+    cmds:
+      - pnpm db:migrate:dev
+
+  db:seed:
+    desc: Seed database with initial data
+    cmds:
+      - pnpm db:seed
+
+  db:studio:
+    desc: Open Prisma Studio
+    cmds:
+      - pnpm db:studio
+
+  db:reset:
+    desc: Reset database (DESTRUCTIVE)
+    cmds:
+      - echo "⚠️  This will delete all data!"
+      - pnpm prisma migrate reset --force
+
+  # Docker
+  docker:up:
+    desc: Start Docker Compose services
+    cmds:
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} up -d
+      - echo "✅ Services started"
+      - echo "   PostgreSQL: localhost:5432"
+      - echo "   Redis: localhost:6379"
+      - echo "   Redis Commander: http://localhost:8081"
+
+  docker:down:
+    desc: Stop Docker Compose services
+    cmds:
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} down
+      - echo "✅ Services stopped"
+
+  docker:logs:
+    desc: View Docker Compose logs
+    cmds:
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} logs -f
+
+  docker:ps:
+    desc: List running Docker containers
+    cmds:
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} ps
+
+  docker:clean:
+    desc: Remove Docker volumes (DESTRUCTIVE)
+    cmds:
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} down -v
+      - echo "✅ Volumes removed"
+
+  # Testing
+  test:
+    desc: Run unit tests
+    cmds:
+      - pnpm test
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - pnpm test:watch
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - pnpm test:coverage
+
+  # Setup
+  setup:
+    desc: Initial project setup
+    cmds:
+      - task: install
+      - task: docker:up
+      - echo "⏳ Waiting for services to be healthy..."
+      - sleep 5
+      - task: db:generate
+      - task: db:push
+      - task: db:seed
+      - echo "✅ Setup complete!"
+      - echo "   Run 'task dev' to start development server"
+
+  # Clean
+  clean:
+    desc: Clean build artifacts and dependencies
+    cmds:
+      - rm -rf .next
+      - rm -rf dist
+      - rm -rf node_modules/.cache
+      - echo "✅ Cleaned build artifacts"
+
+  clean:all:
+    desc: Clean everything (including node_modules and Docker volumes)
+    cmds:
+      - task: clean
+      - rm -rf node_modules
+      - task: docker:clean
+      - echo "✅ Cleaned everything"
+
+  # Utility
+  health:
+    desc: Check health of all services
+    cmds:
+      - echo "🏥 Checking service health..."
+      - echo ""
+      - echo "PostgreSQL:"
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T postgres pg_isready -U tokenburn || echo "❌ Not healthy"
+      - echo ""
+      - echo "Redis:"
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T redis redis-cli ping || echo "❌ Not healthy"
+      - echo ""
+
+  logs:session:
+    desc: View recent session logs
+    cmds:
+      - ls -lt logs/sessions/ | head -10 || echo "No sessions yet"

@@ -1,0 +1,222 @@
+// Prisma Schema for Token-Burn Chatbot Testing Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ConnectorType enum
+enum ConnectorType {
+  HTTP_REST
+  WEBSOCKET
+  GRPC
+  SSE
+}
+
+// AuthType enum
+enum AuthType {
+  NONE
+  BEARER_TOKEN
+  API_KEY
+  BASIC_AUTH
+  CUSTOM_HEADER
+  OAUTH2
+}
+
+// SessionStatus enum
+enum SessionStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Target: Represents a chatbot endpoint to test
+model Target {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  // Connector configuration
+  connectorType  ConnectorType
+  endpoint       String           // URL, WebSocket URI, gRPC address
+
+  // Authentication
+  authType       AuthType
+  authConfig     Json             // Encrypted credentials, API keys, headers
+
+  // Request/Response templating
+  requestTemplate   Json          // JSON template for wrapping messages
+  responseTemplate  Json          // JSON path to extract response
+
+  // Protocol-specific config
+  protocolConfig Json?            // Headers, timeouts, retry config
+
+  // Status
+  isActive    Boolean  @default(true)
+
+  // Relations
+  sessions    Session[]
+  scenarios   ScenarioTarget[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([connectorType])
+  @@index([isActive])
+}
+
+// Scenario: Pre-configured test scenario
+model Scenario {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String?  // "stress", "verbose", "edge-cases", etc.
+
+  // Flow definition
+  flowConfig  Json     // Array of message steps, branching logic
+
+  // Execution parameters
+  repetitions       Int     @default(1)
+  concurrency       Int     @default(1)
+  delayBetweenMs    Int     @default(0)
+  verbosityLevel    Int     @default(1)  // 1-5 scale
+
+  // Templating
+  messageTemplates  Json    // Variable message templates
+
+  // Targeting
+  targets    ScenarioTarget[]
+  sessions   Session[]
+  scheduledJobs ScheduledJob[]
+
+  // Metadata
+  isPublic   Boolean  @default(false)
+  tags       String[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublic])
+}
+
+// Many-to-many: Scenarios can target multiple chatbots
+model ScenarioTarget {
+  id         String   @id @default(cuid())
+
+  scenario   Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  scenarioId String
+
+  target     Target   @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  targetId   String
+
+  // Override scenario defaults per target
+  configOverrides Json?
+
+  createdAt  DateTime @default(now())
+
+  @@unique([scenarioId, targetId])
+  @@index([scenarioId])
+  @@index([targetId])
+}
+
+// Session: A single test execution
+model Session {
+  id            String        @id @default(cuid())
+
+  // References
+  target        Target        @relation(fields: [targetId], references: [id])
+  targetId      String
+
+  scenario      Scenario?     @relation(fields: [scenarioId], references: [id])
+  scenarioId    String?
+
+  // Execution details
+  status        SessionStatus @default(PENDING)
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  // Configuration snapshot (immutable)
+  executionConfig Json         // Frozen scenario + target config
+
+  // File-based logging
+  logPath       String?        // Path to logs/sessions/{id}/
+
+  // Summary metrics (cached from log analysis)
+  messageCount      Int?
+  totalTokens       Int?
+  avgResponseTimeMs Float?
+  errorCount        Int?
+
+  // Metrics relation
+  metrics       SessionMetric[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([targetId])
+  @@index([scenarioId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// SessionMetric: Granular per-message metrics
+model SessionMetric {
+  id            String   @id @default(cuid())
+
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId     String
+
+  // Message metadata
+  messageIndex  Int
+  promptTokens  Int?
+  completionTokens Int?
+  totalTokens   Int?
+
+  // Timing
+  requestSentAt   DateTime
+  responseReceivedAt DateTime
+  responseTimeMs  Float
+
+  // Status
+  success       Boolean
+  errorType     String?
+  errorMessage  String?
+
+  // Repetition detection
+  repetitionScore Float?  // 0-1: how similar to previous responses
+
+  createdAt     DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([messageIndex])
+}
+
+// ScheduledJob: Cron-like scheduling for scenarios
+model ScheduledJob {
+  id          String   @id @default(cuid())
+  name        String
+
+  scenario    Scenario @relation(fields: [scenarioId], references: [id])
+  scenarioId  String
+
+  cronExpression String  // e.g., "0 */6 * * *"
+  timezone    String   @default("UTC")
+
+  isEnabled   Boolean  @default(true)
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isEnabled])
+  @@index([nextRunAt])
+}
