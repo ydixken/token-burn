@@ -115,7 +115,7 @@ export default function DashboardLayout({
             <Zap className="h-5 w-5 text-blue-500 shrink-0" />
             {!collapsed && (
               <span className="text-sm font-semibold text-gray-100 truncate">
-                Token-Burn
+                Krawall
               </span>
             )}
           </a>

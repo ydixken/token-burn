@@ -111,7 +111,7 @@ export default function StepTemplates({ data, onUpdate, onNext, onBack }: StepTe
           Map Request &amp; Response
         </h2>
         <p className="text-sm text-gray-400">
-          Configure how Token-Burn sends messages and reads responses.{" "}
+          Configure how Krawall sends messages and reads responses.{" "}
           <Link
             href="/docs/templates"
             className="text-blue-400 hover:text-blue-300"
@@ -223,7 +223,7 @@ export default function StepTemplates({ data, onUpdate, onNext, onBack }: StepTe
             {previewContent && (
               <div className="bg-green-900/20 border border-green-800 rounded p-3">
                 <div className="text-xs text-green-400 mb-1">
-                  Token-Burn will extract:
+                  Krawall will extract:
                 </div>
                 <div className="text-sm text-green-300 font-medium">
                   &quot;{previewContent}&quot;

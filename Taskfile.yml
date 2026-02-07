@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  APP_NAME: token-burn
+  APP_NAME: krawall
   DOCKER_COMPOSE_FILE: infra/docker-compose.yml
 
 tasks:
@@ -183,7 +183,7 @@ tasks:
       - echo "🏥 Checking service health..."
       - echo ""
       - echo "PostgreSQL:"
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T postgres pg_isready -U tokenburn || echo "❌ Not healthy"
+      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T postgres pg_isready -U krawall || echo "❌ Not healthy"
       - echo ""
       - echo "Redis:"
       - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T redis redis-cli ping || echo "❌ Not healthy"

@@ -1,12 +1,12 @@
-# AGENTS.md - Token-Burn Development Guidelines
+# AGENTS.md - Krawall Development Guidelines
 
-This document defines mandatory behavior for automated agents and human contributors working in the Token-Burn codebase.
+This document defines mandatory behavior for automated agents and human contributors working in the Krawall codebase.
 
 ---
 
 ## 1. Repository / Product Overview
 
-**Token-Burn** is a sophisticated chatbot testing platform designed for stress-testing conversational AI systems through realistic, high-volume conversation flows. It serves QA engineers, DevOps teams, and AI developers who need to validate chatbot performance, reliability, and token consumption under various load conditions.
+**Krawall** is a sophisticated chatbot testing platform designed for stress-testing conversational AI systems through realistic, high-volume conversation flows. It serves QA engineers, DevOps teams, and AI developers who need to validate chatbot performance, reliability, and token consumption under various load conditions.
 
 ### Core Responsibilities
 
@@ -80,7 +80,7 @@ Agents MUST consult official documentation before making assumptions:
 ### Required Directory Layout
 
 ```
-token-burn/
+krawall/
 ├── app/                    # Next.js App Router (MUST use for all routes)
 │   ├── (dashboard)/        # Route group (parentheses for organization only)
 │   ├── api/                # API routes (MUST follow RESTful conventions)
@@ -491,7 +491,7 @@ pnpm test:coverage     # With coverage report
 
 ## Summary
 
-This document establishes the rules and expectations for all work on Token-Burn. By following these guidelines, agents ensure:
+This document establishes the rules and expectations for all work on Krawall. By following these guidelines, agents ensure:
 
 - **Consistent quality** across all contributions
 - **Secure handling** of sensitive data

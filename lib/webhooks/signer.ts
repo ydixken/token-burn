@@ -4,11 +4,11 @@ import crypto from "crypto";
  * Webhook payload signer using HMAC-SHA256.
  *
  * Generates and verifies signatures for webhook payloads
- * using a shared secret between Token-Burn and the receiver.
+ * using a shared secret between Krawall and the receiver.
  */
 
-const SIGNATURE_HEADER = "X-TokenBurn-Signature";
-const TIMESTAMP_HEADER = "X-TokenBurn-Timestamp";
+const SIGNATURE_HEADER = "X-Krawall-Signature";
+const TIMESTAMP_HEADER = "X-Krawall-Timestamp";
 const ALGORITHM = "sha256";
 
 /**

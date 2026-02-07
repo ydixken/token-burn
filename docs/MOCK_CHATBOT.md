@@ -1,6 +1,6 @@
 # Mock Chatbot Server
 
-The mock chatbot server (`tests/mocks/chatbot-server.ts`) simulates various chatbot behaviors for testing Token-Burn scenarios against realistic endpoints without requiring live API keys or third-party services.
+The mock chatbot server (`tests/mocks/chatbot-server.ts`) simulates various chatbot behaviors for testing Krawall scenarios against realistic endpoints without requiring live API keys or third-party services.
 
 ## Starting the Server
 
@@ -45,7 +45,7 @@ When `testMode` is `true`:
 
 ### POST `/v1/chat/completions`
 
-OpenAI-compatible format. This is the primary endpoint for Token-Burn testing.
+OpenAI-compatible format. This is the primary endpoint for Krawall testing.
 
 **Request:**
 
@@ -353,9 +353,9 @@ curl -X POST http://localhost:3001/timeout --max-time 5
 curl -X POST http://localhost:3001/slow
 ```
 
-## Using the Mock Server as a Token-Burn Target
+## Using the Mock Server as a Krawall Target
 
-The mock chatbot is designed to be used as a Target inside Token-Burn for development and testing.
+The mock chatbot is designed to be used as a Target inside Krawall for development and testing.
 
 ### 1. Start the Mock Server
 
@@ -363,9 +363,9 @@ The mock chatbot is designed to be used as a Target inside Token-Burn for develo
 npx tsx tests/mocks/chatbot-server.ts
 ```
 
-### 2. Create a Target in Token-Burn
+### 2. Create a Target in Krawall
 
-In the Token-Burn UI, create a new target with these settings:
+In the Krawall UI, create a new target with these settings:
 
 | Field | Value |
 |-------|-------|
@@ -403,7 +403,7 @@ Use the "Test Connection" button on the target detail page. You should get a suc
 
 ### 4. Run Scenarios
 
-With the mock server running, you can execute any Token-Burn scenario against it. To test specific personas, add the `X-Persona` header in the target's custom headers configuration.
+With the mock server running, you can execute any Krawall scenario against it. To test specific personas, add the `X-Persona` header in the target's custom headers configuration.
 
 ### 5. Persona-Specific Targets
 

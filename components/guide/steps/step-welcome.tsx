@@ -39,7 +39,7 @@ export function StepWelcome() {
         <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 mb-2">
           <Zap className="h-7 w-7 text-blue-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-100">Welcome to Token-Burn</h1>
+        <h1 className="text-2xl font-bold text-gray-100">Welcome to Krawall</h1>
         <p className="text-sm text-gray-400 max-w-md mx-auto">
           An automated chatbot testing platform. Evaluate AI endpoints through structured scenarios,
           track token usage, and measure response quality.

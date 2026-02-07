@@ -1,17 +1,17 @@
 /**
- * OpenAPI 3.0 Specification for Token-Burn API
+ * OpenAPI 3.0 Specification for Krawall API
  */
 
 export function getOpenAPISpec() {
   return {
     openapi: "3.0.3",
     info: {
-      title: "Token-Burn API",
+      title: "Krawall API",
       description:
-        "REST API for Token-Burn — a chatbot stress-testing platform for testing conversational AI systems through realistic, high-volume conversation flows.",
+        "REST API for Krawall — a chatbot stress-testing platform for testing conversational AI systems through realistic, high-volume conversation flows.",
       version: "1.0.0",
       contact: {
-        name: "Token-Burn Team",
+        name: "Krawall Team",
       },
     },
     servers: [

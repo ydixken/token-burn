@@ -1,6 +1,6 @@
-# Token-Burn Implementation Milestones
+# Krawall Implementation Milestones
 
-This document defines the 6 implementation milestones for the Token-Burn chatbot testing platform. Each milestone MUST be completed sequentially and committed to git upon completion.
+This document defines the 6 implementation milestones for the Krawall chatbot testing platform. Each milestone MUST be completed sequentially and committed to git upon completion.
 
 ---
 

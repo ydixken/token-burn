@@ -1,4 +1,4 @@
-# Production Docker Compose Configuration for Token-Burn
+# Production Docker Compose Configuration for Krawall
 # Optimized for production deployment with proper resource limits, health checks, and security
 
 version: '3.8'
@@ -6,8 +6,8 @@ version: '3.8'
 services:
   # Next.js Application
   app:
-    image: ${REGISTRY_URL}/token-burn:${TAG:-latest}
-    container_name: token-burn-app
+    image: ${REGISTRY_URL}/krawall:${TAG:-latest}
+    container_name: krawall-app
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:3000"
@@ -30,7 +30,7 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - token-burn-network
+      - krawall-network
     volumes:
       - ../logs:/app/logs
     deploy:
@@ -44,8 +44,8 @@ services:
 
   # BullMQ Worker for Session Execution
   worker:
-    image: ${REGISTRY_URL}/token-burn/worker:${TAG:-latest}
-    container_name: token-burn-worker
+    image: ${REGISTRY_URL}/krawall/worker:${TAG:-latest}
+    container_name: krawall-worker
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -60,7 +60,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - token-burn-network
+      - krawall-network
     volumes:
       - ../logs:/app/logs
     deploy:
@@ -76,22 +76,22 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: token-burn-postgres
+    container_name: krawall-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-token_burn}
+      POSTGRES_DB: ${POSTGRES_DB:-krawall}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-token_burn}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-krawall}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - token-burn-network
+      - krawall-network
     deploy:
       resources:
         limits:
@@ -104,7 +104,7 @@ services:
   # Redis Cache & Queue
   redis:
     image: redis:7-alpine
-    container_name: token-burn-redis
+    container_name: krawall-redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
@@ -115,7 +115,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - token-burn-network
+      - krawall-network
     deploy:
       resources:
         limits:
@@ -128,7 +128,7 @@ services:
   # Nginx Reverse Proxy (optional, for SSL termination and load balancing)
   nginx:
     image: nginx:alpine
-    container_name: token-burn-nginx
+    container_name: krawall-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -139,7 +139,7 @@ services:
     depends_on:
       - app
     networks:
-      - token-burn-network
+      - krawall-network
     deploy:
       resources:
         limits:
@@ -150,7 +150,7 @@ services:
           memory: 64M
 
 networks:
-  token-burn-network:
+  krawall-network:
     driver: bridge
 
 volumes:

@@ -225,7 +225,7 @@ function InteractivePathDemo() {
             Path: <code className="text-blue-400">{example.path}</code>
           </div>
           <div className="bg-gray-900 rounded p-4">
-            <div className="text-xs text-gray-500 mb-2">Token-Burn extracts:</div>
+            <div className="text-xs text-gray-500 mb-2">Krawall extracts:</div>
             <div className="text-lg font-medium text-green-400">
               {example.result}
             </div>
@@ -258,7 +258,7 @@ export default function TemplateDocsPage() {
           Request &amp; Response Templates
         </h1>
         <p className="text-gray-400 mt-2">
-          Learn how Token-Burn uses JSON path templates to communicate with any
+          Learn how Krawall uses JSON path templates to communicate with any
           chatbot API.
         </p>
       </div>
@@ -277,7 +277,7 @@ export default function TemplateDocsPage() {
             <p className="text-sm text-gray-400">
               Defines the JSON structure sent to the API. The{" "}
               <code className="text-blue-400">messagePath</code> tells
-              Token-Burn where to insert the test message.
+              Krawall where to insert the test message.
             </p>
           </div>
           <div className="space-y-2">
@@ -288,7 +288,7 @@ export default function TemplateDocsPage() {
               <h3 className="font-medium text-white">API Call</h3>
             </div>
             <p className="text-sm text-gray-400">
-              Token-Burn sends the request to your target endpoint with the
+              Krawall sends the request to your target endpoint with the
               configured authentication headers.
             </p>
           </div>
@@ -311,7 +311,7 @@ export default function TemplateDocsPage() {
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 className="text-xl font-semibold text-white mb-4">JSON Path Syntax</h2>
         <p className="text-gray-400 mb-4">
-          Token-Burn uses dot-notation paths to navigate JSON objects. Array
+          Krawall uses dot-notation paths to navigate JSON objects. Array
           elements are accessed by their numeric index.
         </p>
 
@@ -399,7 +399,7 @@ export default function TemplateDocsPage() {
               </span>
             </div>
             <p className="text-sm text-gray-400">
-              JSON path where Token-Burn inserts the test message into the
+              JSON path where Krawall inserts the test message into the
               request body. The message replaces the value at this path before
               each API call.
             </p>
@@ -463,7 +463,7 @@ export default function TemplateDocsPage() {
             </div>
             <p className="text-sm text-gray-400">
               JSON path to extract the assistant&apos;s response text from the API
-              response. This is the primary content that Token-Burn records and
+              response. This is the primary content that Krawall records and
               analyzes.
             </p>
             <div className="mt-2 text-xs text-gray-500">
@@ -483,11 +483,11 @@ export default function TemplateDocsPage() {
               </span>
             </div>
             <p className="text-sm text-gray-400">
-              JSON path to the token usage object. Token-Burn reads{" "}
+              JSON path to the token usage object. Krawall reads{" "}
               <code className="text-gray-300">promptTokens</code>,{" "}
               <code className="text-gray-300">completionTokens</code>, and{" "}
               <code className="text-gray-300">totalTokens</code> from this
-              object. Different APIs use different field names — Token-Burn
+              object. Different APIs use different field names — Krawall
               normalizes them automatically.
             </p>
             <div className="mt-2 text-xs text-gray-500">
@@ -508,7 +508,7 @@ export default function TemplateDocsPage() {
             </div>
             <p className="text-sm text-gray-400">
               JSON path to extract error messages from failed API responses.
-              When the API returns an error, Token-Burn uses this path to get
+              When the API returns an error, Krawall uses this path to get
               a human-readable error message for logging.
             </p>
             <div className="mt-2 text-xs text-gray-500">
@@ -658,7 +658,7 @@ export default function TemplateDocsPage() {
               Either <code className="text-blue-400">tokenUsagePath</code> is
               not set, or the path doesn&apos;t match the response. Not all APIs
               return token usage (e.g., Ollama). This field is optional and
-              Token-Burn will still work without it.
+              Krawall will still work without it.
             </p>
           </div>
 

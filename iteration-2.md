@@ -127,7 +127,7 @@ interface WizardState {
 }
 ```
 
-Persist to localStorage key `tokenburn-guide-v2` (new key, don't break old progress). Provide `goNext()`, `goBack()`, `goToStep(n)`, `markComplete(n)`, `skip(n)` methods.
+Persist to localStorage key `krawall-guide-v2` (new key, don't break old progress). Provide `goNext()`, `goBack()`, `goToStep(n)`, `markComplete(n)`, `skip(n)` methods.
 
 ### G1.4 — Rewrite Guide Page as Wizard Host (guide-ui)
 
@@ -410,7 +410,7 @@ If the session hasn't completed yet, poll every 2 seconds until it does.
 **Create**: `components/guide/steps/step-welcome.tsx`
 
 More than just text — make it visually engaging:
-- Hero section with Token-Burn logo and tagline
+- Hero section with Krawall logo and tagline
 - 3 feature highlight cards in a row:
   - "Multi-Protocol Testing" — HTTP, WebSocket, gRPC, SSE
   - "Real-Time Monitoring" — Watch conversations as they happen

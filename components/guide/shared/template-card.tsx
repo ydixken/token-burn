@@ -11,7 +11,7 @@ const CATEGORY_COLORS: Record<string, "success" | "error" | "warning" | "info" |
   CONTEXT: "info",
   PERFORMANCE: "success",
   LOGIC: "neutral",
-  TOKEN_BURN: "error",
+  KRAWALL: "error",
   ATTACK_SURFACE: "error",
 };
 

@@ -302,10 +302,10 @@ describe("Guide Wizard - State Management", () => {
 // ============================================================
 
 describe("Guide Wizard - localStorage Persistence", () => {
-  const STORAGE_KEY = "tokenburn-guide-v2";
+  const STORAGE_KEY = "krawall-guide-v2";
 
   it("should use correct storage key", () => {
-    expect(STORAGE_KEY).toBe("tokenburn-guide-v2");
+    expect(STORAGE_KEY).toBe("krawall-guide-v2");
   });
 
   it("loadState should return default when nothing stored", () => {

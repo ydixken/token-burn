@@ -44,7 +44,7 @@ export async function POST(
       payload: {
         webhookId: webhook.id,
         webhookName: webhook.name,
-        message: "This is a test delivery from Token-Burn.",
+        message: "This is a test delivery from Krawall.",
       },
       deliveryId: `test-${Date.now()}`,
       timestamp: new Date().toISOString(),

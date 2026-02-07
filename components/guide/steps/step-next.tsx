@@ -67,7 +67,7 @@ export function StepNext() {
         </div>
         <h1 className="text-2xl font-bold text-gray-100">Guide Complete!</h1>
         <p className="text-sm text-gray-400 max-w-md mx-auto">
-          You&apos;ve successfully set up and run your first chatbot test with Token-Burn.
+          You&apos;ve successfully set up and run your first chatbot test with Krawall.
         </p>
       </div>
 

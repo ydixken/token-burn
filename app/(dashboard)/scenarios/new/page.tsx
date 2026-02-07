@@ -42,7 +42,7 @@ const CATEGORY_BADGE_COLORS: Record<string, string> = {
   CONTEXT: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   PERFORMANCE: "bg-purple-500/10 text-purple-400 border-purple-500/20",
   LOGIC: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  TOKEN_BURN: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  KRAWALL: "bg-orange-500/10 text-orange-400 border-orange-500/20",
   ATTACK_SURFACE: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 

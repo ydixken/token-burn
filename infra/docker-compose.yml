@@ -4,29 +4,29 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: tokenburn-postgres
+    container_name: krawall-postgres
     environment:
-      POSTGRES_USER: tokenburn
-      POSTGRES_PASSWORD: tokenburn
-      POSTGRES_DB: tokenburn
+      POSTGRES_USER: krawall
+      POSTGRES_PASSWORD: krawall
+      POSTGRES_DB: krawall
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tokenburn"]
+      test: ["CMD-SHELL", "pg_isready -U krawall"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     networks:
-      - tokenburn
+      - krawall
 
   # Redis Cache & Queue
   redis:
     image: redis:7-alpine
-    container_name: tokenburn-redis
+    container_name: krawall-redis
     command: redis-server --appendonly yes --requirepass ""
     ports:
       - "6379:6379"
@@ -39,12 +39,12 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - tokenburn
+      - krawall
 
   # Redis Commander (Web UI for Redis)
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: tokenburn-redis-commander
+    container_name: krawall-redis-commander
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:
@@ -54,15 +54,15 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - tokenburn
+      - krawall
 
 volumes:
   postgres_data:
-    name: tokenburn_postgres_data
+    name: krawall_postgres_data
   redis_data:
-    name: tokenburn_redis_data
+    name: krawall_redis_data
 
 networks:
-  tokenburn:
-    name: tokenburn_network
+  krawall:
+    name: krawall_network
     driver: bridge

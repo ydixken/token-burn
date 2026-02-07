@@ -8,7 +8,7 @@ import {
   useEffect,
 } from "react";
 
-const STORAGE_KEY = "tokenburn-guide-v2";
+const STORAGE_KEY = "krawall-guide-v2";
 
 export interface WizardState {
   currentStep: number;

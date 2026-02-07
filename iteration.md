@@ -1,8 +1,8 @@
-# Token-Burn: Major Feature & Polish Sprint — Team Leader Brief
+# Krawall: Major Feature & Polish Sprint — Team Leader Brief
 
 ## Context
 
-Token-Burn is a fully working chatbot stress-testing platform (12 milestones complete, 70+ tests passing). The core engine works, but the GUI looks like a prototype, several routes are broken, and key features are missing. This sprint transforms Token-Burn from a working prototype into a polished, presentable product that looks like it went through years of iteration.
+Krawall is a fully working chatbot stress-testing platform (12 milestones complete, 70+ tests passing). The core engine works, but the GUI looks like a prototype, several routes are broken, and key features are missing. This sprint transforms Krawall from a working prototype into a polished, presentable product that looks like it went through years of iteration.
 
 **The app works. Your job is to make it exceptional.**
 
@@ -191,7 +191,7 @@ Replace the current text-link sidebar with an icon-based navigation bar (like cl
 **Collapsed state** (default, 56px wide):
 
 - Icon-only navigation with tooltip on hover
-- Token-Burn logo mark at top (small, monochrome)
+- Krawall logo mark at top (small, monochrome)
 - Icons for each section (use Lucide React icons — already common in Next.js projects):
   - `LayoutDashboard` → Dashboard
   - `Crosshair` → Targets
@@ -218,7 +218,7 @@ Replace the current text-link sidebar with an icon-based navigation bar (like cl
 
 **Header redesign**:
 
-- Remove "Token-Burn Dashboard" and "Next.js 16.1.4 + TypeScript + Tailwind" — completely
+- Remove "Krawall Dashboard" and "Next.js 16.1.4 + TypeScript + Tailwind" — completely
 - Add breadcrumb navigation showing current location: `Dashboard / Targets / My OpenAI Bot`
 - Add a compact status bar: "3 sessions running" with live count (clicking goes to sessions)
 - Add command palette trigger (`Cmd+K` or `Ctrl+K`) — even if the palette itself is a later feature
@@ -421,7 +421,7 @@ An interactive, step-by-step guide that walks new users through the platform:
 
 **Guide structure** (each step is a card with description, action button, and completion checkmark):
 
-1. **Welcome to Token-Burn** — Overview of what the platform does
+1. **Welcome to Krawall** — Overview of what the platform does
 2. **Start Infrastructure** — How to run Docker containers (`task docker:up`)
 3. **Create Your First Target** — Walk through target creation with the mock chatbot. Pre-fill: name="Mock Chatbot", endpoint=`http://localhost:3001`, type=HTTP_REST, no auth. Include a "Create This Target" one-click button.
 4. **Test the Connection** — Click "Test Connection" on the newly created target. Explain what the test does.
@@ -446,7 +446,7 @@ Document how to use the mock chatbot for testing:
 - Response patterns: what triggers verbose/XML/repetitive responses
 - How to configure: port, test mode
 - Example curl commands for each endpoint
-- How to use it as a target in Token-Burn (step-by-step with screenshots/code)
+- How to use it as a target in Krawall (step-by-step with screenshots/code)
 
 Also add a link to this doc from the in-app guide (Step 3).
 
@@ -834,7 +834,7 @@ Present these to the user for consideration in future sprints:
 
 6. **Diff Viewer for Responses** — Side-by-side diff of two responses (like GitHub diff). Highlight what changed between runs. Essential for regression testing.
 
-7. **CLI Tool** — `npx token-burn run --target=openai --scenario=stress-test`. Run scenarios from CI/CD pipelines without the GUI.
+7. **CLI Tool** — `npx krawall run --target=openai --scenario=stress-test`. Run scenarios from CI/CD pipelines without the GUI.
 
 8. **Session Annotations** — Mark specific messages in a session as "interesting", "bug", "regression". Add notes. Filter sessions by annotations.
 

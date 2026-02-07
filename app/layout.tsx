@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Token-Burn | Chatbot Testing Platform",
+  title: "Krawall | Chatbot Testing Platform",
   description: "Stress-test conversational AI systems with realistic, high-volume conversation flows",
 };
 

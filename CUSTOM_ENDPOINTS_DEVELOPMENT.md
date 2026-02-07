@@ -1,12 +1,12 @@
 # Custom Endpoints Development Guide
 
-A comprehensive guide to building connector plugins for Token-Burn.
+A comprehensive guide to building connector plugins for Krawall.
 
 ---
 
 ## 1. Overview
 
-Plugins extend Token-Burn's base connectors with additional capabilities. A connector handles the raw protocol (HTTP, WebSocket, gRPC, SSE), while a plugin layers on behavior like:
+Plugins extend Krawall's base connectors with additional capabilities. A connector handles the raw protocol (HTTP, WebSocket, gRPC, SSE), while a plugin layers on behavior like:
 
 - **Conversation history** — maintaining a `messages[]` array across turns
 - **Authentication flows** — multi-step auth handshakes before the main API
@@ -496,7 +496,7 @@ Set the persona via the `X-Persona` header when sending requests.
 
 ## 9. Examples Walkthrough
 
-Token-Burn ships with four built-in plugins. Each demonstrates a different pattern.
+Krawall ships with four built-in plugins. Each demonstrates a different pattern.
 
 ### OpenAI Plugin (`openai-plugin.ts`)
 

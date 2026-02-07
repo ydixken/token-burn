@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/client";
 import { z } from "zod";
 
 const DEFAULT_SETTINGS: Record<string, { value: unknown; category: string }> = {
-  "general.appName": { value: "Token-Burn", category: "general" },
+  "general.appName": { value: "Krawall", category: "general" },
   "general.defaultTimeout": { value: 30000, category: "general" },
   "general.maxConcurrentSessions": { value: 10, category: "general" },
   "general.logRetentionDays": { value: 30, category: "general" },

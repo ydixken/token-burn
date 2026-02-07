@@ -31,7 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   CONTEXT: "Context",
   PERFORMANCE: "Performance",
   LOGIC: "Logic",
-  TOKEN_BURN: "Token Burn",
+  KRAWALL: "Krawall",
   ATTACK_SURFACE: "Attack Surface",
 };
 

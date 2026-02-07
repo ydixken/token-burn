@@ -1,4 +1,4 @@
-// Prisma Schema for Token-Burn Chatbot Testing Platform
+// Prisma Schema for Krawall Chatbot Testing Platform
 
 generator client {
   provider = "prisma-client-js"

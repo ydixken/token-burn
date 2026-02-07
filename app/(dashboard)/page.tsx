@@ -428,7 +428,7 @@ export default function DashboardPage() {
   const [guideCompleted, setGuideCompleted] = useState(false);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("tokenburn-guide-v2");
+      const saved = localStorage.getItem("krawall-guide-v2");
       if (saved) {
         const parsed = JSON.parse(saved);
         setGuideCompleted(parsed.completedAt != null);

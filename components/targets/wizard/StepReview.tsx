@@ -100,7 +100,7 @@ export default function StepReview({ data, onBack }: StepReviewProps) {
       const response = await fetch(`/api/targets/${savedTargetId}/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ testMessage: "Hello, this is a connection test from Token-Burn." }),
+        body: JSON.stringify({ testMessage: "Hello, this is a connection test from Krawall." }),
       });
 
       const result = await response.json();

@@ -1,4 +1,4 @@
-# Token-Burn: Chatbot Testing Platform
+# Krawall: Chatbot Testing Platform
 
 A sophisticated platform for stress-testing conversational AI systems through realistic, high-volume conversation flows with repetitive, verbose prompts.
 
@@ -6,7 +6,7 @@ A sophisticated platform for stress-testing conversational AI systems through re
 
 - **Interactive Setup Wizard**: 8-step guided configurator with inline forms, provider presets, and live connection testing at `/guide`
 - **Provider Presets**: One-click setup for OpenAI, Anthropic, Google Gemini, Azure OpenAI, Ollama, custom HTTP/WebSocket/gRPC endpoints
-- **12 Scenario Templates**: Pre-built test scenarios across categories — Stress Test, Edge Case, Context, Performance, Logic, Token Burn, and Attack Surface
+- **12 Scenario Templates**: Pre-built test scenarios across categories — Stress Test, Edge Case, Context, Performance, Logic, Krawall, and Attack Surface
 - **Multi-Protocol Support**: HTTP/REST, WebSockets, gRPC, Server-Sent Events
 - **Flexible Templating**: JSON-based request/response mapping with Zod validation
 - **Visual Scenario Builder**: Drag-and-drop flow editor with message, loop, delay, and conditional steps
@@ -39,7 +39,7 @@ A sophisticated platform for stress-testing conversational AI systems through re
 ## Project Structure
 
 ```
-token-burn/
+krawall/
 ├── app/                        # Next.js 16.1.6 App Router
 │   ├── (dashboard)/            # Dashboard routes (route group)
 │   │   ├── page.tsx            # / — Live dashboard with widgets
@@ -235,7 +235,7 @@ Each preset includes endpoint defaults, auth field definitions, request/response
 | Context | Conversation Context | Multi-turn memory testing |
 | Performance | Rapid Fire | Throughput benchmarking |
 | Logic | Branching Conversation | Conditional flow testing |
-| Token Burn | Long-Form Output | Token consumption analysis |
+| Krawall | Long-Form Output | Token consumption analysis |
 | Attack Surface | E-Commerce Drain, Support Flood, Context Stuffer, Polite Requester | Security and abuse pattern testing |
 
 ### Worker Lifecycle

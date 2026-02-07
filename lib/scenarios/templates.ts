@@ -284,7 +284,7 @@ export const SCENARIO_TEMPLATES: ScenarioTemplate[] = [
     id: "long-form-output",
     name: "Long-Form Output Test",
     description: "Request long, detailed responses to maximize output tokens",
-    category: "TOKEN_BURN",
+    category: "KRAWALL",
     flowConfig: [
       {
         type: "message",

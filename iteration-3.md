@@ -182,7 +182,7 @@ Replace the current "Getting Started" card with a richer CTA that links to `/gui
 )}
 ```
 
-Also show a smaller persistent guide link when the user HAS targets but hasn't completed the guide (check localStorage `tokenburn-guide-v2`):
+Also show a smaller persistent guide link when the user HAS targets but hasn't completed the guide (check localStorage `krawall-guide-v2`):
 
 ```tsx
 {!loading && stats.totalTargets > 0 && !guideCompleted && (

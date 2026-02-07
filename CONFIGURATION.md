@@ -1,6 +1,6 @@
 # Configuration Guide
 
-Token-Burn is configured through environment variables. Copy `.env.example` to `.env` and adjust values as needed.
+Krawall is configured through environment variables. Copy `.env.example` to `.env` and adjust values as needed.
 
 ## Environment Variables
 
@@ -14,10 +14,10 @@ Token-Burn is configured through environment variables. Copy `.env.example` to `
 
 ```bash
 # Development
-DATABASE_URL="postgresql://tokenburn:tokenburn@localhost:5432/tokenburn"
+DATABASE_URL="postgresql://krawall:krawall@localhost:5432/krawall"
 
 # Production (use strong credentials)
-DATABASE_URL="postgresql://tokenburn:S3cureP@ss@db.example.com:5432/tokenburn?sslmode=require"
+DATABASE_URL="postgresql://krawall:S3cureP@ss@db.example.com:5432/krawall?sslmode=require"
 ```
 
 ### Redis
@@ -75,7 +75,7 @@ Located at `infra/docker-compose.yml`. Default service configuration:
 
 | Service | Image | Port | Credentials |
 |---------|-------|------|-------------|
-| PostgreSQL | postgres:16-alpine | 5432 | tokenburn / tokenburn |
+| PostgreSQL | postgres:16-alpine | 5432 | krawall / krawall |
 | Redis | redis:7-alpine | 6379 | No password |
 | Redis Commander | rediscommander/redis-commander | 8081 | — |
 
@@ -199,10 +199,10 @@ Webhooks send HTTP POST notifications when events occur.
 
 ### Payload Signing
 
-Webhook payloads are signed with HMAC-SHA256. Verify using the `X-TokenBurn-Signature` header:
+Webhook payloads are signed with HMAC-SHA256. Verify using the `X-Krawall-Signature` header:
 
 ```
-X-TokenBurn-Signature: t=<timestamp>,v1=<hex-digest>
+X-Krawall-Signature: t=<timestamp>,v1=<hex-digest>
 ```
 
 ### Retry Policy

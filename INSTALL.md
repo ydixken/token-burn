@@ -14,7 +14,7 @@
 ```bash
 # 1. Clone the repository
 git clone <repository-url>
-cd token-burn
+cd krawall
 
 # 2. Install dependencies
 pnpm install

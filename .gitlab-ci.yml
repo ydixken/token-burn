@@ -1,4 +1,4 @@
-# GitLab CI/CD Pipeline for Token-Burn
+# GitLab CI/CD Pipeline for Krawall
 # Automated testing, building, and deployment
 
 image: node:20-alpine
@@ -41,10 +41,10 @@ test:unit:
     - postgres:16-alpine
     - redis:7-alpine
   variables:
-    POSTGRES_DB: token_burn_test
+    POSTGRES_DB: krawall_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
-    DATABASE_URL: postgresql://postgres:postgres@postgres:5432/token_burn_test
+    DATABASE_URL: postgresql://postgres:postgres@postgres:5432/krawall_test
     REDIS_URL: redis://redis:6379
   script:
     - pnpm run test
@@ -105,10 +105,10 @@ deploy:staging:
     - chmod 700 ~/.ssh
     - ssh-keyscan $STAGING_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh $STAGING_USER@$STAGING_HOST "cd /opt/token-burn && docker compose -f infra/docker-compose.prod.yml pull && docker compose -f infra/docker-compose.prod.yml up -d"
+    - ssh $STAGING_USER@$STAGING_HOST "cd /opt/krawall && docker compose -f infra/docker-compose.prod.yml pull && docker compose -f infra/docker-compose.prod.yml up -d"
   environment:
     name: staging
-    url: https://staging.token-burn.example.com
+    url: https://staging.krawall.example.com
   only:
     - main
 
@@ -124,10 +124,10 @@ deploy:production:
     - chmod 700 ~/.ssh
     - ssh-keyscan $PRODUCTION_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh $PRODUCTION_USER@$PRODUCTION_HOST "cd /opt/token-burn && docker compose -f infra/docker-compose.prod.yml pull && docker compose -f infra/docker-compose.prod.yml up -d"
+    - ssh $PRODUCTION_USER@$PRODUCTION_HOST "cd /opt/krawall && docker compose -f infra/docker-compose.prod.yml pull && docker compose -f infra/docker-compose.prod.yml up -d"
   environment:
     name: production
-    url: https://token-burn.example.com
+    url: https://krawall.example.com
   when: manual
   only:
     - main

@@ -1,6 +1,6 @@
-# Token-Burn API Documentation
+# Krawall API Documentation
 
-Complete reference for all API endpoints in the Token-Burn platform.
+Complete reference for all API endpoints in the Krawall platform.
 
 ## Base URL
 
@@ -900,7 +900,7 @@ Webhook notification system for receiving real-time event callbacks when session
 
 Events: `session.completed`, `session.failed`, `session.cancelled`, `metric.threshold`
 
-Payloads are signed with HMAC-SHA256 via the `X-TokenBurn-Signature` header.
+Payloads are signed with HMAC-SHA256 via the `X-Krawall-Signature` header.
 
 ---
 

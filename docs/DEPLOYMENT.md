@@ -1,6 +1,6 @@
-# Token-Burn Deployment Guide
+# Krawall Deployment Guide
 
-Complete guide for deploying Token-Burn to production environments.
+Complete guide for deploying Krawall to production environments.
 
 ## Table of Contents
 
@@ -57,7 +57,7 @@ docker compose version
 
 ### Required Variables
 
-Create `/opt/token-burn/.env` with the following:
+Create `/opt/krawall/.env` with the following:
 
 ```bash
 # Application
@@ -67,10 +67,10 @@ NEXTAUTH_URL=https://yourdomain.com
 NEXTAUTH_SECRET=your-super-secret-key-here
 
 # Database
-POSTGRES_DB=token_burn
+POSTGRES_DB=krawall
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your-strong-password
-DATABASE_URL=postgresql://postgres:your-strong-password@postgres:5432/token_burn
+DATABASE_URL=postgresql://postgres:your-strong-password@postgres:5432/krawall
 
 # Redis
 REDIS_URL=redis://redis:6379
@@ -105,8 +105,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```bash
 cd /opt
-sudo git clone https://github.com/yourusername/token-burn.git
-cd token-burn
+sudo git clone https://github.com/yourusername/krawall.git
+cd krawall
 ```
 
 ### Build Images
@@ -122,10 +122,10 @@ docker compose -f infra/docker-compose.prod.yml pull
 
 ```bash
 # Build application
-docker build -t token-burn:latest -f docker/Dockerfile .
+docker build -t krawall:latest -f docker/Dockerfile .
 
 # Build worker
-docker build -t token-burn-worker:latest -f docker/Dockerfile.worker .
+docker build -t krawall-worker:latest -f docker/Dockerfile.worker .
 ```
 
 ### Start Services
@@ -173,12 +173,12 @@ pnpm prisma db seed
 ```bash
 # Backup database
 docker compose -f infra/docker-compose.prod.yml exec postgres \
-  pg_dump -U postgres token_burn > backup_$(date +%Y%m%d_%H%M%S).sql
+  pg_dump -U postgres krawall > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Restore from backup
 cat backup_20260126_200000.sql | \
   docker compose -f infra/docker-compose.prod.yml exec -T postgres \
-  psql -U postgres token_burn
+  psql -U postgres krawall
 ```
 
 ---
@@ -196,27 +196,27 @@ sudo certbot certonly --standalone -d yourdomain.com
 
 # Copy certificates
 sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem \
-  /opt/token-burn/docker/ssl/cert.pem
+  /opt/krawall/docker/ssl/cert.pem
 sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem \
-  /opt/token-burn/docker/ssl/key.pem
+  /opt/krawall/docker/ssl/key.pem
 
 # Set permissions
-sudo chmod 644 /opt/token-burn/docker/ssl/cert.pem
-sudo chmod 600 /opt/token-burn/docker/ssl/key.pem
+sudo chmod 644 /opt/krawall/docker/ssl/cert.pem
+sudo chmod 600 /opt/krawall/docker/ssl/key.pem
 ```
 
 ### Auto-Renewal
 
 ```bash
 # Add renewal hook
-sudo bash -c 'cat > /etc/letsencrypt/renewal-hooks/deploy/token-burn.sh << EOF
+sudo bash -c 'cat > /etc/letsencrypt/renewal-hooks/deploy/krawall.sh << EOF
 #!/bin/bash
-cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem /opt/token-burn/docker/ssl/cert.pem
-cp /etc/letsencrypt/live/yourdomain.com/privkey.pem /opt/token-burn/docker/ssl/key.pem
-docker compose -f /opt/token-burn/infra/docker-compose.prod.yml restart nginx
+cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem /opt/krawall/docker/ssl/cert.pem
+cp /etc/letsencrypt/live/yourdomain.com/privkey.pem /opt/krawall/docker/ssl/key.pem
+docker compose -f /opt/krawall/infra/docker-compose.prod.yml restart nginx
 EOF'
 
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/token-burn.sh
+sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/krawall.sh
 
 # Test renewal
 sudo certbot renew --dry-run
@@ -234,7 +234,7 @@ curl https://yourdomain.com/api/health
 
 # Database connectivity
 docker compose -f infra/docker-compose.prod.yml exec postgres \
-  pg_isready -U postgres -d token_burn
+  pg_isready -U postgres -d krawall
 
 # Redis connectivity
 docker compose -f infra/docker-compose.prod.yml exec redis redis-cli ping
@@ -242,7 +242,7 @@ docker compose -f infra/docker-compose.prod.yml exec redis redis-cli ping
 
 ### Automated Monitoring
 
-Create `/opt/token-burn/healthcheck.sh`:
+Create `/opt/krawall/healthcheck.sh`:
 
 ```bash
 #!/bin/bash
@@ -255,7 +255,7 @@ if ! curl -sf https://yourdomain.com/api/health > /dev/null; then
 fi
 
 # Check worker queue
-QUEUE_SIZE=$(docker compose -f /opt/token-burn/infra/docker-compose.prod.yml \
+QUEUE_SIZE=$(docker compose -f /opt/krawall/infra/docker-compose.prod.yml \
   exec -T redis redis-cli LLEN bull:session-execution:wait)
 
 if [ "$QUEUE_SIZE" -gt 1000 ]; then
@@ -267,7 +267,7 @@ echo "OK: All health checks passed"
 
 Add to crontab:
 ```bash
-*/5 * * * * /opt/token-burn/healthcheck.sh >> /var/log/token-burn-health.log 2>&1
+*/5 * * * * /opt/krawall/healthcheck.sh >> /var/log/krawall-health.log 2>&1
 ```
 
 ---
@@ -297,20 +297,20 @@ docker compose -f infra/docker-compose.prod.yml logs --no-color > logs_$(date +%
 docker stats
 
 # Disk usage
-df -h /opt/token-burn
-du -sh /opt/token-burn/logs/
+df -h /opt/krawall
+du -sh /opt/krawall/logs/
 
 # Database size
 docker compose -f infra/docker-compose.prod.yml exec postgres \
-  psql -U postgres -d token_burn -c "SELECT pg_size_pretty(pg_database_size('token_burn'));"
+  psql -U postgres -d krawall -c "SELECT pg_size_pretty(pg_database_size('krawall'));"
 ```
 
 ### Log Rotation
 
-Create `/etc/logrotate.d/token-burn`:
+Create `/etc/logrotate.d/krawall`:
 
 ```
-/opt/token-burn/logs/*.jsonl {
+/opt/krawall/logs/*.jsonl {
     daily
     rotate 30
     compress
@@ -319,7 +319,7 @@ Create `/etc/logrotate.d/token-burn`:
     create 0644 root root
     sharedscripts
     postrotate
-        docker compose -f /opt/token-burn/infra/docker-compose.prod.yml restart app
+        docker compose -f /opt/krawall/infra/docker-compose.prod.yml restart app
     endscript
 }
 ```
@@ -330,23 +330,23 @@ Create `/etc/logrotate.d/token-burn`:
 
 ### Automated Backups
 
-Create `/opt/token-burn/backup.sh`:
+Create `/opt/krawall/backup.sh`:
 
 ```bash
 #!/bin/bash
 set -e
 
-BACKUP_DIR="/opt/backups/token-burn"
+BACKUP_DIR="/opt/backups/krawall"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 mkdir -p $BACKUP_DIR
 
 # Backup database
-docker compose -f /opt/token-burn/infra/docker-compose.prod.yml exec -T postgres \
-  pg_dump -U postgres token_burn | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+docker compose -f /opt/krawall/infra/docker-compose.prod.yml exec -T postgres \
+  pg_dump -U postgres krawall | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
 # Backup logs
-tar -czf $BACKUP_DIR/logs_$DATE.tar.gz /opt/token-burn/logs/
+tar -czf $BACKUP_DIR/logs_$DATE.tar.gz /opt/krawall/logs/
 
 # Keep only last 7 days
 find $BACKUP_DIR -name "*.gz" -mtime +7 -delete
@@ -356,7 +356,7 @@ echo "Backup completed: $DATE"
 
 Schedule daily backups:
 ```bash
-0 2 * * * /opt/token-burn/backup.sh >> /var/log/token-burn-backup.log 2>&1
+0 2 * * * /opt/krawall/backup.sh >> /var/log/krawall-backup.log 2>&1
 ```
 
 ### Disaster Recovery
@@ -366,12 +366,12 @@ Schedule daily backups:
 docker compose -f infra/docker-compose.prod.yml down
 
 # Restore database
-gunzip < /opt/backups/token-burn/db_20260126_020000.sql.gz | \
+gunzip < /opt/backups/krawall/db_20260126_020000.sql.gz | \
   docker compose -f infra/docker-compose.prod.yml exec -T postgres \
-  psql -U postgres token_burn
+  psql -U postgres krawall
 
 # Restore logs
-tar -xzf /opt/backups/token-burn/logs_20260126_020000.tar.gz -C /
+tar -xzf /opt/backups/krawall/logs_20260126_020000.tar.gz -C /
 
 # Restart services
 docker compose -f infra/docker-compose.prod.yml up -d
@@ -403,7 +403,7 @@ docker compose -f infra/docker-compose.prod.yml ps postgres
 
 # Test connection
 docker compose -f infra/docker-compose.prod.yml exec postgres \
-  psql -U postgres -d token_burn -c "SELECT 1;"
+  psql -U postgres -d krawall -c "SELECT 1;"
 
 # Restart database
 docker compose -f infra/docker-compose.prod.yml restart postgres
@@ -444,10 +444,10 @@ docker compose -f infra/docker-compose.prod.yml restart worker
 
 ```bash
 # Verify certificate files exist
-ls -l /opt/token-burn/docker/ssl/
+ls -l /opt/krawall/docker/ssl/
 
 # Check certificate validity
-openssl x509 -in /opt/token-burn/docker/ssl/cert.pem -text -noout
+openssl x509 -in /opt/krawall/docker/ssl/cert.pem -text -noout
 
 # Restart nginx
 docker compose -f infra/docker-compose.prod.yml restart nginx
@@ -478,7 +478,7 @@ docker compose -f infra/docker-compose.prod.yml up -d --scale worker=4
 
 In `.env`:
 ```bash
-DATABASE_URL=postgresql://postgres:password@postgres:5432/token_burn?connection_limit=20
+DATABASE_URL=postgresql://postgres:password@postgres:5432/krawall?connection_limit=20
 ```
 
 ### Vertical Scaling
@@ -516,8 +516,8 @@ Before going live, ensure:
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/yourusername/token-burn/issues
-- Documentation: https://github.com/yourusername/token-burn/tree/main/docs
+- GitHub Issues: https://github.com/yourusername/krawall/issues
+- Documentation: https://github.com/yourusername/krawall/tree/main/docs
 
 ---
 

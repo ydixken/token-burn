@@ -159,9 +159,9 @@ export default function SettingsPage() {
           </h3>
           <Input
             label="Application Name"
-            value={String(getValue("general.appName", "Token-Burn"))}
+            value={String(getValue("general.appName", "Krawall"))}
             onChange={(e) => setValue("general.appName", e.target.value)}
-            placeholder="Token-Burn"
+            placeholder="Krawall"
           />
           <Input
             label="Default Timeout (ms)"

@@ -1,6 +1,6 @@
 # Template & Preset Reference
 
-This document covers Token-Burn's template system: how request and response templates work, available provider presets, and how to develop connector plugins.
+This document covers Krawall's template system: how request and response templates work, available provider presets, and how to develop connector plugins.
 
 ---
 
@@ -18,7 +18,7 @@ This document covers Token-Burn's template system: how request and response temp
 
 ## Overview
 
-Templates are the mechanism Token-Burn uses to communicate with any chatbot or LLM API. Every target needs two templates:
+Templates are the mechanism Krawall uses to communicate with any chatbot or LLM API. Every target needs two templates:
 
 1. **Request Template** — Defines how to build the outgoing API request by injecting the test message into the correct location in the JSON payload.
 2. **Response Template** — Defines how to extract the chatbot's reply (and optionally token usage) from the API response.
@@ -29,7 +29,7 @@ Templates use a JSON path syntax to reference nested fields.
 
 ## JSON Path Syntax
 
-Token-Burn supports a simplified JSON path syntax for both request and response templates.
+Krawall supports a simplified JSON path syntax for both request and response templates.
 
 ### Format
 
@@ -64,7 +64,7 @@ Paths follow the pattern: `field.nestedField.arrayIndex.deeperField`
 
 ## Request Templates
 
-A request template tells Token-Burn how to construct the JSON payload for each API call.
+A request template tells Krawall how to construct the JSON payload for each API call.
 
 ### Fields
 
@@ -123,7 +123,7 @@ Sending `"Hello"` produces:
 
 ## Response Templates
 
-A response template tells Token-Burn how to extract the chatbot reply from the API response.
+A response template tells Krawall how to extract the chatbot reply from the API response.
 
 ### Fields
 
@@ -278,7 +278,7 @@ Each preset includes:
 
 ## Plugin Development Guide
 
-Token-Burn's connector system is extensible through plugins. A connector plugin implements a protocol-specific communication layer by extending the `BaseConnector` abstract class.
+Krawall's connector system is extensible through plugins. A connector plugin implements a protocol-specific communication layer by extending the `BaseConnector` abstract class.
 
 ### Architecture
 

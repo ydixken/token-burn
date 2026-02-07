@@ -428,11 +428,11 @@ Install models with \`ollama pull <model>\`:
 4. Define the response template with the JSON path to extract responses
 
 ### Request Template
-The \`messagePath\` tells Token-Burn where to insert the test message.
+The \`messagePath\` tells Krawall where to insert the test message.
 The \`structure\` is the base JSON payload sent to your API.
 
 ### Response Template
-The \`contentPath\` tells Token-Burn where to find the response text.
+The \`contentPath\` tells Krawall where to find the response text.
 The \`tokenUsagePath\` (optional) extracts token usage metrics.
 The \`errorPath\` (optional) extracts error messages from failed requests.`,
     exampleResponse: {
