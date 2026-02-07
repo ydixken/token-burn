@@ -16,36 +16,62 @@ Currently, the API does not require authentication. This will be added in a futu
 
 ## Health Check
 
-### GET /health
+### GET /api/health
 
-Check API health status.
+Check the health of all services (API, database, Redis).
 
-**Response**
+**Response (200 — all healthy)**
 
 ```json
 {
-  "status": "ok",
-  "timestamp": "2026-01-26T20:00:00.000Z",
-  "version": "1.0.0"
+  "status": "healthy",
+  "timestamp": "2026-02-07T00:00:00.000Z",
+  "services": {
+    "api": {
+      "status": "healthy",
+      "responseTimeMs": 2
+    },
+    "database": {
+      "status": "healthy",
+      "responseTimeMs": 5,
+      "error": null
+    },
+    "redis": {
+      "status": "healthy",
+      "responseTimeMs": 3,
+      "error": null
+    }
+  }
 }
 ```
+
+**Status Codes**
+
+| Code | Meaning |
+|------|---------|
+| 200 | All services healthy, or degraded (Redis unhealthy) |
+| 503 | Database unhealthy |
+
+The top-level `status` field is one of: `"healthy"`, `"degraded"`, `"unhealthy"`.
 
 ---
 
 ## Targets
 
-### GET /targets
+Targets represent chatbot endpoints to stress-test.
 
-List all target chatbot endpoints.
+### GET /api/targets
+
+List all targets. Sensitive fields (`authConfig`, templates) are excluded from the list response.
 
 **Query Parameters**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| limit | number | Maximum number of results (default: 100) |
-| offset | number | Pagination offset (default: 0) |
+| isActive | string | Filter by active status: `"true"` or `"false"` |
+| connectorType | string | Filter by connector type (e.g. `HTTP_REST`) |
 
-**Response**
+**Response (200)**
 
 ```json
 {
@@ -58,45 +84,61 @@ List all target chatbot endpoints.
       "connectorType": "HTTP_REST",
       "endpoint": "https://api.example.com/chat",
       "authType": "BEARER_TOKEN",
-      "createdAt": "2026-01-26T20:00:00.000Z"
+      "isActive": true,
+      "createdAt": "2026-01-26T20:00:00.000Z",
+      "updatedAt": "2026-01-26T20:00:00.000Z"
     }
   ],
-  "pagination": {
-    "total": 1,
-    "limit": 100,
-    "offset": 0,
-    "hasMore": false
-  }
+  "count": 1
 }
 ```
 
-### POST /targets
+### POST /api/targets
 
-Create a new target.
+Create a new target. Auth credentials are encrypted at rest (AES-256-GCM).
 
 **Request Body**
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Target name (1-100 chars) |
+| description | string | No | Target description |
+| connectorType | ConnectorType | Yes | Protocol type |
+| endpoint | string (URL) | Yes | Target endpoint URL |
+| authType | AuthType | Yes | Authentication method |
+| authConfig | object | Yes | Auth credentials (encrypted before storage) |
+| requestTemplate | RequestTemplate | Yes | How to wrap messages |
+| responseTemplate | ResponseTemplate | Yes | How to extract responses |
+| protocolConfig | object | No | Protocol-specific settings |
+| isActive | boolean | No | Active status (default: `true`) |
+
+**RequestTemplate**
+
 ```json
 {
-  "name": "My Chatbot",
-  "description": "Production chatbot API",
-  "connectorType": "HTTP_REST",
-  "endpoint": "https://api.example.com/chat",
-  "authType": "BEARER_TOKEN",
-  "authConfig": {
-    "token": "your-api-token"
+  "messagePath": "$.messages[0].content",
+  "structure": {
+    "model": "gpt-4",
+    "messages": [{ "role": "user", "content": "" }]
   },
-  "requestTemplate": {
-    "messagePath": "message",
-    "format": "json"
-  },
-  "responseTemplate": {
-    "contentPath": "response.text"
-  }
+  "variables": {}
 }
 ```
 
-**Response**
+**ResponseTemplate**
+
+```json
+{
+  "contentPath": "$.choices[0].message.content",
+  "tokenUsagePath": "$.usage",
+  "errorPath": "$.error.message",
+  "transform": "none"
+}
+```
+
+The `transform` field accepts: `"none"`, `"markdown"`, `"html"`.
+
+**Response (201)**
 
 ```json
 {
@@ -104,39 +146,120 @@ Create a new target.
   "data": {
     "id": "clwxyz123",
     "name": "My Chatbot",
-    ...
+    "description": "Production chatbot API",
+    "connectorType": "HTTP_REST",
+    "endpoint": "https://api.example.com/chat",
+    "authType": "BEARER_TOKEN",
+    "isActive": true,
+    "createdAt": "2026-01-26T20:00:00.000Z"
+  },
+  "message": "Target created successfully"
+}
+```
+
+### GET /api/targets/:id
+
+Get a target by ID. Returns full details including templates, decrypted (masked) auth config, and relationship counts.
+
+**Response (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clwxyz123",
+    "name": "My Chatbot",
+    "description": "Production chatbot API",
+    "connectorType": "HTTP_REST",
+    "endpoint": "https://api.example.com/chat",
+    "authType": "BEARER_TOKEN",
+    "authConfig": {
+      "token": "your...en-1"
+    },
+    "requestTemplate": { "..." : "..." },
+    "responseTemplate": { "..." : "..." },
+    "protocolConfig": {},
+    "isActive": true,
+    "sessionCount": 5,
+    "scenarioCount": 2,
+    "createdAt": "2026-01-26T20:00:00.000Z",
+    "updatedAt": "2026-01-26T20:00:00.000Z"
   }
 }
 ```
 
-### GET /targets/:id
+Sensitive auth values are masked (e.g. `"your...en-1"`).
 
-Get a specific target by ID.
+### PUT /api/targets/:id
 
-### PUT /targets/:id
+Update a target. All fields are optional.
 
-Update a target.
+**Request Body** — Same fields as POST, all optional.
 
-### DELETE /targets/:id
+**Response (200)**
 
-Delete a target.
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clwxyz123",
+    "name": "Updated Name",
+    "description": "Updated description",
+    "connectorType": "HTTP_REST",
+    "endpoint": "https://api.example.com/chat",
+    "authType": "BEARER_TOKEN",
+    "isActive": true,
+    "updatedAt": "2026-02-07T00:00:00.000Z"
+  },
+  "message": "Target updated successfully"
+}
+```
+
+### DELETE /api/targets/:id
+
+Delete a target. Fails if the target has existing sessions.
+
+**Response (200)**
+
+```json
+{
+  "success": true,
+  "message": "Target deleted successfully"
+}
+```
+
+**Response (400) — Has sessions**
+
+```json
+{
+  "success": false,
+  "error": "Cannot delete target with existing sessions",
+  "message": "This target has 5 session(s). Delete sessions first or archive the target instead."
+}
+```
+
+### POST /api/targets/:id/test
+
+> **Coming Soon** — Connection test / dry-run endpoint. Will verify that the target endpoint is reachable and authentication is valid without starting a full session.
 
 ---
 
 ## Scenarios
 
-### GET /scenarios
+Scenarios define test flows with message sequences, loops, conditionals, and delays.
 
-List all test scenarios.
+### GET /api/scenarios
+
+List all scenarios.
 
 **Query Parameters**
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| targetId | string | Filter by target ID |
 | category | string | Filter by category |
+| isActive | string | Filter by active status: `"true"` or `"false"` |
 
-**Response**
+**Response (200)**
 
 ```json
 {
@@ -146,51 +269,150 @@ List all test scenarios.
       "id": "clwxyz456",
       "name": "Stress Test",
       "description": "High-volume repetitive prompts",
-      "category": "STRESS_TEST",
-      "targetId": "clwxyz123",
-      "flowConfig": [...],
-      "verbosityLevel": "verbose",
+      "category": "stress",
       "repetitions": 5,
       "concurrency": 1,
-      "createdAt": "2026-01-26T20:00:00.000Z"
+      "verbosityLevel": "verbose",
+      "isActive": true,
+      "createdAt": "2026-01-26T20:00:00.000Z",
+      "updatedAt": "2026-01-26T20:00:00.000Z",
+      "_count": {
+        "sessions": 3
+      }
     }
-  ]
+  ],
+  "count": 1
 }
 ```
 
-### POST /scenarios
+### POST /api/scenarios
 
 Create a new scenario.
 
 **Request Body**
 
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Scenario name (1-100 chars) |
+| description | string | No | Description |
+| category | string | No | Category label |
+| flowConfig | FlowStep[] | Yes | Array of flow steps |
+| repetitions | integer | No | 1-1000 (default: 1) |
+| concurrency | integer | No | 1-100 (default: 1) |
+| delayBetweenMs | integer | No | 0-60000 ms (default: 0) |
+| verbosityLevel | string | No | Default: `"normal"` |
+| messageTemplates | object | No | Template variables |
+| isActive | boolean | No | Default: `true` |
+
+**FlowStep**
+
 ```json
 {
-  "name": "Stress Test",
-  "description": "High-volume repetitive prompts",
-  "category": "STRESS_TEST",
-  "targetId": "clwxyz123",
-  "flowConfig": [
-    {
-      "type": "message",
-      "content": "Hello, can you help me?"
+  "id": "step1",
+  "type": "message",
+  "config": {
+    "message": "Hello, can you help me?"
+  },
+  "next": "step2"
+}
+```
+
+Flow step types: `"message"`, `"delay"`, `"conditional"`, `"loop"`.
+
+**Response (201)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clwxyz456",
+    "name": "Stress Test",
+    "description": "High-volume repetitive prompts",
+    "category": "stress",
+    "repetitions": 5,
+    "concurrency": 1,
+    "verbosityLevel": "verbose",
+    "createdAt": "2026-01-26T20:00:00.000Z"
+  },
+  "message": "Scenario created successfully"
+}
+```
+
+### GET /api/scenarios/:id
+
+Get a scenario by ID with target info and session count.
+
+**Response (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clwxyz456",
+    "name": "Stress Test",
+    "description": "High-volume repetitive prompts",
+    "category": "stress",
+    "flowConfig": [...],
+    "repetitions": 5,
+    "concurrency": 1,
+    "delayBetweenMs": 1000,
+    "verbosityLevel": "verbose",
+    "messageTemplates": {},
+    "isActive": true,
+    "target": {
+      "id": "clwxyz123",
+      "name": "My Chatbot"
     },
-    {
-      "type": "loop",
-      "iterations": 10,
-      "steps": [
-        {
-          "type": "message",
-          "content": "Please explain that again in more detail."
-        }
-      ]
-    }
-  ],
-  "verbosityLevel": "verbose",
-  "repetitions": 5,
-  "concurrency": 1,
-  "delayBetweenMs": 1000,
-  "messageTemplates": {}
+    "sessionCount": 3,
+    "createdAt": "2026-01-26T20:00:00.000Z",
+    "updatedAt": "2026-01-26T20:00:00.000Z"
+  }
+}
+```
+
+### PUT /api/scenarios/:id
+
+Update a scenario. All fields are optional.
+
+**Response (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "clwxyz456",
+    "name": "Updated Scenario",
+    "description": "Updated description",
+    "category": "stress",
+    "repetitions": 10,
+    "concurrency": 2,
+    "verbosityLevel": "verbose",
+    "updatedAt": "2026-02-07T00:00:00.000Z"
+  },
+  "message": "Scenario updated successfully"
+}
+```
+
+### DELETE /api/scenarios/:id
+
+Delete a scenario. Fails if the scenario has existing sessions.
+
+**Response (200)**
+
+```json
+{
+  "success": true,
+  "message": "Scenario deleted successfully"
+}
+```
+
+**Response (400) — Has sessions**
+
+```json
+{
+  "success": false,
+  "error": "Cannot delete scenario with existing sessions",
+  "message": "This scenario has 3 session(s). Delete sessions first or archive the scenario instead."
 }
 ```
 
@@ -198,9 +420,11 @@ Create a new scenario.
 
 ## Sessions
 
-### GET /sessions
+Sessions represent individual test execution runs.
 
-List all test sessions.
+### GET /api/sessions
+
+List all sessions with optional filtering and pagination.
 
 **Query Parameters**
 
@@ -208,13 +432,11 @@ List all test sessions.
 |-----------|------|-------------|
 | targetId | string | Filter by target ID |
 | scenarioId | string | Filter by scenario ID |
-| status | string | Filter by status (PENDING, QUEUED, RUNNING, COMPLETED, FAILED) |
-| startDate | string | ISO date string (inclusive) |
-| endDate | string | ISO date string (inclusive) |
-| limit | number | Maximum results (default: 100) |
+| status | string | Filter by status (PENDING, QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED) |
+| limit | number | Maximum results (default: 50) |
 | offset | number | Pagination offset (default: 0) |
 
-**Response**
+**Response (200)**
 
 ```json
 {
@@ -227,31 +449,29 @@ List all test sessions.
       "status": "COMPLETED",
       "startedAt": "2026-01-26T20:00:00.000Z",
       "completedAt": "2026-01-26T20:05:00.000Z",
-      "summaryMetrics": {
-        "messageCount": 50,
-        "totalTokens": 5000,
-        "avgResponseTimeMs": 250,
-        "errorCount": 0,
-        "errorRate": 0
+      "executionConfig": { "..." : "..." },
+      "summaryMetrics": { "..." : "..." },
+      "target": {
+        "name": "My Chatbot",
+        "connectorType": "HTTP_REST"
+      },
+      "scenario": {
+        "name": "Stress Test"
       }
     }
   ],
   "pagination": {
     "total": 1,
-    "limit": 100,
+    "limit": 50,
     "offset": 0,
     "hasMore": false
   }
 }
 ```
 
-### GET /sessions/:id
+### GET /api/sessions/:id/stream
 
-Get session details.
-
-### GET /sessions/:id/stream
-
-Stream live logs via Server-Sent Events (SSE).
+Stream live session logs via Server-Sent Events (SSE).
 
 **Response Stream**
 
@@ -269,20 +489,32 @@ data: {"type":"complete","status":"COMPLETED"}
 
 ## Execute
 
-### POST /execute
+### POST /api/execute
 
-Fire-and-forget session execution. Queues a session for background processing.
+Fire-and-forget session execution. Creates a session record, queues a BullMQ job, and returns immediately with the session ID.
 
 **Request Body**
 
-```json
-{
-  "targetId": "clwxyz123",
-  "scenarioId": "clwxyz456"
-}
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| targetId | string (CUID) | Yes | Target to execute against |
+| scenarioId | string (CUID) | No | Scenario to run (provides flow config) |
+| executionConfig | object | No | Execution overrides |
 
-**Response**
+Either `scenarioId` or `executionConfig.customMessages` must be provided.
+
+**executionConfig**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| repetitions | integer | 1-1000 |
+| concurrency | integer | 1-10 |
+| delayBetweenMs | integer | 0-60000 ms |
+| messageTemplates | object | Template variable substitutions |
+| verbosityLevel | string | `"normal"`, `"verbose"`, or `"extreme"` |
+| customMessages | string[] | Ad-hoc messages (instead of scenario flow) |
+
+**Response (202)**
 
 ```json
 {
@@ -295,11 +527,29 @@ Fire-and-forget session execution. Queues a session for background processing.
 }
 ```
 
+**Response (400) — Missing messages**
+
+```json
+{
+  "success": false,
+  "error": "Either scenarioId or executionConfig.customMessages is required"
+}
+```
+
+**Response (404) — Target not found**
+
+```json
+{
+  "success": false,
+  "error": "Target not found"
+}
+```
+
 ---
 
 ## Metrics
 
-### GET /metrics
+### GET /api/metrics
 
 Query session metrics with filtering and aggregation.
 
@@ -312,11 +562,11 @@ Query session metrics with filtering and aggregation.
 | scenarioId | string | Filter by scenario ID |
 | startDate | string | ISO date string |
 | endDate | string | ISO date string |
-| status | string | Filter by status |
+| status | string | Filter by session status |
 | limit | number | Maximum results (1-1000) |
 | offset | number | Pagination offset |
 
-**Response**
+**Response (200)**
 
 ```json
 {
@@ -341,29 +591,30 @@ Query session metrics with filtering and aggregation.
 }
 ```
 
-### GET /metrics/export
+### GET /api/metrics/export
 
-Export session metrics.
+Export session metrics as CSV or JSON.
 
 **Query Parameters**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | sessionId | string | Yes | Session ID to export |
-| format | string | No | Export format: "csv" or "json" (default: "csv") |
+| format | string | No | `"csv"` (default) or `"json"` |
 
-**Response (CSV)**
+---
 
-```csv
-Session ID,Target,Scenario,Status,Started At,Completed At,Message Count,Total Tokens,Avg Response Time (ms),Min Response Time (ms),Max Response Time (ms),P50 Response Time (ms),P95 Response Time (ms),P99 Response Time (ms),Error Count,Error Rate (%),Tokens Per Second
-clwxyz789,My Chatbot,Stress Test,COMPLETED,2026-01-26T20:00:00.000Z,2026-01-26T20:05:00.000Z,50,5000,250,100,800,200,600,750,0,0,16.67
-```
+## Dashboard
+
+### GET /api/dashboard/stats
+
+> **Coming Soon** — Dashboard statistics endpoint. Will return aggregated metrics for the homepage widgets: total sessions, active targets, recent activity, token usage trends.
 
 ---
 
 ## Scheduled Jobs
 
-### GET /scheduled-jobs
+### GET /api/scheduled-jobs
 
 List all scheduled jobs.
 
@@ -373,7 +624,7 @@ List all scheduled jobs.
 |-----------|------|-------------|
 | scenarioId | string | Filter by scenario ID |
 
-**Response**
+**Response (200)**
 
 ```json
 {
@@ -395,7 +646,7 @@ List all scheduled jobs.
 }
 ```
 
-### POST /scheduled-jobs
+### POST /api/scheduled-jobs
 
 Create a scheduled job.
 
@@ -410,13 +661,23 @@ Create a scheduled job.
 }
 ```
 
-### PUT /scheduled-jobs?id=:id
+### PUT /api/scheduled-jobs?id=:id
 
 Update a scheduled job.
 
-### DELETE /scheduled-jobs?id=:id
+### DELETE /api/scheduled-jobs?id=:id
 
 Delete a scheduled job.
+
+---
+
+## Webhooks
+
+> **Coming Soon** — Webhook notification system for receiving real-time event callbacks when sessions complete, fail, or hit metric thresholds.
+>
+> Planned events: `session.completed`, `session.failed`, `session.cancelled`, `metric.threshold`
+>
+> Payloads will be signed with HMAC-SHA256 via the `X-TokenBurn-Signature` header.
 
 ---
 
@@ -424,34 +685,54 @@ Delete a scheduled job.
 
 All endpoints follow a consistent error response format:
 
+**Validation Error (400)**
+
 ```json
 {
   "success": false,
-  "error": "Error message",
-  "details": []
+  "error": "Validation error",
+  "details": [
+    {
+      "code": "invalid_type",
+      "expected": "string",
+      "received": "undefined",
+      "path": ["name"],
+      "message": "Required"
+    }
+  ]
+}
+```
+
+**Not Found (404)**
+
+```json
+{
+  "success": false,
+  "error": "Target not found"
+}
+```
+
+**Server Error (500)**
+
+```json
+{
+  "success": false,
+  "error": "Failed to fetch targets",
+  "message": "Connection refused"
 }
 ```
 
 **HTTP Status Codes**
 
-- `200` - Success
-- `400` - Bad Request (validation errors)
-- `404` - Not Found
-- `500` - Internal Server Error
-
----
-
-## Rate Limiting
-
-- API endpoints: 10 requests per second per IP
-- Execute endpoint: 1 request per second per IP (burst: 2)
-
-Rate limit headers:
-```
-X-RateLimit-Limit: 10
-X-RateLimit-Remaining: 9
-X-RateLimit-Reset: 1706299200
-```
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 202 | Accepted (queued for background processing) |
+| 400 | Bad Request (validation error, constraint violation) |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+| 503 | Service Unavailable (health check failure) |
 
 ---
 
@@ -461,9 +742,9 @@ X-RateLimit-Reset: 1706299200
 
 ```typescript
 enum ConnectorType {
-  HTTP_REST = "HTTP_REST",
-  WEBSOCKET = "WEBSOCKET",
-  GRPC = "GRPC",
+  HTTP_REST = "HTTP_REST"
+  WEBSOCKET = "WEBSOCKET"
+  GRPC = "GRPC"
   SSE = "SSE"
 }
 ```
@@ -472,10 +753,12 @@ enum ConnectorType {
 
 ```typescript
 enum AuthType {
-  NONE = "NONE",
-  API_KEY = "API_KEY",
-  BEARER_TOKEN = "BEARER_TOKEN",
-  BASIC = "BASIC"
+  NONE = "NONE"
+  BEARER_TOKEN = "BEARER_TOKEN"
+  API_KEY = "API_KEY"
+  BASIC_AUTH = "BASIC_AUTH"
+  CUSTOM_HEADER = "CUSTOM_HEADER"
+  OAUTH2 = "OAUTH2"
 }
 ```
 
@@ -483,11 +766,11 @@ enum AuthType {
 
 ```typescript
 enum SessionStatus {
-  PENDING = "PENDING",
-  QUEUED = "QUEUED",
-  RUNNING = "RUNNING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
+  PENDING = "PENDING"
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  COMPLETED = "COMPLETED"
+  FAILED = "FAILED"
   CANCELLED = "CANCELLED"
 }
 ```
@@ -495,20 +778,20 @@ enum SessionStatus {
 ### VerbosityLevel
 
 ```typescript
-type VerbosityLevel = "minimal" | "normal" | "verbose"
+type VerbosityLevel = "normal" | "verbose" | "extreme"
 ```
 
 ---
 
 ## Pagination
 
-All list endpoints support pagination:
+List endpoints support pagination via `limit` and `offset` query parameters:
 
 ```json
 {
   "pagination": {
     "total": 100,
-    "limit": 20,
+    "limit": 50,
     "offset": 0,
     "hasMore": true
   }
@@ -516,6 +799,7 @@ All list endpoints support pagination:
 ```
 
 To fetch the next page:
+
 ```
-GET /api/sessions?limit=20&offset=20
+GET /api/sessions?limit=50&offset=50
 ```

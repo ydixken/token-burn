@@ -6,11 +6,19 @@ A sophisticated platform for stress-testing conversational AI systems through re
 
 - **Multi-Protocol Support**: HTTP/REST, WebSockets, gRPC, Server-Sent Events
 - **Flexible Templating**: JSON-based request/response mapping with Zod validation
-- **Scenario Library**: Pre-built test scenarios for stress testing
-- **Fire-and-Forget Execution**: Async session processing via BullMQ
-- **Real-Time Metrics**: Response time, token usage, error rates, repetition detection
+- **Visual Scenario Builder**: Drag-and-drop flow editor with message, loop, delay, and conditional steps
+- **Fire-and-Forget Execution**: Async session processing via BullMQ with template variable substitution
+- **Conversation Context**: Stateful session memory with message history, conversation ID tracking, and context windowing
+- **Real-Time Metrics**: Response time, token usage, error rates, repetition detection, quality scoring
+- **A/B Comparison Testing**: Side-by-side comparison of chatbot responses with statistical analysis
+- **Multi-Target Batch Execution**: Run the same scenario against multiple targets in parallel
+- **Webhook Notifications**: HMAC-signed webhook delivery for session events with retry logic
+- **Rate Limit Simulation**: Token bucket algorithm with automatic 429 backoff handling
+- **Session Replay**: Step-through playback with anomaly highlighting and per-message metrics
+- **YAML Import/Export**: Version-control-friendly scenario format with bulk import
+- **Live Dashboard**: Real-time stats, quick execution, auto-refreshing widgets
 - **File-Based Logging**: High-performance JSONL logging for session data
-- **Live Streaming**: Real-time log viewing via Server-Sent Events
+- **Target Connection Testing**: One-click endpoint verification before running full scenarios
 
 ## 🛠️ Tech Stack
 
@@ -25,25 +33,50 @@ A sophisticated platform for stress-testing conversational AI systems through re
 
 ```
 token-burn/
-├── app/                    # Next.js 16.1.4 App Router
-│   ├── (dashboard)/       # Dashboard routes
-│   ├── api/               # API endpoints
-│   └── globals.css        # Global styles
-├── components/            # React components
-├── lib/                   # Core library
-│   ├── connectors/        # Protocol implementations
-│   ├── jobs/             # BullMQ workers
-│   ├── db/               # Prisma client
-│   ├── cache/            # Redis client
-│   └── utils/            # Utilities
-├── prisma/               # Database schema
-├── tests/                # Test suites
-│   ├── unit/             # Unit tests
-│   ├── integration/      # Integration tests
-│   └── mocks/            # Mock servers
-├── infra/                # Infrastructure
-│   └── docker-compose.yml
-└── Taskfile.yml          # Task automation
+├── app/                        # Next.js 16.1.4 App Router
+│   ├── (dashboard)/            # Dashboard routes (route group)
+│   │   ├── page.tsx            # / — Live dashboard with widgets
+│   │   ├── targets/            # /targets — Target management
+│   │   ├── scenarios/          # /scenarios — Scenario CRUD + flow builder
+│   │   ├── sessions/           # /sessions — Session list + detail + replay
+│   │   ├── batches/            # /batches — Multi-target batch execution
+│   │   ├── compare/            # /compare — A/B comparison views
+│   │   ├── metrics/            # /metrics — Charts and analytics
+│   │   └── settings/webhooks/  # /settings/webhooks — Webhook management
+│   ├── api/                    # API Routes
+│   │   ├── targets/            # CRUD + connection testing
+│   │   ├── scenarios/          # CRUD + YAML import/export
+│   │   ├── sessions/           # Sessions + SSE streaming
+│   │   ├── execute/            # Fire-and-forget + batch execution
+│   │   ├── compare/            # A/B comparison API
+│   │   ├── webhooks/           # Webhook CRUD + test + deliveries
+│   │   ├── metrics/            # Query + export + quality scores
+│   │   └── dashboard/          # Aggregated stats
+│   └── globals.css
+├── components/                 # React components
+│   ├── sessions/               # LogViewer, SessionReplay
+│   ├── scenarios/              # FlowBuilder, YamlImportExport
+│   ├── targets/                # TestConnectionButton
+│   ├── batches/                # BatchExecuteForm
+│   ├── webhooks/               # WebhookForm
+│   └── jobs/                   # ActiveJobs
+├── lib/                        # Core library
+│   ├── connectors/             # HTTP, WebSocket, gRPC, SSE
+│   ├── context/                # Conversation context / memory
+│   ├── jobs/                   # BullMQ workers + scheduler
+│   ├── metrics/                # MetricsCollector + QualityScorer
+│   ├── webhooks/               # Signer + delivery worker + emitter
+│   ├── rate-limit/             # Token bucket rate limiter
+│   ├── logging/                # JSONL session logger
+│   └── utils/                  # Encryption, helpers
+├── prisma/                     # Database schema + migrations
+├── tests/                      # Test suites (70+ tests)
+│   ├── unit/                   # Connector, webhook, quality tests
+│   ├── integration/            # API route + E2E tests
+│   └── mocks/                  # Mock chatbot server
+├── infra/                      # Docker Compose (dev + prod)
+├── docs/                       # API reference + deployment guide
+└── Taskfile.yml                # Task automation
 ```
 
 ## 🚀 Quick Start
@@ -149,17 +182,21 @@ class MyConnector extends BaseConnector {
 ### Database Schema
 
 Key models:
-- **Target**: Chatbot endpoint configuration
-- **Scenario**: Test scenario definition
-- **Session**: Test execution instance
+- **Target**: Chatbot endpoint configuration (auth, templates, rate limits)
+- **Scenario**: Test scenario definition (flow config, execution settings)
+- **Session**: Test execution instance (status, metrics, log path)
 - **SessionMetric**: Per-message metrics
 - **ScheduledJob**: Cron scheduling
+- **Comparison**: A/B test results between two sessions
+- **Webhook**: Event notification configuration
+- **WebhookDelivery**: Delivery log with retry tracking
 
 ### Job Queue
 
 BullMQ workers for background processing:
-- `session-execution`: Execute test scenarios
-- `metrics-aggregation`: Aggregate and analyze metrics
+- `session-execution`: Execute test scenarios with connector lifecycle management
+- `metrics-aggregation`: Aggregate and analyze metrics (P50, P95, P99)
+- `webhook-delivery`: Signed webhook delivery with exponential backoff retry
 
 ## 🧪 Testing
 
@@ -229,6 +266,51 @@ The included mock chatbot server simulates various behaviors:
 - ✅ Complete API documentation
 - ✅ AGENTS.md
 - ✅ Deployment guides
+
+### Milestone 7: Build Fixes & Stability ✓
+- ✅ Next.js 16 async params migration (all dynamic routes)
+- ✅ Prisma type alignment across all route handlers
+- ✅ gRPC connector interface compliance
+- ✅ Scheduler JSON type casting
+- ✅ Unit test reliability (deterministic mock server)
+- ✅ 70+ tests passing
+
+### Milestone 8: Session Engine & Context ✓
+- ✅ Enhanced flow engine (all step types, Handlebars templating)
+- ✅ Connector lifecycle with auto-reconnect (exponential backoff)
+- ✅ Concurrency via semaphore-based limiting
+- ✅ Per-message and session-level timeouts
+- ✅ Context variable extraction from responses
+- ✅ ConversationContext class with message history and windowing
+
+### Milestone 9: Target Testing & Dashboard ✓
+- ✅ Target connection test endpoint (dry run)
+- ✅ Dashboard stats API (aggregated metrics)
+- ✅ Live dashboard with auto-refreshing widgets
+- ✅ Quick Execute widget
+- ✅ Scenario flow builder (drag-and-drop visual editor)
+- ✅ Target test button in UI
+
+### Milestone 10: Comparison & Quality ✓
+- ✅ Comparison model and A/B testing API
+- ✅ Side-by-side comparison UI with metric visualization
+- ✅ Response quality scoring (relevance, coherence, completeness)
+- ✅ YAML import/export for scenarios
+- ✅ Rate limit simulation with token bucket algorithm
+
+### Milestone 11: Webhooks & Notifications ✓
+- ✅ Webhook model with HMAC-SHA256 signing
+- ✅ BullMQ delivery worker with exponential backoff
+- ✅ Webhook CRUD API + test delivery endpoint
+- ✅ Event emission (session.completed, session.failed)
+- ✅ Webhook management UI with delivery logs
+
+### Milestone 12: Batch Execution & Replay ✓
+- ✅ Multi-target batch execution API
+- ✅ Batch execution UI with progress tracking
+- ✅ Session replay with playback controls and timeline
+- ✅ Anomaly highlighting in replay (errors, slow responses, repetitions)
+- ✅ API route integration tests (48 tests)
 
 ## 🔒 Security
 
