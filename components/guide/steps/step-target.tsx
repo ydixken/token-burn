@@ -85,6 +85,14 @@ export function StepTarget() {
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providerPage, setProviderPage] = useState(0);
+  const PROVIDERS_PER_PAGE = 4;
+  const allProviders = [MOCK_PRESET, ...PROVIDER_PRESETS];
+  const totalProviderPages = Math.ceil(allProviders.length / PROVIDERS_PER_PAGE);
+  const paginatedProviders = allProviders.slice(
+    providerPage * PROVIDERS_PER_PAGE,
+    (providerPage + 1) * PROVIDERS_PER_PAGE
+  );
 
   const selectPreset = (id: string) => {
     setSelectedPresetId(id);
@@ -205,19 +213,44 @@ export function StepTarget() {
       {subStep === "choose" && (
         <div className="space-y-4 animate-fadeIn">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <MockChatbotCard
-              selected={selectedPresetId === "mock-chatbot"}
-              onClick={() => selectPreset("mock-chatbot")}
-            />
-            {PROVIDER_PRESETS.map((preset) => (
-              <ProviderCard
-                key={preset.id}
-                preset={preset}
-                selected={selectedPresetId === preset.id}
-                onClick={() => selectPreset(preset.id)}
-              />
-            ))}
+            {paginatedProviders.map((preset) =>
+              preset.id === "mock-chatbot" ? (
+                <MockChatbotCard
+                  key="mock-chatbot"
+                  selected={selectedPresetId === "mock-chatbot"}
+                  onClick={() => selectPreset("mock-chatbot")}
+                />
+              ) : (
+                <ProviderCard
+                  key={preset.id}
+                  preset={preset}
+                  selected={selectedPresetId === preset.id}
+                  onClick={() => selectPreset(preset.id)}
+                />
+              )
+            )}
           </div>
+          {totalProviderPages > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setProviderPage((p) => Math.max(0, p - 1))}
+                disabled={providerPage === 0}
+                className="px-2 py-1 text-xs rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:text-gray-700 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs text-gray-500">
+                {providerPage + 1} / {totalProviderPages}
+              </span>
+              <button
+                onClick={() => setProviderPage((p) => Math.min(totalProviderPages - 1, p + 1))}
+                disabled={providerPage >= totalProviderPages - 1}
+                className="px-2 py-1 text-xs rounded text-gray-400 hover:text-gray-200 hover:bg-gray-800 disabled:text-gray-700 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           <div className="flex justify-end">
             <Button
               size="sm"
