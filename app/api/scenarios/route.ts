@@ -10,6 +10,25 @@ const FlowStepSchema = z.object({
   next: z.string().optional(),
 });
 
+// Validation schema for error handling configuration
+const ErrorHandlingSchema = z.object({
+  onError: z.enum(["skip", "abort", "retry"]).default("skip"),
+  retryConfig: z.object({
+    maxRetries: z.number().int().min(0).max(100).default(3),
+    delayMs: z.number().int().min(100).max(60000).default(1000),
+    backoffMultiplier: z.number().min(1).max(10).default(1.5),
+    maxDelayMs: z.number().int().min(1000).max(300000).default(30000),
+  }).optional(),
+  statusCodeRules: z.array(z.object({
+    codes: z.array(z.number().int().min(100).max(599)),
+    action: z.enum(["skip", "abort", "retry"]),
+    retryConfig: z.object({
+      maxRetries: z.number().int().min(0).max(100),
+      delayMs: z.number().int().min(100).max(60000),
+    }).optional(),
+  })).max(10).optional(),
+}).optional();
+
 // Validation schema for creating a scenario
 const CreateScenarioSchema = z.object({
   name: z.string().min(1).max(100),
@@ -22,6 +41,7 @@ const CreateScenarioSchema = z.object({
   verbosityLevel: z.string().default("normal"),
   messageTemplates: z.record(z.unknown()).default({}),
   isActive: z.boolean().default(true),
+  errorHandling: ErrorHandlingSchema,
 });
 
 /**
@@ -58,6 +78,7 @@ export async function GET(request: NextRequest) {
         concurrency: true,
         verbosityLevel: true,
         isActive: true,
+        errorHandling: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -110,6 +131,7 @@ export async function POST(request: NextRequest) {
         verbosityLevel: validated.verbosityLevel,
         messageTemplates: validated.messageTemplates as any,
         isActive: validated.isActive,
+        errorHandling: validated.errorHandling as any,
       },
     });
 

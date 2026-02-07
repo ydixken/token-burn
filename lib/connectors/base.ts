@@ -340,10 +340,12 @@ export type AuthType = "NONE" | "BEARER_TOKEN" | "API_KEY" | "BASIC_AUTH" | "CUS
  */
 export class ConnectorError extends Error {
   public originalError?: unknown;
+  public statusCode?: number;
 
-  constructor(message: string, originalError?: unknown) {
+  constructor(message: string, originalError?: unknown, statusCode?: number) {
     super(message);
     this.name = "ConnectorError";
     this.originalError = originalError;
+    this.statusCode = statusCode;
   }
 }

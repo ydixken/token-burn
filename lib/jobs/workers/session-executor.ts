@@ -3,8 +3,9 @@ import { redis } from "@/lib/cache/redis";
 import { prisma } from "@/lib/db/client";
 import { ConnectorRegistry } from "@/lib/connectors/registry";
 import { SessionLogger, MessageLogEntry } from "@/lib/storage/session-logger";
-import type { SessionJobData, ExecutionConfig, FlowStep } from "../queue";
+import type { SessionJobData, ExecutionConfig, FlowStep, ErrorHandlingConfig } from "../queue";
 import type { BaseConnector, ConnectorConfig } from "@/lib/connectors/base";
+import { ConnectorError } from "@/lib/connectors/base";
 import { ConversationContext } from "@/lib/context/conversation-context";
 import { TokenBucket } from "@/lib/rate-limit/token-bucket";
 import { emitWebhookEvent } from "@/lib/webhooks/emitter";
@@ -134,6 +135,47 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
+// ─── Error Handling Resolution ───────────────────────────────────────────────
+
+interface ResolvedErrorAction {
+  type: "skip" | "abort" | "retry";
+  maxRetries: number;
+  delayMs: number;
+  backoffMultiplier: number;
+  maxDelayMs: number;
+}
+
+function resolveErrorAction(
+  config: ErrorHandlingConfig | undefined,
+  statusCode?: number
+): ResolvedErrorAction {
+  if (!config) return { type: "skip", maxRetries: 3, delayMs: 1000, backoffMultiplier: 1.5, maxDelayMs: 30000 };
+
+  // Check status code rules first
+  if (statusCode && config.statusCodeRules) {
+    for (const rule of config.statusCodeRules) {
+      if (rule.codes.includes(statusCode)) {
+        return {
+          type: rule.action,
+          maxRetries: rule.retryConfig?.maxRetries ?? config.retryConfig?.maxRetries ?? 3,
+          delayMs: rule.retryConfig?.delayMs ?? config.retryConfig?.delayMs ?? 1000,
+          backoffMultiplier: config.retryConfig?.backoffMultiplier ?? 1.5,
+          maxDelayMs: config.retryConfig?.maxDelayMs ?? 30000,
+        };
+      }
+    }
+  }
+
+  // Fall back to default onError
+  return {
+    type: config.onError,
+    maxRetries: config.retryConfig?.maxRetries ?? 3,
+    delayMs: config.retryConfig?.delayMs ?? 1000,
+    backoffMultiplier: config.retryConfig?.backoffMultiplier ?? 1.5,
+    maxDelayMs: config.retryConfig?.maxDelayMs ?? 30000,
+  };
+}
+
 // ─── Session Executor Worker ─────────────────────────────────────────────────
 
 export function createSessionWorker() {
@@ -241,6 +283,7 @@ export function createSessionWorker() {
         const resetBetweenRepetitions = executionConfig.resetBetweenRepetitions || false;
         const variableExtractors = executionConfig.variableExtractors || {};
         const customVariables = executionConfig.messageTemplates || {};
+        const errorHandling = executionConfig.errorHandling;
 
         // Wrap entire execution in session-level timeout if configured
         const executeSession = async () => {
@@ -271,7 +314,7 @@ export function createSessionWorker() {
                   logger!,
                   context,
                   job,
-                  { delayBetweenMs, verbosityLevel, messageTimeout, variableExtractors, customVariables },
+                  { delayBetweenMs, verbosityLevel, messageTimeout, variableExtractors, customVariables, errorHandling },
                   concurrency
                 );
               } else {
@@ -284,6 +327,7 @@ export function createSessionWorker() {
                     messageTimeout,
                     variableExtractors,
                     customVariables,
+                    errorHandling,
                   });
 
                   // Update progress
@@ -326,7 +370,7 @@ export function createSessionWorker() {
                       connector!,
                       logger!,
                       context,
-                      { messageTimeout, variableExtractors }
+                      { messageTimeout, variableExtractors, errorHandling }
                     );
                   } finally {
                     semaphore.release();
@@ -345,6 +389,7 @@ export function createSessionWorker() {
                   await executeMessage(substituted, connector!, logger!, context, {
                     messageTimeout,
                     variableExtractors,
+                    errorHandling,
                   });
 
                   if (delayBetweenMs > 0) {
@@ -495,11 +540,13 @@ interface StepOptions {
   messageTimeout: number;
   variableExtractors: Record<string, string>;
   customVariables: Record<string, unknown>;
+  errorHandling?: ErrorHandlingConfig;
 }
 
 interface MessageOptions {
   messageTimeout: number;
   variableExtractors: Record<string, string>;
+  errorHandling?: ErrorHandlingConfig;
 }
 
 // ─── Parallel Step Execution ─────────────────────────────────────────────────
@@ -552,6 +599,7 @@ async function executeFlowStep(
       await executeMessage(verboseMessage, connector, logger, context, {
         messageTimeout: options.messageTimeout,
         variableExtractors: options.variableExtractors,
+        errorHandling: options.errorHandling,
       });
       break;
     }
@@ -713,6 +761,7 @@ async function executeMessage(
   } catch (error) {
     const responseTimeMs = Date.now() - startTime;
     const isTimeout = (error as Error).message.includes("timed out");
+    const statusCode = error instanceof ConnectorError ? error.statusCode : undefined;
 
     // Log error entry
     const errorEntry: MessageLogEntry = {
@@ -725,6 +774,7 @@ async function executeMessage(
       error: (error as Error).message,
       metadata: {
         timedOut: isTimeout,
+        statusCode,
       },
     };
 
@@ -732,7 +782,68 @@ async function executeMessage(
 
     console.error(`    Message failed${isTimeout ? " (timeout)" : ""}: ${(error as Error).message}`);
 
-    // Don't throw - continue with next message
+    // Resolve error action based on config and status code
+    const action = resolveErrorAction(options.errorHandling, statusCode);
+
+    if (action.type === "abort") {
+      throw error;
+    }
+
+    if (action.type === "retry") {
+      let lastAttemptError = error;
+      for (let attempt = 1; attempt <= action.maxRetries; attempt++) {
+        const delay = Math.min(
+          action.delayMs * Math.pow(action.backoffMultiplier, attempt - 1),
+          action.maxDelayMs
+        );
+        console.log(`    Retry ${attempt}/${action.maxRetries} after ${Math.round(delay)}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
+        try {
+          const retryStart = Date.now();
+          const retryResponse = await withTimeout(
+            connector.sendMessage(message, {
+              sessionId: context.sessionId,
+              messageIndex: index,
+              timestamp: new Date(),
+            }),
+            options.messageTimeout,
+            `Message ${index + 1} retry ${attempt}`
+          );
+
+          const retryResponseTimeMs = Date.now() - retryStart;
+
+          // Success on retry — update context and log
+          context.conversation.addMessage("assistant", retryResponse.content);
+          context.lastResponse = retryResponse.content;
+
+          const retryEntry: MessageLogEntry = {
+            index,
+            timestamp: new Date().toISOString(),
+            direction: "received",
+            content: retryResponse.content,
+            responseTimeMs: retryResponseTimeMs,
+            tokenUsage: retryResponse.metadata?.tokenUsage,
+            success: true,
+            metadata: {
+              retryAttempt: attempt,
+            },
+          };
+          logger.logMessage(retryEntry);
+
+          console.log(`    Retry ${attempt} succeeded (${retryResponseTimeMs}ms)`);
+          return; // Success — exit catch block
+        } catch (retryError) {
+          lastAttemptError = retryError;
+          console.error(`    Retry ${attempt} failed: ${(retryError as Error).message}`);
+        }
+      }
+
+      // All retries exhausted — log and skip (fall through)
+      console.error(`    All ${action.maxRetries} retries exhausted, skipping message`);
+    }
+
+    // "skip" (default) — continue with next message
   }
 }
 

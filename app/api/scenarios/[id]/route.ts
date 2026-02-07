@@ -10,6 +10,25 @@ const FlowStepSchema = z.object({
   next: z.string().optional(),
 });
 
+// Validation schema for error handling configuration
+const ErrorHandlingSchema = z.object({
+  onError: z.enum(["skip", "abort", "retry"]).default("skip"),
+  retryConfig: z.object({
+    maxRetries: z.number().int().min(0).max(100).default(3),
+    delayMs: z.number().int().min(100).max(60000).default(1000),
+    backoffMultiplier: z.number().min(1).max(10).default(1.5),
+    maxDelayMs: z.number().int().min(1000).max(300000).default(30000),
+  }).optional(),
+  statusCodeRules: z.array(z.object({
+    codes: z.array(z.number().int().min(100).max(599)),
+    action: z.enum(["skip", "abort", "retry"]),
+    retryConfig: z.object({
+      maxRetries: z.number().int().min(0).max(100),
+      delayMs: z.number().int().min(100).max(60000),
+    }).optional(),
+  })).max(10).optional(),
+}).optional();
+
 // Validation schema for updating a scenario
 const UpdateScenarioSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -22,6 +41,7 @@ const UpdateScenarioSchema = z.object({
   verbosityLevel: z.string().optional(),
   messageTemplates: z.record(z.unknown()).optional(),
   isActive: z.boolean().optional(),
+  errorHandling: ErrorHandlingSchema,
 });
 
 /**

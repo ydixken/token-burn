@@ -166,7 +166,7 @@ export default function StepReview({ data, onBack }: StepReviewProps) {
                   {testResult.healthy ? "Connection Successful" : "Connection Failed"}
                 </span>
                 <span className="text-xs text-gray-400 ml-auto">
-                  {testResult.latencyMs}ms
+                  {Math.round(testResult.latencyMs)}ms
                 </span>
               </div>
               {testResult.testResponse && (

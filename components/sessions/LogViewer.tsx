@@ -339,7 +339,7 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
                   {(message.responseTimeMs || message.tokenUsage) && (
                     <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
                       {message.responseTimeMs && (
-                        <span>Response: {message.responseTimeMs}ms</span>
+                        <span>Response: {Math.round(message.responseTimeMs)}ms</span>
                       )}
                       {message.tokenUsage?.totalTokens && (
                         <span>Tokens: {message.tokenUsage.totalTokens}</span>

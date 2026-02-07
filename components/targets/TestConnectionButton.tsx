@@ -128,7 +128,7 @@ export default function TestConnectionButton({ targetId, targetName }: TestConne
             )}
             {result.responseTimeMs !== undefined && (
               <div className="text-gray-400">
-                Response Time: <span className="text-gray-300">{result.responseTimeMs}ms</span>
+                Response Time: <span className="text-gray-300">{Math.round(result.responseTimeMs)}ms</span>
               </div>
             )}
           </div>

@@ -92,6 +92,9 @@ model Scenario {
   // Flow configuration
   flowConfig Json // Array of flow steps
 
+  // Error handling configuration
+  errorHandling Json?
+
   // Execution parameters
   repetitions    Int  @default(1)
   concurrency    Int  @default(1)

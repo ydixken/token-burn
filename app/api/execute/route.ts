@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
             delayBetweenMs: scenario.delayBetweenMs,
             messageTemplates: scenario.messageTemplates as Record<string, unknown> | undefined ?? undefined,
             verbosityLevel: scenario.verbosityLevel as ExecutionConfig["verbosityLevel"],
+            errorHandling: (scenario as any).errorHandling as ExecutionConfig["errorHandling"],
           }
         : {}),
       ...(validated.executionConfig || {}),

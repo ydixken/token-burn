@@ -10,6 +10,13 @@ interface Target {
   connectorType: string;
 }
 
+interface StatusCodeRule {
+  codes: string;
+  action: "skip" | "abort" | "retry";
+  maxRetries: number;
+  delayMs: number;
+}
+
 interface ScenarioData {
   id: string;
   name: string;
@@ -22,6 +29,20 @@ interface ScenarioData {
   verbosityLevel: number;
   isPublic: boolean;
   tags: string[];
+  errorHandling?: {
+    onError: "skip" | "abort" | "retry";
+    retryConfig?: {
+      maxRetries: number;
+      delayMs: number;
+      backoffMultiplier: number;
+      maxDelayMs: number;
+    };
+    statusCodeRules?: Array<{
+      codes: number[];
+      action: "skip" | "abort" | "retry";
+      retryConfig?: { maxRetries: number; delayMs: number };
+    }>;
+  };
 }
 
 const CATEGORIES = [
@@ -64,6 +85,13 @@ export default function EditScenarioPage() {
   const [flowSteps, setFlowSteps] = useState<FlowStep[]>([]);
   const [initialFlowSteps, setInitialFlowSteps] = useState<FlowStep[]>([]);
 
+  // Error handling state
+  const [onError, setOnError] = useState<"skip" | "abort" | "retry">("skip");
+  const [retryMaxRetries, setRetryMaxRetries] = useState(3);
+  const [retryDelayMs, setRetryDelayMs] = useState(1000);
+  const [retryBackoffMultiplier, setRetryBackoffMultiplier] = useState(1.5);
+  const [statusCodeRules, setStatusCodeRules] = useState<StatusCodeRule[]>([]);
+
   useEffect(() => {
     fetchTargets();
     fetchScenario();
@@ -99,6 +127,27 @@ export default function EditScenarioPage() {
         const steps = (scenario.flowConfig as FlowStep[]) || [];
         setFlowSteps(steps);
         setInitialFlowSteps(steps);
+
+        // Load error handling config
+        if (scenario.errorHandling) {
+          const eh = scenario.errorHandling;
+          setOnError(eh.onError || "skip");
+          if (eh.retryConfig) {
+            setRetryMaxRetries(eh.retryConfig.maxRetries ?? 3);
+            setRetryDelayMs(eh.retryConfig.delayMs ?? 1000);
+            setRetryBackoffMultiplier(eh.retryConfig.backoffMultiplier ?? 1.5);
+          }
+          if (eh.statusCodeRules) {
+            setStatusCodeRules(
+              eh.statusCodeRules.map((r) => ({
+                codes: r.codes.join(", "),
+                action: r.action,
+                maxRetries: r.retryConfig?.maxRetries ?? 3,
+                delayMs: r.retryConfig?.delayMs ?? 1000,
+              }))
+            );
+          }
+        }
       } else {
         setError(data.error || "Failed to fetch scenario");
       }
@@ -131,6 +180,26 @@ export default function EditScenarioPage() {
     setError(null);
 
     try {
+      const errorHandling: Record<string, unknown> = {
+        onError,
+        retryConfig: {
+          maxRetries: retryMaxRetries,
+          delayMs: retryDelayMs,
+          backoffMultiplier: retryBackoffMultiplier,
+          maxDelayMs: 30000,
+        },
+        statusCodeRules: statusCodeRules.map((r) => ({
+          codes: r.codes
+            .split(",")
+            .map((c) => parseInt(c.trim(), 10))
+            .filter((c) => !isNaN(c)),
+          action: r.action,
+          ...(r.action === "retry"
+            ? { retryConfig: { maxRetries: r.maxRetries, delayMs: r.delayMs } }
+            : {}),
+        })),
+      };
+
       const body: Record<string, unknown> = {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -140,6 +209,7 @@ export default function EditScenarioPage() {
         concurrency,
         delayBetweenMs,
         verbosityLevel,
+        errorHandling,
       };
 
       const response = await fetch(`/api/scenarios/${scenarioId}`, {
@@ -328,6 +398,182 @@ export default function EditScenarioPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Error Handling */}
+            <div className="border-t border-gray-700 pt-4">
+              <h4 className="text-xs font-semibold text-gray-400 mb-3">Error Handling</h4>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">On Error</label>
+                  <select
+                    value={onError}
+                    onChange={(e) => setOnError(e.target.value as "skip" | "abort" | "retry")}
+                    className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="skip">Skip</option>
+                    <option value="abort">Abort</option>
+                    <option value="retry">Retry</option>
+                  </select>
+                </div>
+
+                {onError === "retry" && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Max Retries</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={retryMaxRetries}
+                        onChange={(e) => setRetryMaxRetries(parseInt(e.target.value) || 0)}
+                        className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <span className="text-[10px] text-gray-500">0 = unlimited</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Delay (ms)</label>
+                      <input
+                        type="number"
+                        min={100}
+                        step={100}
+                        value={retryDelayMs}
+                        onChange={(e) => setRetryDelayMs(parseInt(e.target.value) || 100)}
+                        className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Backoff Multiplier</label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={0.1}
+                        value={retryBackoffMultiplier}
+                        onChange={(e) => setRetryBackoffMultiplier(parseFloat(e.target.value) || 1)}
+                        className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Status Code Rules */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-medium text-gray-400">Status Code Rules</label>
+                    {statusCodeRules.length < 10 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setStatusCodeRules([
+                            ...statusCodeRules,
+                            { codes: "", action: "retry", maxRetries: 3, delayMs: 1000 },
+                          ])
+                        }
+                        className="text-[10px] text-blue-400 hover:text-blue-300"
+                      >
+                        + Add Rule
+                      </button>
+                    )}
+                  </div>
+
+                  {statusCodeRules.map((rule, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-gray-900 border border-gray-700 rounded p-2 mb-2 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-gray-500">Rule {idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setStatusCodeRules(statusCodeRules.filter((_, i) => i !== idx))
+                          }
+                          className="text-[10px] text-red-400 hover:text-red-300"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-0.5">
+                          Status Codes (comma-separated)
+                        </label>
+                        <input
+                          value={rule.codes}
+                          onChange={(e) => {
+                            const updated = [...statusCodeRules];
+                            updated[idx] = { ...updated[idx], codes: e.target.value };
+                            setStatusCodeRules(updated);
+                          }}
+                          placeholder="429, 503"
+                          className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-gray-500 mb-0.5">Action</label>
+                        <select
+                          value={rule.action}
+                          onChange={(e) => {
+                            const updated = [...statusCodeRules];
+                            updated[idx] = {
+                              ...updated[idx],
+                              action: e.target.value as "skip" | "abort" | "retry",
+                            };
+                            setStatusCodeRules(updated);
+                          }}
+                          className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="skip">Skip</option>
+                          <option value="abort">Abort</option>
+                          <option value="retry">Retry</option>
+                        </select>
+                      </div>
+                      {rule.action === "retry" && (
+                        <div className="grid grid-cols-2 gap-1">
+                          <div>
+                            <label className="block text-[10px] text-gray-500 mb-0.5">
+                              Max Retries
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={rule.maxRetries}
+                              onChange={(e) => {
+                                const updated = [...statusCodeRules];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  maxRetries: parseInt(e.target.value) || 0,
+                                };
+                                setStatusCodeRules(updated);
+                              }}
+                              className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-gray-500 mb-0.5">
+                              Delay (ms)
+                            </label>
+                            <input
+                              type="number"
+                              min={100}
+                              step={100}
+                              value={rule.delayMs}
+                              onChange={(e) => {
+                                const updated = [...statusCodeRules];
+                                updated[idx] = {
+                                  ...updated[idx],
+                                  delayMs: parseInt(e.target.value) || 100,
+                                };
+                                setStatusCodeRules(updated);
+                              }}
+                              className="w-full bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

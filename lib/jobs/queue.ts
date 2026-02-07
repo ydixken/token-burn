@@ -62,6 +62,21 @@ export interface MetricsJobData {
   sessionId: string;
 }
 
+export interface ErrorHandlingConfig {
+  onError: "skip" | "abort" | "retry";
+  retryConfig?: {
+    maxRetries: number;
+    delayMs: number;
+    backoffMultiplier: number;
+    maxDelayMs: number;
+  };
+  statusCodeRules?: Array<{
+    codes: number[];
+    action: "skip" | "abort" | "retry";
+    retryConfig?: { maxRetries: number; delayMs: number };
+  }>;
+}
+
 export interface ExecutionConfig {
   flowConfig?: FlowStep[];
   customMessages?: string[];
@@ -74,6 +89,7 @@ export interface ExecutionConfig {
   messageTimeout?: number; // per-message timeout in ms (default 30000)
   resetBetweenRepetitions?: boolean; // disconnect/reconnect between reps
   variableExtractors?: Record<string, string>; // name → JSON path to extract from response
+  errorHandling?: ErrorHandlingConfig;
 }
 
 export interface FlowStep {

@@ -118,7 +118,7 @@ export class HTTPConnector extends BaseConnector {
       if (response.status >= 400) {
         const errorMessage =
           this.extractError(response.data) || `HTTP ${response.status}: ${response.statusText}`;
-        throw new ConnectorError(errorMessage);
+        throw new ConnectorError(errorMessage, undefined, response.status);
       }
 
       // Extract response content
@@ -150,7 +150,7 @@ export class HTTPConnector extends BaseConnector {
           const errorMessage =
             this.extractError(axiosError.response.data) ||
             `HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`;
-          throw new ConnectorError(errorMessage, error);
+          throw new ConnectorError(errorMessage, error, axiosError.response.status);
         }
 
         if (axiosError.code === "ENOTFOUND" || axiosError.code === "ECONNREFUSED") {

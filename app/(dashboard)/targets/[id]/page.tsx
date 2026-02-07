@@ -485,7 +485,7 @@ export default function TargetDetailPage() {
               <span className={testResult.healthy ? "text-green-300 font-medium" : "text-red-300 font-medium"}>
                 {testResult.healthy ? "Connection Successful" : "Connection Failed"}
               </span>
-              <span className="text-xs text-gray-400 ml-auto">{testResult.latencyMs}ms</span>
+              <span className="text-xs text-gray-400 ml-auto">{Math.round(testResult.latencyMs)}ms</span>
             </div>
             {testResult.testResponse && (
               <div className="mt-2">

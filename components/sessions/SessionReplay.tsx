@@ -44,7 +44,7 @@ function detectAnomalies(messages: Message[]): Anomaly[] {
       anomalies.push({ index: i, type: "error", label: "Error" });
     }
     if (msg.responseTimeMs && msg.responseTimeMs > threshold) {
-      anomalies.push({ index: i, type: "slow_response", label: `Slow (${msg.responseTimeMs}ms)` });
+      anomalies.push({ index: i, type: "slow_response", label: `Slow (${Math.round(msg.responseTimeMs)}ms)` });
     }
     const contentKey = `${msg.direction}:${msg.content.trim().substring(0, 100)}`;
     if (seenContents.has(contentKey)) {
@@ -508,7 +508,7 @@ export default function SessionReplay({ sessionId }: SessionReplayProps) {
                       ? "text-yellow-400"
                       : "text-green-400"
                   }`}>
-                    {currentMessage.responseTimeMs}ms
+                    {Math.round(currentMessage.responseTimeMs)}ms
                   </div>
                 </div>
               )}
