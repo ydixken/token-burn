@@ -370,7 +370,7 @@ export default function DashboardPage() {
     setExecuting(true);
     setExecuteResult(null);
     try {
-      const res = await fetch("/api/sessions", {
+      const res = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -382,7 +382,7 @@ export default function DashboardPage() {
       if (data.success) {
         setExecuteResult({
           success: true,
-          message: `Session started: ${data.data?.id?.slice(0, 8) ?? "OK"}`,
+          message: `Session queued: ${data.data?.sessionId?.slice(0, 8) ?? "OK"}`,
         });
         setSelectedTarget("");
         setSelectedScenario("");
@@ -423,6 +423,18 @@ export default function DashboardPage() {
   const activeSessionsFromRecent = recentSessions.filter(
     (s) => s.status === "RUNNING"
   );
+
+  // Check if user completed the guided setup
+  const [guideCompleted, setGuideCompleted] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tokenburn-guide-v2");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setGuideCompleted(parsed.completedAt != null);
+      }
+    } catch { /* silent */ }
+  }, []);
 
   // -------------------------------------------------------------------------
   // Render
@@ -882,6 +894,21 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+      {/* Continue Guide link — when user has data but guide is incomplete */}
+      {!loading &&
+        (stats.totalTargets > 0 || stats.totalScenarios > 0) &&
+        !guideCompleted && (
+          <div className="flex items-center justify-end mt-2">
+            <Link
+              href="/guide"
+              className="text-xs text-gray-500 hover:text-blue-400 flex items-center gap-1 transition-colors"
+            >
+              <BookOpen className="h-3 w-3" />
+              Continue Guided Setup
+            </Link>
+          </div>
         )}
     </div>
   );

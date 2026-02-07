@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   experimental: {
-    instrumentationHook: true,
     serverActions: {
       bodySizeLimit: "2mb",
     },
