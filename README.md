@@ -30,7 +30,7 @@ This is the cloud billing equivalent of leaving your database exposed on the int
 
 Krawall exploits this by mimicking natural conversation flows that are perfectly valid but maximally expensive: repetitive prompts, requests for verbose structured output (hi, XML), "helpful clarifications" on every response, and multi-turn context accumulation. Every request is something a real customer might send. Nothing to see here.
 
-**The goal isn't to cause damage - it's to prove the attack vector is real, trivial to exploit, and that companies need to take API cost security as seriously as application security.**
+**The goal isn't to cause damage - it's to prove the attack vector is real, trivial to exploit, and that companies need to take API cost security as seriously as application security.** Read the full story behind the project in [Let's Burn Some Tokens](https://dixken.de/blog/lets-burn-some-tokens).
 
 ---
 
