@@ -499,7 +499,7 @@ export default function DashboardPage() {
                   </h2>
                   <p className="text-base text-gray-400 mb-3">
                     Set up your first chatbot target, create a test scenario, and run your first
-                    stress test — all in about 5 minutes.
+                    stress test - all in about 5 minutes.
                   </p>
                   <span className="inline-flex items-center gap-2 text-sm font-medium text-blue-400 group-hover:text-blue-300 transition-colors">
                     <BookOpen className="h-4 w-4" />
