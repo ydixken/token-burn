@@ -467,7 +467,7 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* ============================================================= */}
-        {/* LEFT COLUMN — Live Sessions (tall tile) */}
+        {/* LEFT COLUMN - Live Sessions (tall tile) */}
         {/* ============================================================= */}
         <Card
           variant="bordered"
@@ -561,7 +561,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* ============================================================= */}
-        {/* CENTER + RIGHT — Quick Stats (4 compact metric cards) */}
+        {/* CENTER + RIGHT - Quick Stats (4 compact metric cards) */}
         {/* ============================================================= */}
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {loading ? (
@@ -861,7 +861,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Guide CTA — only when truly empty */}
+      {/* Guide CTA - only when truly empty */}
       {!loading &&
         stats.totalTargets === 0 &&
         stats.totalScenarios === 0 && (
@@ -881,7 +881,7 @@ export default function DashboardPage() {
                     </h3>
                     <p className="text-xs text-gray-400 mb-0">
                       Set up your first chatbot target, create a test scenario,
-                      and run your first test — all in about 5 minutes.
+                      and run your first test - all in about 5 minutes.
                     </p>
                   </div>
                 </div>
@@ -896,7 +896,7 @@ export default function DashboardPage() {
           </Card>
         )}
 
-      {/* Continue Guide link — when user has data but guide is incomplete */}
+      {/* Continue Guide link - when user has data but guide is incomplete */}
       {!loading &&
         (stats.totalTargets > 0 || stats.totalScenarios > 0) &&
         !guideCompleted && (

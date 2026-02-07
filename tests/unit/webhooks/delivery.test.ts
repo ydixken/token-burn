@@ -13,7 +13,7 @@ import {
  *
  * Tests the signer integration with a mock receiver server that
  * validates incoming webhook signatures. The BullMQ queue/worker
- * is not tested here (requires Redis) — those are integration tests.
+ * is not tested here (requires Redis) - those are integration tests.
  *
  * This suite verifies:
  * - End-to-end signing + verification via HTTP
@@ -40,7 +40,7 @@ describe("Webhook Delivery", () => {
     // Raw body parsing for signature verification
     receiverApp.use(express.raw({ type: "application/json" }));
 
-    // Success endpoint — validates signature
+    // Success endpoint - validates signature
     receiverApp.post("/webhook", (req, res) => {
       const body = req.body.toString();
       const signature = req.headers[
@@ -62,7 +62,7 @@ describe("Webhook Delivery", () => {
       }
     });
 
-    // Error endpoint — always returns 500
+    // Error endpoint - always returns 500
     receiverApp.post("/webhook/error", (_req, res) => {
       res.status(500).json({ error: "Internal server error" });
     });

@@ -1,12 +1,12 @@
-# Iteration 3 — Team Leader Brief
+# Iteration 3 - Team Leader Brief
 
 ## Context
 
 Three issues need resolution:
 
-1. **Sessions stuck in PENDING/QUEUED**: The BullMQ worker code exists (`createSessionWorker()`, `createMetricsWorker()`) in `lib/jobs/workers/` but **nothing ever instantiates them**. After `POST /api/execute` queues a job, no worker picks it up — sessions stay QUEUED forever. Users see "Waiting for session to start..." indefinitely.
+1. **Sessions stuck in PENDING/QUEUED**: The BullMQ worker code exists (`createSessionWorker()`, `createMetricsWorker()`) in `lib/jobs/workers/` but **nothing ever instantiates them**. After `POST /api/execute` queues a job, no worker picks it up - sessions stay QUEUED forever. Users see "Waiting for session to start..." indefinitely.
 
-2. **No guide entry point on dashboard**: The Getting Started Guide wizard exists at `/guide` but is only discoverable via the sidebar nav link. New users landing on an empty dashboard see a basic "Getting Started" card (lines 816-861 in `app/(dashboard)/page.tsx`) that links to `/targets/new` and `/scenarios/new` — not the wizard.
+2. **No guide entry point on dashboard**: The Getting Started Guide wizard exists at `/guide` but is only discoverable via the sidebar nav link. New users landing on an empty dashboard see a basic "Getting Started" card (lines 816-861 in `app/(dashboard)/page.tsx`) that links to `/targets/new` and `/scenarios/new` - not the wizard.
 
 3. **README is stale**: Lists 12 milestones but doesn't cover the new guided configurator wizard, provider presets, scenario template browser, inline connection testing, or the settings/API docs pages.
 
@@ -26,9 +26,9 @@ Three issues need resolution:
 
 **Gate**: Sessions transition from QUEUED → RUNNING → COMPLETED when executed.
 
-### W1.1 — Create Worker Startup via Next.js Instrumentation (worker-eng)
+### W1.1 - Create Worker Startup via Next.js Instrumentation (worker-eng)
 
-**Problem**: `createSessionWorker()` and `createMetricsWorker()` exist but are never called. Next.js has an `instrumentation.ts` hook that runs once on server startup — perfect for worker initialization.
+**Problem**: `createSessionWorker()` and `createMetricsWorker()` exist but are never called. Next.js has an `instrumentation.ts` hook that runs once on server startup - perfect for worker initialization.
 
 **Create**: `instrumentation.ts` (project root)
 
@@ -55,7 +55,7 @@ export async function register() {
 }
 ```
 
-**Modify**: `next.config.ts` — add `instrumentationHook: true` to experimental:
+**Modify**: `next.config.ts` - add `instrumentationHook: true` to experimental:
 
 ```typescript
 experimental: {
@@ -72,7 +72,7 @@ experimental: {
 3. Execute a test via dashboard Quick Execute or guide
 4. Confirm session transitions: PENDING → QUEUED → RUNNING → COMPLETED
 
-### W1.2 — Queue Status API (worker-eng)
+### W1.2 - Queue Status API (worker-eng)
 
 **Create**: `app/api/queue/status/route.ts`
 
@@ -102,14 +102,14 @@ Expose BullMQ queue internals so the UI can show what's happening with pending s
 
 Use existing `getSessionQueueStats()` and `getMetricsQueueStats()` from `lib/jobs/queue.ts`. Add a worker health check by checking if a worker is registered for the queue.
 
-### W1.3 — Session Detail: Queue Position & Worker Diagnostics (dashboard-ui)
+### W1.3 - Session Detail: Queue Position & Worker Diagnostics (dashboard-ui)
 
 When a session is in PENDING or QUEUED state, the session detail page and the mini-log-viewer should show useful information instead of just "Waiting for session to start...":
 
 **Modify**: `components/guide/shared/mini-log-viewer.tsx`
 
 When SSE connects and gets `status: "PENDING"` or `status: "QUEUED"`:
-- Show "Session queued — position {n} in queue" (fetch from `/api/queue/status`)
+- Show "Session queued - position {n} in queue" (fetch from `/api/queue/status`)
 - If worker is not running: Show warning "Workers are not running. Session cannot be processed."
 - If worker is running: Show "Worker is processing sessions. Your session will start shortly."
 - Poll `/api/queue/status` every 3 seconds while waiting
@@ -121,7 +121,7 @@ Add a banner at the top when session is QUEUED/PENDING:
 - Show worker status
 - "If this persists, check that the dev server started with workers enabled."
 
-### W1.4 — Add Worker Script to Taskfile (worker-eng)
+### W1.4 - Add Worker Script to Taskfile (worker-eng)
 
 **Modify**: `Taskfile.yml`
 
@@ -148,7 +148,7 @@ Also update the `setup` task to mention that workers start automatically.
 
 **Gate**: New users see a prominent "Start Guided Setup" button on the dashboard that takes them to the wizard.
 
-### W2.1 — Replace Getting Started Card with Guide CTA (dashboard-ui)
+### W2.1 - Replace Getting Started Card with Guide CTA (dashboard-ui)
 
 **Modify**: `app/(dashboard)/page.tsx` (lines 816-861)
 
@@ -166,7 +166,7 @@ Replace the current "Getting Started" card with a richer CTA that links to `/gui
           <div>
             <h3 className="text-sm font-semibold text-blue-300 mb-1">New here? Start the Guided Setup</h3>
             <p className="text-xs text-gray-400 mb-0">
-              Set up your first chatbot target, create a test scenario, and run your first test — all in about 5 minutes.
+              Set up your first chatbot target, create a test scenario, and run your first test - all in about 5 minutes.
             </p>
           </div>
         </div>
@@ -195,12 +195,12 @@ Also show a smaller persistent guide link when the user HAS targets but hasn't c
 )}
 ```
 
-### W2.2 — Queue Diagnostics in Dashboard (dashboard-ui)
+### W2.2 - Queue Diagnostics in Dashboard (dashboard-ui)
 
 **Modify**: `app/(dashboard)/page.tsx`
 
 Add queue status to the Live Sessions widget. When sessions are in QUEUED/PENDING, show:
-- An info banner: "2 sessions queued — workers active" (or "workers not detected" in red)
+- An info banner: "2 sessions queued - workers active" (or "workers not detected" in red)
 - Fetch from `/api/queue/status` alongside dashboard stats
 
 This gives users immediate visibility into WHY their sessions aren't progressing.
@@ -211,13 +211,13 @@ This gives users immediate visibility into WHY their sessions aren't progressing
 
 **Gate**: README accurately reflects all current features including the new wizard, provider presets, and template system.
 
-### W3.1 — Full README Rewrite (docs-eng)
+### W3.1 - Full README Rewrite (docs-eng)
 
 **Modify**: `README.md`
 
 Sections to add/update:
 
-**Features section** — add:
+**Features section** - add:
 - Interactive Setup Wizard: 8-step guided configurator with inline forms, provider presets, and live testing
 - Provider Presets: One-click setup for OpenAI, Anthropic, Google Gemini, Azure OpenAI, Ollama, and custom endpoints
 - 12 Scenario Templates: Pre-built test scenarios across categories (Stress Test, Edge Case, Performance, Attack Surface, etc.)
@@ -226,7 +226,7 @@ Sections to add/update:
 - API Documentation: Built-in Swagger/OpenAPI explorer at `/api-docs`
 - Mock Chatbot Server: Built-in OpenAI-compatible mock for testing without API keys
 
-**Project Structure** — add new directories:
+**Project Structure** - add new directories:
 ```
 ├── components/
 │   ├── guide/              # Guided setup wizard
@@ -240,40 +240,40 @@ Sections to add/update:
 │       └── templates.ts    # 12 scenario templates
 ```
 
-**Quick Start** — update to mention:
+**Quick Start** - update to mention:
 - After setup, visit `/guide` for the interactive guided setup
 - Workers start automatically via `instrumentation.ts`
 
-**Implementation Status** — add new milestones:
+**Implementation Status** - add new milestones:
 - Milestone 13: Design System & UI Components (19 reusable components, collapsible sidebar, command palette, toast system, keyboard shortcuts)
 - Milestone 14: Guided Setup Wizard (8-step interactive wizard with provider presets, template browser, inline connection testing, live session monitoring)
 - Milestone 15: Worker Lifecycle & Diagnostics (auto-start via instrumentation, queue status API, session diagnostics)
 
-**Available Commands** — add:
+**Available Commands** - add:
 ```bash
 task dev:full         # Start dev with workers
 task worker:status    # Check queue health
 ```
 
-**Architecture section** — add Provider Preset and Scenario Template subsections explaining the extensibility model.
+**Architecture section** - add Provider Preset and Scenario Template subsections explaining the extensibility model.
 
 ---
 
 ## Execution Order
 
-### Phase 1: Fix workers (W1.1 + W1.2) — worker-eng, parallel
+### Phase 1: Fix workers (W1.1 + W1.2) - worker-eng, parallel
 - Create `instrumentation.ts`
 - Update `next.config.ts`
 - Create queue status API
 - Test: start dev server → execute session → confirm COMPLETED
 
-### Phase 2: UI integration (W1.3 + W2.1 + W2.2) — dashboard-ui, after Phase 1
+### Phase 2: UI integration (W1.3 + W2.1 + W2.2) - dashboard-ui, after Phase 1
 - Add queue diagnostics to mini-log-viewer
 - Add session detail queue banner
 - Replace dashboard Getting Started card with guide CTA
 - Add queue status to Live Sessions widget
 
-### Phase 3: Taskfile + README (W1.4 + W3.1) — worker-eng + docs-eng, parallel with Phase 2
+### Phase 3: Taskfile + README (W1.4 + W3.1) - worker-eng + docs-eng, parallel with Phase 2
 - Update Taskfile with new tasks
 - Full README rewrite
 
@@ -282,21 +282,21 @@ task worker:status    # Check queue health
 ## Files Summary
 
 **New files (2):**
-- `instrumentation.ts` — Next.js worker startup hook
-- `app/api/queue/status/route.ts` — Queue diagnostics API
+- `instrumentation.ts` - Next.js worker startup hook
+- `app/api/queue/status/route.ts` - Queue diagnostics API
 
 **Modified files (6):**
-- `next.config.ts` — Enable instrumentationHook
-- `components/guide/shared/mini-log-viewer.tsx` — Queue position when pending
-- `app/(dashboard)/page.tsx` — Guide CTA card + queue diagnostics
-- `app/(dashboard)/sessions/[id]/page.tsx` — Queue banner for pending sessions
-- `Taskfile.yml` — New tasks: dev:full, worker:status
-- `README.md` — Full rewrite with new features
+- `next.config.ts` - Enable instrumentationHook
+- `components/guide/shared/mini-log-viewer.tsx` - Queue position when pending
+- `app/(dashboard)/page.tsx` - Guide CTA card + queue diagnostics
+- `app/(dashboard)/sessions/[id]/page.tsx` - Queue banner for pending sessions
+- `Taskfile.yml` - New tasks: dev:full, worker:status
+- `README.md` - Full rewrite with new features
 
 **Read-only dependencies (do NOT modify):**
-- `lib/jobs/queue.ts` — Import `getSessionQueueStats()`, `getMetricsQueueStats()`
-- `lib/jobs/workers/session-executor.ts` — Import `createSessionWorker()`
-- `lib/jobs/workers/metrics-aggregator.ts` — Import `createMetricsWorker()`
+- `lib/jobs/queue.ts` - Import `getSessionQueueStats()`, `getMetricsQueueStats()`
+- `lib/jobs/workers/session-executor.ts` - Import `createSessionWorker()`
+- `lib/jobs/workers/metrics-aggregator.ts` - Import `createMetricsWorker()`
 
 ---
 

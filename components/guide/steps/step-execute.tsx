@@ -122,7 +122,7 @@ export function StepExecute() {
             <Crosshair className="h-4 w-4 text-gray-500" />
             <div>
               <span className="text-gray-400">Target:</span>{" "}
-              <span className="text-gray-200 font-medium">{targetName || createdTargetId || "—"}</span>
+              <span className="text-gray-200 font-medium">{targetName || createdTargetId || "-"}</span>
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export function StepExecute() {
             <FileText className="h-4 w-4 text-gray-500" />
             <div>
               <span className="text-gray-400">Scenario:</span>{" "}
-              <span className="text-gray-200 font-medium">{scenarioName || createdScenarioId || "—"}</span>
+              <span className="text-gray-200 font-medium">{scenarioName || createdScenarioId || "-"}</span>
             </div>
           </div>
 

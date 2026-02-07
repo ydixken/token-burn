@@ -357,7 +357,7 @@ Same as OpenAI Chat Completions:
     documentation: `## Ollama
 
 ### Authentication
-No authentication required — Ollama runs locally.
+No authentication required - Ollama runs locally.
 
 ### Endpoint
 Default: \`http://localhost:11434/api/chat\`

@@ -167,7 +167,7 @@ export async function DELETE(
       );
     }
 
-    // Delete webhook — deliveries cascade via Prisma onDelete: Cascade
+    // Delete webhook - deliveries cascade via Prisma onDelete: Cascade
     await prisma.webhook.delete({ where: { id } });
 
     return NextResponse.json({

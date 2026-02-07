@@ -111,7 +111,7 @@ export default function ScenariosPage() {
             {row.category}
           </Badge>
         ) : (
-          <span className="text-xs text-gray-600">—</span>
+          <span className="text-xs text-gray-600">-</span>
         ),
     },
     {

@@ -74,7 +74,7 @@ export function StepWelcome() {
             <div key={req.label} className="flex items-center gap-2 text-xs">
               <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
               <span className="text-gray-300 font-medium">{req.label}</span>
-              <span className="text-gray-600">— {req.detail}</span>
+              <span className="text-gray-600">- {req.detail}</span>
             </div>
           ))}
         </div>

@@ -153,7 +153,7 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
               break;
 
             case "reconnect":
-              // Session transitioned out of PENDING/QUEUED — reconnect to get messages
+              // Session transitioned out of PENDING/QUEUED - reconnect to get messages
               eventSource.close();
               setTimeout(() => connectToStream(), 500);
               break;

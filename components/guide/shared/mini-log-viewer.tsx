@@ -132,7 +132,7 @@ export function MiniLogViewer({ sessionId, onComplete }: MiniLogViewerProps) {
             <>
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="text-emerald-400">
-                Complete — {totalMessages} messages
+                Complete - {totalMessages} messages
               </span>
             </>
           )}
@@ -152,7 +152,7 @@ export function MiniLogViewer({ sessionId, onComplete }: MiniLogViewerProps) {
           <div className="flex flex-col items-center justify-center py-8 text-sm text-gray-500 gap-1">
             {queueInfo ? (
               <>
-                <span>Session queued — {queueInfo.waiting} in queue, {queueInfo.active} processing</span>
+                <span>Session queued - {queueInfo.waiting} in queue, {queueInfo.active} processing</span>
                 {!queueInfo.workerRunning && (
                   <span className="text-xs text-amber-500">Workers may not be running. Check server logs.</span>
                 )}

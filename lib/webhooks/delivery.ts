@@ -103,7 +103,7 @@ export function createWebhookWorker(
           };
         }
 
-        // Non-2xx response — treat as failure and let BullMQ retry
+        // Non-2xx response - treat as failure and let BullMQ retry
         const errorMsg = `HTTP ${response.status}: ${typeof response.data === "string" ? response.data.slice(0, 200) : JSON.stringify(response.data).slice(0, 200)}`;
         throw new WebhookDeliveryError(errorMsg, response.status);
       } catch (error) {

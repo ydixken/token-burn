@@ -308,7 +308,7 @@ export default function ComparisonDetailPage() {
               </div>
               <div className="text-2xl font-bold text-white">
                 {results.winner === "tie" ? (
-                  "Tie — No Clear Winner"
+                  "Tie - No Clear Winner"
                 ) : (
                   <>
                     <span
@@ -381,7 +381,7 @@ export default function ComparisonDetailPage() {
                 <div className="text-gray-300">
                   {session.startedAt
                     ? new Date(session.startedAt).toLocaleString()
-                    : "—"}
+                    : "-"}
                 </div>
               </div>
               <div>
@@ -389,7 +389,7 @@ export default function ComparisonDetailPage() {
                 <div className="text-gray-300">
                   {session.completedAt
                     ? new Date(session.completedAt).toLocaleString()
-                    : "—"}
+                    : "-"}
                 </div>
               </div>
             </div>
@@ -455,7 +455,7 @@ export default function ComparisonDetailPage() {
                   </td>
                   <td className="px-6 py-3 text-center">
                     {row.winner === "tie" ? (
-                      <span className="text-gray-500">—</span>
+                      <span className="text-gray-500">-</span>
                     ) : (
                       <span
                         className={
@@ -491,7 +491,7 @@ export default function ComparisonDetailPage() {
                   ...chartOptions.plugins,
                   title: {
                     display: true,
-                    text: "Response Time (ms) — lower is better",
+                    text: "Response Time (ms) - lower is better",
                     color: "#9ca3af",
                   },
                 },
@@ -537,7 +537,7 @@ export default function ComparisonDetailPage() {
                   ...chartOptions.plugins,
                   title: {
                     display: true,
-                    text: "Error Rate (%) — lower is better",
+                    text: "Error Rate (%) - lower is better",
                     color: "#9ca3af",
                   },
                 },

@@ -20,7 +20,7 @@ Currently, the API does not require authentication. This will be added in a futu
 
 Check the health of all services (API, database, Redis).
 
-**Response (200 — all healthy)**
+**Response (200 - all healthy)**
 
 ```json
 {
@@ -194,7 +194,7 @@ Sensitive auth values are masked (e.g. `"your...en-1"`).
 
 Update a target. All fields are optional.
 
-**Request Body** — Same fields as POST, all optional.
+**Request Body** - Same fields as POST, all optional.
 
 **Response (200)**
 
@@ -228,7 +228,7 @@ Delete a target. Fails if the target has existing sessions.
 }
 ```
 
-**Response (400) — Has sessions**
+**Response (400) - Has sessions**
 
 ```json
 {
@@ -240,7 +240,7 @@ Delete a target. Fails if the target has existing sessions.
 
 ### POST /api/targets/:id/test
 
-> **Coming Soon** — Connection test / dry-run endpoint. Will verify that the target endpoint is reachable and authentication is valid without starting a full session.
+> **Coming Soon** - Connection test / dry-run endpoint. Will verify that the target endpoint is reachable and authentication is valid without starting a full session.
 
 ---
 
@@ -406,7 +406,7 @@ Delete a scenario. Fails if the scenario has existing sessions.
 }
 ```
 
-**Response (400) — Has sessions**
+**Response (400) - Has sessions**
 
 ```json
 {
@@ -527,7 +527,7 @@ Either `scenarioId` or `executionConfig.customMessages` must be provided.
 }
 ```
 
-**Response (400) — Missing messages**
+**Response (400) - Missing messages**
 
 ```json
 {
@@ -536,7 +536,7 @@ Either `scenarioId` or `executionConfig.customMessages` must be provided.
 }
 ```
 
-**Response (404) — Target not found**
+**Response (404) - Target not found**
 
 ```json
 {
@@ -882,7 +882,7 @@ Validates request and response templates, optionally against a sample API respon
 
 When validation fails, individual results will have `valid: false` and may include a `suggestion` array of available JSON paths.
 
-**Response (400) — Invalid schema**
+**Response (400) - Invalid schema**
 
 ```json
 {

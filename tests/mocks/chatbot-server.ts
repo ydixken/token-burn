@@ -197,7 +197,7 @@ function handleEcommerce(message: string, session: SessionData): string {
     return `Here's a summary of our conversation:\n\n${summary}\n\nTotal exchanges: ${session.messages.length}`;
   }
 
-  return `Welcome to TechStore! I can help you with:\n- **list products** — Browse our catalog (${PRODUCT_CATALOG.length} items)\n- **compare X and Y** — Side-by-side comparison\n- **reviews for X** — Customer reviews\n- **XML format** — Get data in XML\n- **summarize our conversation** — Recap what we discussed`;
+  return `Welcome to TechStore! I can help you with:\n- **list products** - Browse our catalog (${PRODUCT_CATALOG.length} items)\n- **compare X and Y** - Side-by-side comparison\n- **reviews for X** - Customer reviews\n- **XML format** - Get data in XML\n- **summarize our conversation** - Recap what we discussed`;
 }
 
 function handleSupport(message: string, session: SessionData): string {

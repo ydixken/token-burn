@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
           // Return raw secret ONLY on creation so user can store it
           secret: rawSecret,
         },
-        message: "Webhook created successfully. Store the secret — it will not be shown again.",
+        message: "Webhook created successfully. Store the secret - it will not be shown again.",
       },
       { status: 201 }
     );

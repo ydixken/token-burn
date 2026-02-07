@@ -8,13 +8,13 @@ A comprehensive guide to building connector plugins for Krawall.
 
 Plugins extend Krawall's base connectors with additional capabilities. A connector handles the raw protocol (HTTP, WebSocket, gRPC, SSE), while a plugin layers on behavior like:
 
-- **Conversation history** — maintaining a `messages[]` array across turns
-- **Authentication flows** — multi-step auth handshakes before the main API
-- **Response normalization** — extracting content from provider-specific response formats
-- **Token usage tracking** — accumulating usage metrics across a session
-- **Audit logging** — recording every sent/received message for compliance or debugging
+- **Conversation history** - maintaining a `messages[]` array across turns
+- **Authentication flows** - multi-step auth handshakes before the main API
+- **Response normalization** - extracting content from provider-specific response formats
+- **Token usage tracking** - accumulating usage metrics across a session
+- **Audit logging** - recording every sent/received message for compliance or debugging
 
-Plugins are registered globally via `PluginLoader` and executed in priority order. Multiple plugins can be active on a single connector simultaneously — for example, an auth plugin (priority 10) runs before an OpenAI conversation plugin (priority 50), which runs before an audit plugin (priority 200).
+Plugins are registered globally via `PluginLoader` and executed in priority order. Multiple plugins can be active on a single connector simultaneously - for example, an auth plugin (priority 10) runs before an OpenAI conversation plugin (priority 50), which runs before an audit plugin (priority 200).
 
 ---
 
@@ -71,9 +71,9 @@ Every plugin implements the `ConnectorPlugin` interface defined in `lib/connecto
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `priority` | `number` | `100` | Execution order — lower numbers run first. Auth plugins use `10`, conversation plugins use `50`, passive/audit plugins use `200`. |
-| `minConnectorVersion` | `string` | — | Minimum connector version required (semver) |
-| `configSchema` | `PluginConfigField[]` | — | Schema for dynamic UI form generation (see Section 6) |
+| `priority` | `number` | `100` | Execution order - lower numbers run first. Auth plugins use `10`, conversation plugins use `50`, passive/audit plugins use `200`. |
+| `minConnectorVersion` | `string` | - | Minimum connector version required (semver) |
+| `configSchema` | `PluginConfigField[]` | - | Schema for dynamic UI form generation (see Section 6) |
 
 ### Lifecycle Hooks
 
@@ -84,7 +84,7 @@ Every plugin implements the `ConnectorPlugin` interface defined in `lib/connecto
 | `afterReceive` | `(response: ConnectorResponse, context: PluginContext) => Promise<{ response: ConnectorResponse; metadata?: Record<string, unknown> }>` | Transform or inspect the incoming response |
 | `onConnect` | `(config: ConnectorConfig, context: PluginContext) => Promise<ConnectorConfig>` | Modify connector config during connection (e.g., inject auth headers) |
 | `onDisconnect` | `(context: PluginContext) => Promise<void>` | Clean up when the session ends |
-| `onError` | `(error: Error, hookName: string, context: PluginContext) => void` | Called when any hook throws — for logging/recovery |
+| `onError` | `(error: Error, hookName: string, context: PluginContext) => void` | Called when any hook throws - for logging/recovery |
 
 All hooks are optional. Implement only what you need.
 
@@ -132,7 +132,7 @@ async beforeSend(
 }
 ```
 
-**Return:** `{ message, metadata? }` — the message string (potentially modified) and optional metadata to pass downstream.
+**Return:** `{ message, metadata? }` - the message string (potentially modified) and optional metadata to pass downstream.
 
 **Important:** To leave the message unchanged, return `{ message }` as-is. You must always return the message.
 
@@ -167,7 +167,7 @@ async afterReceive(
 }
 ```
 
-**Return:** `{ response, metadata? }` — the response object (potentially modified) and optional metadata.
+**Return:** `{ response, metadata? }` - the response object (potentially modified) and optional metadata.
 
 ---
 
@@ -484,11 +484,11 @@ describe("my-plugin", () => {
 
 Use personas to test edge cases:
 
-- **`rate-limited`** — test retry logic (429 every 3rd request)
-- **`flaky`** — test error handling (random 500s, timeouts, empty responses)
-- **`ecommerce`** — test long/structured responses
-- **`code`** — test responses that grow over a session
-- **`support`** — test JSON response parsing
+- **`rate-limited`** - test retry logic (429 every 3rd request)
+- **`flaky`** - test error handling (random 500s, timeouts, empty responses)
+- **`ecommerce`** - test long/structured responses
+- **`code`** - test responses that grow over a session
+- **`support`** - test JSON response parsing
 
 Set the persona via the `X-Persona` header when sending requests.
 
@@ -507,7 +507,7 @@ Krawall ships with four built-in plugins. Each demonstrates a different pattern.
 - **`beforeSend`**: Pushes the user message onto `context.state.messages`
 - **`afterReceive`**: Pushes the assistant response, normalizes `usage.prompt_tokens` / `usage.completion_tokens` to the standard `tokenUsage` format
 - **`onDisconnect`**: Clears history and token counter
-- **Priority:** `50` — runs after auth but before audit
+- **Priority:** `50` - runs after auth but before audit
 
 ### Anthropic Plugin (`anthropic-plugin.ts`)
 
@@ -527,19 +527,19 @@ Krawall ships with four built-in plugins. Each demonstrates a different pattern.
 - **`onConnect`**: Sends a `fetch()` to the configured `authEndpoint`, extracts the token from the response using a configurable JSON path (`tokenPath`), then injects it into the connector's headers
 - **Config-driven**: All auth details (endpoint, method, body, token path, header name, prefix) come from `configSchema`
 - **`getValueAtPath` utility**: Supports dot-notation and bracket paths (e.g., `data.access_token`, `$.data[0].token`)
-- **Priority:** `10` — runs first so auth headers are available for all subsequent plugins
+- **Priority:** `10` - runs first so auth headers are available for all subsequent plugins
 
 ### Audit Plugin (`audit-plugin.ts`)
 
 **Purpose:** Passively records all messages and responses for compliance/debugging.
 
 **Key patterns:**
-- **Passive**: Never modifies messages or responses — returns them unchanged
+- **Passive**: Never modifies messages or responses - returns them unchanged
 - **`beforeSend`**: Records send timestamp and message content
 - **`afterReceive`**: Records response content, response time (calculated from send timestamp), and token usage
 - **In-memory storage**: Uses a module-level `Map<string, AuditLogEntry[]>` keyed by session ID
 - **Exported utilities**: `getAuditLog(sessionId?)` and `clearAuditLog(sessionId?)` for reading/clearing logs
-- **Priority:** `200` — runs last so it captures the final transformed state
+- **Priority:** `200` - runs last so it captures the final transformed state
 - **Wide compatibility**: `["HTTP_REST", "WEBSOCKET", "GRPC", "SSE"]`
 
 ---
@@ -709,13 +709,13 @@ const budgetPlugin: ConnectorPlugin = {
 ### Hooks Not Firing
 
 - Verify `compatibleConnectors` includes the connector type you're using (e.g., `"HTTP_REST"`).
-- Check `priority` — a lower-priority (higher number) plugin that errors in `onError` might mask issues.
+- Check `priority` - a lower-priority (higher number) plugin that errors in `onError` might mask issues.
 - Ensure you're returning the correct shape from hooks (`{ message }` from `beforeSend`, `{ response }` from `afterReceive`).
 
 ### State Not Persisting Between Messages
 
 - Confirm you're writing to `context.state` (not a local variable).
-- `context.state` is scoped per session — a new session gets a fresh state.
+- `context.state` is scoped per session - a new session gets a fresh state.
 - `onDisconnect` typically clears state. Make sure you're not disconnecting between messages.
 
 ### Config Validation Errors
@@ -729,7 +729,7 @@ const budgetPlugin: ConnectorPlugin = {
 
 - Check that the `authEndpoint` is reachable from the server.
 - Verify the `tokenPath` matches the auth response structure (use dot-notation like `data.access_token`).
-- Check the `authMethod` — some endpoints require `GET` instead of `POST`.
+- Check the `authMethod` - some endpoints require `GET` instead of `POST`.
 - If the token is nested in an array, use bracket notation: `data.tokens[0].value`.
 
 ### Mock Server Not Responding

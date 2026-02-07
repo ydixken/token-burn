@@ -5,7 +5,7 @@
 | Requirement | Minimum Version | Notes |
 |-------------|----------------|-------|
 | Node.js | 20.0.0+ | LTS recommended |
-| pnpm | 8.0.0+ | **Required** — npm and yarn are not supported |
+| pnpm | 8.0.0+ | **Required** - npm and yarn are not supported |
 | Docker Desktop | Latest | For PostgreSQL and Redis |
 | Git | 2.x | For version control |
 
@@ -24,14 +24,14 @@ cd infra && docker compose up -d && cd ..
 
 # 4. Configure environment
 cp .env.example .env
-# Edit .env — generate a real encryption key:
+# Edit .env - generate a real encryption key:
 # openssl rand -hex 32
 
 # 5. Setup database
 pnpm prisma generate
 pnpm prisma migrate dev
 
-# 6. Seed database (optional — adds sample data)
+# 6. Seed database (optional - adds sample data)
 pnpm run db:seed
 
 # 7. Start development server

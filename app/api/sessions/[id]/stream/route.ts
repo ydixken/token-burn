@@ -65,7 +65,7 @@ export async function GET(
 
                 if (updated.status !== "PENDING" && updated.status !== "QUEUED") {
                   clearInterval(waitInterval);
-                  // Session started or finished — redirect client to reconnect with fresh state
+                  // Session started or finished - redirect client to reconnect with fresh state
                   controller.enqueue(
                     encoder.encode(`data: ${JSON.stringify({ type: "reconnect" })}\n\n`)
                   );

@@ -1,20 +1,20 @@
-# Guided Configurator Redesign — Team Leader Brief
+# Guided Configurator Redesign - Team Leader Brief
 
 ## Context
 
-The current guide at `/guide` is underdesigned. It's a flat list of collapsible cards with hardcoded one-click buttons. Step 5 (Create Scenario) is **broken** — it sends `{ steps: [...] }` but the API expects `{ flowConfig: [...] }`. Beyond the bug, the entire UX needs to be reimagined as a proper **multi-step wizard** with inline forms, live previews, provider preset integration, and embedded real-time feedback — not a checklist that links to other pages.
+The current guide at `/guide` is underdesigned. It's a flat list of collapsible cards with hardcoded one-click buttons. Step 5 (Create Scenario) is **broken** - it sends `{ steps: [...] }` but the API expects `{ flowConfig: [...] }`. Beyond the bug, the entire UX needs to be reimagined as a proper **multi-step wizard** with inline forms, live previews, provider preset integration, and embedded real-time feedback - not a checklist that links to other pages.
 
 **What's wrong today:**
 - Broken: Step 5 sends wrong payload format (Zod validation rejects it)
-- No inline forms — user can't customize target name, endpoint, or scenario content
+- No inline forms - user can't customize target name, endpoint, or scenario content
 - No provider preset integration (6 presets exist in `lib/connectors/presets.ts` but aren't surfaced)
 - No template browser (12 scenario templates exist in `lib/scenarios/templates.ts` but aren't shown)
-- Steps 4/7/8 just link to other pages — no inline test, no inline monitoring
+- Steps 4/7/8 just link to other pages - no inline test, no inline monitoring
 - No visual previews of what's being created
 - No validation feedback before submission
 - No way to skip steps or branch based on user choices
 - No connection to toast notification system
-- Progress tracking is basic localStorage — doesn't track what was created (IDs)
+- Progress tracking is basic localStorage - doesn't track what was created (IDs)
 
 ---
 
@@ -36,26 +36,26 @@ Replace the single 620-line `guide/page.tsx` with a multi-file component system:
 
 ```
 app/(dashboard)/guide/
-  page.tsx                    — Wizard container, step routing, progress state
+  page.tsx                    - Wizard container, step routing, progress state
 components/guide/
-  wizard-shell.tsx            — Layout: sidebar progress rail + main content area
-  wizard-context.tsx          — React context: created IDs, progress, navigation
+  wizard-shell.tsx            - Layout: sidebar progress rail + main content area
+  wizard-context.tsx          - React context: created IDs, progress, navigation
   steps/
-    step-welcome.tsx          — Step 1: Welcome + prerequisites check
-    step-infrastructure.tsx   — Step 2: Docker status check
-    step-target.tsx           — Step 3: Target creation wizard (multi-sub-step)
-    step-test-connection.tsx  — Step 4: Inline connection test
-    step-scenario.tsx         — Step 5: Scenario creation from templates
-    step-execute.tsx          — Step 6: Execute with live mini-viewer
-    step-results.tsx          — Step 7: Inline results dashboard
-    step-next.tsx             — Step 8: Advanced features tour
+    step-welcome.tsx          - Step 1: Welcome + prerequisites check
+    step-infrastructure.tsx   - Step 2: Docker status check
+    step-target.tsx           - Step 3: Target creation wizard (multi-sub-step)
+    step-test-connection.tsx  - Step 4: Inline connection test
+    step-scenario.tsx         - Step 5: Scenario creation from templates
+    step-execute.tsx          - Step 6: Execute with live mini-viewer
+    step-results.tsx          - Step 7: Inline results dashboard
+    step-next.tsx             - Step 8: Advanced features tour
   shared/
-    provider-card.tsx         — Provider preset selection card
-    template-card.tsx         — Scenario template preview card
-    mini-log-viewer.tsx       — Embedded live session log (subset of LogViewer)
-    json-preview.tsx          — Read-only JSON preview of what will be created
-    connection-tester.tsx     — Inline connection test with live status
-    step-navigation.tsx       — Back/Next/Skip footer
+    provider-card.tsx         - Provider preset selection card
+    template-card.tsx         - Scenario template preview card
+    mini-log-viewer.tsx       - Embedded live session log (subset of LogViewer)
+    json-preview.tsx          - Read-only JSON preview of what will be created
+    connection-tester.tsx     - Inline connection test with live status
+    step-navigation.tsx       - Back/Next/Skip footer
 ```
 
 ---
@@ -64,7 +64,7 @@ components/guide/
 
 **Gate**: Guide loads, scenario creation works, wizard frame renders.
 
-### G1.1 — Fix Scenario Creation Bug (guide-api)
+### G1.1 - Fix Scenario Creation Bug (guide-api)
 
 **File**: `app/(dashboard)/guide/page.tsx` (lines 269-311)
 
@@ -98,7 +98,7 @@ The API (`app/api/scenarios/route.ts`) expects:
 
 **test-eng verifies**: `POST /api/scenarios` with this payload returns `success: true`.
 
-### G1.2 — Wizard Shell Component (guide-ui)
+### G1.2 - Wizard Shell Component (guide-ui)
 
 **Create**: `components/guide/wizard-shell.tsx`
 
@@ -109,7 +109,7 @@ Two-column layout:
 
 On mobile: rail collapses to a horizontal progress bar at top.
 
-### G1.3 — Wizard Context Provider (guide-ui)
+### G1.3 - Wizard Context Provider (guide-ui)
 
 **Create**: `components/guide/wizard-context.tsx`
 
@@ -129,7 +129,7 @@ interface WizardState {
 
 Persist to localStorage key `krawall-guide-v2` (new key, don't break old progress). Provide `goNext()`, `goBack()`, `goToStep(n)`, `markComplete(n)`, `skip(n)` methods.
 
-### G1.4 — Rewrite Guide Page as Wizard Host (guide-ui)
+### G1.4 - Rewrite Guide Page as Wizard Host (guide-ui)
 
 **File**: `app/(dashboard)/guide/page.tsx`
 
@@ -148,16 +148,16 @@ Where `STEPS` is an array of `{ id, title, description, icon, component, canSkip
 
 **Gate**: User can create a target through an inline multi-sub-step form with provider presets, custom endpoint, and live preview.
 
-This is the most important step — it's where the user configures their first chatbot endpoint. It needs to feel like a first-class setup experience, not a hidden form behind a "Create Mock Target" button.
+This is the most important step - it's where the user configures their first chatbot endpoint. It needs to feel like a first-class setup experience, not a hidden form behind a "Create Mock Target" button.
 
-### G2.1 — Provider Preset Selection (guide-ui)
+### G2.1 - Provider Preset Selection (guide-ui)
 
 **Create**: `components/guide/steps/step-target.tsx`
 
 **Sub-step 1: Choose a Provider**
 
 Visual grid of provider cards (3 columns on desktop, 1 on mobile). Each card shows:
-- Provider icon/logo mark (use colored text icon or first-letter avatar — no external images)
+- Provider icon/logo mark (use colored text icon or first-letter avatar - no external images)
 - Provider name (OpenAI, Anthropic, Google Gemini, Azure OpenAI, Ollama, Mock Chatbot)
 - One-line description
 - Connector type badge (`HTTP_REST`, `SSE`, etc.)
@@ -175,18 +175,18 @@ Also show a "Custom Endpoint" card at the bottom for advanced users who want to 
 
 **Create**: `components/guide/shared/provider-card.tsx`
 
-### G2.2 — Target Configuration Form (guide-ui)
+### G2.2 - Target Configuration Form (guide-ui)
 
 **Sub-step 2: Configure Target**
 
 Inline form that is **pre-filled** from the selected preset but fully editable:
 
 **Fields:**
-- **Name** (text input, required) — Pre-filled: "My OpenAI Bot" or "Mock Chatbot"
-- **Description** (textarea, optional) — Pre-filled from preset description
-- **Endpoint** (text input, required, URL validation) — Pre-filled from `preset.defaultEndpoint`. For Mock Chatbot: `http://localhost:3001/v1/chat/completions`
-- **Connector Type** (select, disabled for presets) — Auto-set from preset
-- **Auth Type** (select, disabled for presets) — Auto-set from preset
+- **Name** (text input, required) - Pre-filled: "My OpenAI Bot" or "Mock Chatbot"
+- **Description** (textarea, optional) - Pre-filled from preset description
+- **Endpoint** (text input, required, URL validation) - Pre-filled from `preset.defaultEndpoint`. For Mock Chatbot: `http://localhost:3001/v1/chat/completions`
+- **Connector Type** (select, disabled for presets) - Auto-set from preset
+- **Auth Type** (select, disabled for presets) - Auto-set from preset
 - **Auth Config** (dynamic fields based on auth type):
   - `NONE`: No fields shown
   - `BEARER_TOKEN`: API key password input
@@ -194,7 +194,7 @@ Inline form that is **pre-filled** from the selected preset but fully editable:
   - `BASIC_AUTH`: Username + password inputs
   - `CUSTOM_HEADER`: Header name + value inputs
 
-**Pre-filled from preset `authFields`** — show labels, placeholders, and required indicators.
+**Pre-filled from preset `authFields`** - show labels, placeholders, and required indicators.
 
 **Request Template** section (collapsed by default, expandable for advanced users):
 - Read-only JSON preview of the request structure
@@ -206,7 +206,7 @@ Inline form that is **pre-filled** from the selected preset but fully editable:
 - Token usage path (pre-filled from preset)
 - Error path (pre-filled from preset)
 
-### G2.3 — Target Preview & Creation (guide-ui)
+### G2.3 - Target Preview & Creation (guide-ui)
 
 **Sub-step 3: Review & Create**
 
@@ -221,7 +221,7 @@ Full read-only preview of what will be created:
 - On failure: red error banner with detailed error message and "Try Again" button
 - Store `createdTargetId` in wizard context
 
-### G2.4 — Guide-Specific Target API (guide-api)
+### G2.4 - Guide-Specific Target API (guide-api)
 
 **Create**: `app/api/guide/create-target/route.ts`
 
@@ -237,11 +237,11 @@ Thin wrapper around the target creation that also:
 
 **Gate**: Connection test runs inline in the guide with live status updates.
 
-### G3.1 — Inline Connection Tester (guide-ui)
+### G3.1 - Inline Connection Tester (guide-ui)
 
 **Create**: `components/guide/shared/connection-tester.tsx`
 
-NOT a link to `/targets` — the test runs right here in the guide:
+NOT a link to `/targets` - the test runs right here in the guide:
 
 **UI:**
 - Large status circle in the center:
@@ -262,7 +262,7 @@ NOT a link to `/targets` — the test runs right here in the guide:
 
 Read `createdTargetId` from wizard context. If null, show "You need to create a target first" with a "Go Back" button.
 
-### G3.2 — Step 4: Test Connection Step (guide-ui)
+### G3.2 - Step 4: Test Connection Step (guide-ui)
 
 **Create**: `components/guide/steps/step-test-connection.tsx`
 
@@ -278,7 +278,7 @@ Wraps the `connection-tester.tsx` component. Auto-runs the test on mount if `cre
 
 **Gate**: User can browse templates, preview them, customize, and create a scenario through the guide.
 
-### G4.1 — Template Browser (guide-ui)
+### G4.1 - Template Browser (guide-ui)
 
 **Create**: `components/guide/steps/step-scenario.tsx`
 
@@ -292,8 +292,8 @@ Visual template browser:
   - Category badge (colored: red for Attack Surface, blue for Stress Test, etc.)
   - Description (2-line truncated)
   - Quick stats: step count, loop count, estimated messages, repetition count
-  - "Preview" button — expands to show flow steps inline
-  - "Use This Template" button — selects it and moves to sub-step 2
+  - "Preview" button - expands to show flow steps inline
+  - "Use This Template" button - selects it and moves to sub-step 2
 
 **Create**: `components/guide/shared/template-card.tsx`
 
@@ -303,7 +303,7 @@ Also include a **"Create from Scratch"** card at the bottom that opens a minimal
 
 Source data from `SCENARIO_TEMPLATES` in `lib/scenarios/templates.ts`.
 
-### G4.2 — Template Preview & Customization (guide-ui)
+### G4.2 - Template Preview & Customization (guide-ui)
 
 **Sub-step 2: Customize Scenario**
 
@@ -311,18 +311,18 @@ After selecting a template:
 - **Scenario name** (text input, pre-filled from template name)
 - **Description** (textarea, pre-filled)
 - **Flow preview**: Visual list of steps with icons:
-  - `message` — Chat bubble icon + message content (editable text input)
-  - `loop` — Loop icon + iteration count (editable number input) + nested steps
-  - `delay` — Clock icon + duration
-  - `conditional` — Branch icon + condition
+  - `message` - Chat bubble icon + message content (editable text input)
+  - `loop` - Loop icon + iteration count (editable number input) + nested steps
+  - `delay` - Clock icon + duration
+  - `conditional` - Branch icon + condition
 - **Execution settings** (collapsed by default):
   - Repetitions (number input, pre-filled)
   - Concurrency (number input, pre-filled)
   - Delay between messages (number input, pre-filled)
 
-Users can edit message content directly in the flow preview. This is NOT the full FlowBuilder drag-and-drop — it's a simplified inline editor.
+Users can edit message content directly in the flow preview. This is NOT the full FlowBuilder drag-and-drop - it's a simplified inline editor.
 
-### G4.3 — Scenario Review & Creation (guide-ui)
+### G4.3 - Scenario Review & Creation (guide-ui)
 
 **Sub-step 3: Review & Create**
 
@@ -332,7 +332,7 @@ Users can edit message content directly in the flow preview. This is NOT the ful
 - On success: green banner + scenario ID, auto-advance
 - Store `createdScenarioId` in wizard context
 
-**CRITICAL**: Use the correct `flowConfig` format from the template. Map template data directly — the templates already use the correct `flowConfig` structure (verified in `lib/scenarios/templates.ts`). Just add proper `id` fields to each step if missing.
+**CRITICAL**: Use the correct `flowConfig` format from the template. Map template data directly - the templates already use the correct `flowConfig` structure (verified in `lib/scenarios/templates.ts`). Just add proper `id` fields to each step if missing.
 
 ---
 
@@ -340,7 +340,7 @@ Users can edit message content directly in the flow preview. This is NOT the ful
 
 **Gate**: User can execute a test and see results inline without leaving the guide.
 
-### G5.1 — Execute Step (guide-ui)
+### G5.1 - Execute Step (guide-ui)
 
 **Create**: `components/guide/steps/step-execute.tsx`
 
@@ -355,7 +355,7 @@ After clicking "Launch Test":
 2. Store `createdSessionId` in wizard context
 3. Transition UI to the mini live viewer
 
-### G5.2 — Mini Log Viewer (guide-ui)
+### G5.2 - Mini Log Viewer (guide-ui)
 
 **Create**: `components/guide/shared/mini-log-viewer.tsx`
 
@@ -373,7 +373,7 @@ An embedded, compact version of the full `LogViewer`:
 
 This replaces the old Step 7 ("Watch it Live") which just linked to `/sessions`.
 
-### G5.3 — Results Step (guide-ui)
+### G5.3 - Results Step (guide-ui)
 
 **Create**: `components/guide/steps/step-results.tsx`
 
@@ -392,8 +392,8 @@ Inline results dashboard (replaces old Step 8 "Analyze Results"):
   - Success rate
 - **What this means** explainer section:
   - Interpret the metrics for the user
-  - "Your chatbot responded in an average of 450ms — this is within normal range"
-  - "0 errors out of 5 messages — all requests succeeded"
+  - "Your chatbot responded in an average of 450ms - this is within normal range"
+  - "0 errors out of 5 messages - all requests succeeded"
 
 Fetch data from `GET /api/sessions/{createdSessionId}` (which includes `summaryMetrics`).
 
@@ -405,33 +405,33 @@ If the session hasn't completed yet, poll every 2 seconds until it does.
 
 **Gate**: All wizard steps are implemented with proper content.
 
-### G6.1 — Welcome Step (guide-ui)
+### G6.1 - Welcome Step (guide-ui)
 
 **Create**: `components/guide/steps/step-welcome.tsx`
 
-More than just text — make it visually engaging:
+More than just text - make it visually engaging:
 - Hero section with Krawall logo and tagline
 - 3 feature highlight cards in a row:
-  - "Multi-Protocol Testing" — HTTP, WebSocket, gRPC, SSE
-  - "Real-Time Monitoring" — Watch conversations as they happen
-  - "Deep Analytics" — Token usage, response times, quality scores
+  - "Multi-Protocol Testing" - HTTP, WebSocket, gRPC, SSE
+  - "Real-Time Monitoring" - Watch conversations as they happen
+  - "Deep Analytics" - Token usage, response times, quality scores
 - **Prerequisites checklist** (auto-detected where possible):
-  - Node.js >= 20 — show as requirement
-  - Docker running — show as requirement
-  - pnpm installed — show as requirement
+  - Node.js >= 20 - show as requirement
+  - Docker running - show as requirement
+  - pnpm installed - show as requirement
 - Estimated time: "This guide takes about 5 minutes"
 - "Let's Get Started" CTA button
 
-### G6.2 — Infrastructure Step (guide-ui)
+### G6.2 - Infrastructure Step (guide-ui)
 
 **Create**: `components/guide/steps/step-infrastructure.tsx`
 
 More interactive than just "run this command":
 - **Service status panel** (3 rows):
-  - PostgreSQL — status dot + port 5432
-  - Redis — status dot + port 6379
-  - Mock Chatbot Server — status dot + port 3001
-- **"Check Services" button** — calls `GET /api/health` and displays results
+  - PostgreSQL - status dot + port 5432
+  - Redis - status dot + port 6379
+  - Mock Chatbot Server - status dot + port 3001
+- **"Check Services" button** - calls `GET /api/health` and displays results
 - If services are down: show the exact commands to run with copy-to-clipboard buttons:
   ```
   task docker:up          # Start PostgreSQL & Redis
@@ -440,7 +440,7 @@ More interactive than just "run this command":
 - If services are up: show green status and enable "Next"
 - Auto-check on mount, re-check every 10 seconds
 
-### G6.3 — Health Check API Enhancement (guide-api)
+### G6.3 - Health Check API Enhancement (guide-api)
 
 **File**: `app/api/health/route.ts`
 
@@ -456,9 +456,9 @@ Enhance the existing health check to return granular service status:
 }
 ```
 
-Add a check for the mock server: try `GET http://localhost:3001/health` with a 2-second timeout. If it fails, report "unreachable" (not an error — it's optional).
+Add a check for the mock server: try `GET http://localhost:3001/health` with a 2-second timeout. If it fails, report "unreachable" (not an error - it's optional).
 
-### G6.4 — Next Steps & Advanced Features Tour (guide-ui)
+### G6.4 - Next Steps & Advanced Features Tour (guide-ui)
 
 **Create**: `components/guide/steps/step-next.tsx`
 
@@ -467,16 +467,16 @@ A feature discovery page, NOT just links:
 - **What you built** summary:
   - Target: {name} at {endpoint}
   - Scenario: {name} with {step count} steps
-  - Session: {id} — {message count} messages, {total tokens} tokens
+  - Session: {id} - {message count} messages, {total tokens} tokens
 - **Advanced features grid** (2 columns, interactive cards):
-  - **Batch Testing** — Run the same scenario against multiple targets simultaneously
-  - **A/B Comparison** — Compare two sessions side-by-side with statistical analysis
-  - **Webhook Alerts** — Get notified when sessions complete or fail
-  - **Scheduled Jobs** — Run scenarios on a cron schedule
-  - **API Docs** — Full API reference for automation
-  - **Plugin System** — Build custom connectors for your chatbot
+  - **Batch Testing** - Run the same scenario against multiple targets simultaneously
+  - **A/B Comparison** - Compare two sessions side-by-side with statistical analysis
+  - **Webhook Alerts** - Get notified when sessions complete or fail
+  - **Scheduled Jobs** - Run scenarios on a cron schedule
+  - **API Docs** - Full API reference for automation
+  - **Plugin System** - Build custom connectors for your chatbot
 - Each card: icon, title, 2-line description, "Explore" link
-- **"Run another test"** button — resets wizard to step 3 (reuse target, pick new scenario)
+- **"Run another test"** button - resets wizard to step 3 (reuse target, pick new scenario)
 
 ---
 
@@ -484,7 +484,7 @@ A feature discovery page, NOT just links:
 
 **Gate**: Guide works end-to-end, handles errors gracefully, is responsive.
 
-### G7.1 — Error Handling (guide-ui)
+### G7.1 - Error Handling (guide-ui)
 
 Every API call in the guide needs:
 - Loading spinner on the action button
@@ -498,13 +498,13 @@ Every API call in the guide needs:
 - Validation error: Show field-level errors on the form
 - Duplicate target name: "A target named 'Mock Chatbot' already exists. Use a different name or delete the existing one."
 
-### G7.2 — Responsive Design (guide-ui)
+### G7.2 - Responsive Design (guide-ui)
 
 - **Desktop** (>1024px): Two-column layout (sidebar rail + content)
 - **Tablet** (768-1024px): Sidebar rail collapses to compact icons
 - **Mobile** (<768px): Full-width content, horizontal step indicators at top, swipe navigation between steps
 
-### G7.3 — Keyboard Navigation (guide-ui)
+### G7.3 - Keyboard Navigation (guide-ui)
 
 - `Enter` to advance / submit current step
 - `Backspace` to go back
@@ -512,7 +512,7 @@ Every API call in the guide needs:
 - Number keys (1-8) to jump to step
 - `Esc` to close expanded sections
 
-### G7.4 — Resume & Recovery (guide-ui)
+### G7.4 - Resume & Recovery (guide-ui)
 
 When user returns to the guide:
 - Detect existing progress from localStorage
@@ -521,7 +521,7 @@ When user returns to the guide:
 - If session was created, show results if completed, or re-attach to stream if still running.
 - Show a "Welcome back! You're on step {n}" banner with option to "Start Fresh"
 
-### G7.5 — Animations & Transitions (guide-ui)
+### G7.5 - Animations & Transitions (guide-ui)
 
 - Step transitions: slide-left (forward) / slide-right (back) with 200ms duration
 - Content fade-in within steps (150ms)
@@ -530,18 +530,18 @@ When user returns to the guide:
 - Success/error banners: slide-down entry
 - Skeleton loading states for async content (provider presets, templates, session data)
 
-### G7.6 — Integration Tests (test-eng)
+### G7.6 - Integration Tests (test-eng)
 
 Write an integration test that simulates the full guide flow:
-1. Open guide — verify wizard shell renders
-2. Step 1: Welcome — click Next
-3. Step 2: Infrastructure — verify health check called
-4. Step 3: Select Mock Chatbot preset — verify form pre-fills — create target — verify API called with correct payload
-5. Step 4: Test connection — verify test endpoint called with correct target ID
-6. Step 5: Select Quick Start template — verify form pre-fills — create scenario — verify `flowConfig` format is correct
-7. Step 6: Execute — verify execute API called — verify mini log viewer connects to SSE
-8. Step 7: Results — verify metrics fetched
-9. Step 8: Next Steps — verify links
+1. Open guide - verify wizard shell renders
+2. Step 1: Welcome - click Next
+3. Step 2: Infrastructure - verify health check called
+4. Step 3: Select Mock Chatbot preset - verify form pre-fills - create target - verify API called with correct payload
+5. Step 4: Test connection - verify test endpoint called with correct target ID
+6. Step 5: Select Quick Start template - verify form pre-fills - create scenario - verify `flowConfig` format is correct
+7. Step 6: Execute - verify execute API called - verify mini log viewer connects to SSE
+8. Step 7: Results - verify metrics fetched
+9. Step 8: Next Steps - verify links
 
 ---
 
@@ -568,38 +568,38 @@ Write an integration test that simulates the full guide flow:
 - `tests/integration/guide.test.ts`
 
 **Modified files (2):**
-- `app/(dashboard)/guide/page.tsx` — Complete rewrite
-- `app/api/health/route.ts` — Add granular service status
+- `app/(dashboard)/guide/page.tsx` - Complete rewrite
+- `app/api/health/route.ts` - Add granular service status
 
 **Read-only dependencies (do NOT modify):**
-- `lib/connectors/presets.ts` — Import `PROVIDER_PRESETS`
-- `lib/scenarios/templates.ts` — Import `SCENARIO_TEMPLATES`
-- `app/api/targets/route.ts` — Target creation API
-- `app/api/scenarios/route.ts` — Scenario creation API (correct `flowConfig` format)
-- `app/api/execute/route.ts` — Session execution API
-- `app/api/sessions/[id]/stream/route.ts` — SSE stream for live logs
-- `components/ui/*.tsx` — Existing UI primitives (Button, Card, Toast, etc.)
+- `lib/connectors/presets.ts` - Import `PROVIDER_PRESETS`
+- `lib/scenarios/templates.ts` - Import `SCENARIO_TEMPLATES`
+- `app/api/targets/route.ts` - Target creation API
+- `app/api/scenarios/route.ts` - Scenario creation API (correct `flowConfig` format)
+- `app/api/execute/route.ts` - Session execution API
+- `app/api/sessions/[id]/stream/route.ts` - SSE stream for live logs
+- `components/ui/*.tsx` - Existing UI primitives (Button, Card, Toast, etc.)
 
 ---
 
 ## Execution Order
 
-### Phase 1 (G1): Fix bug + scaffold — parallel
+### Phase 1 (G1): Fix bug + scaffold - parallel
 - **guide-api**: Fix scenario payload (G1.1)
 - **guide-ui**: Wizard shell + context (G1.2, G1.3, G1.4)
 - **test-eng**: Verify scenario fix after G1.1
 
-### Phase 2 (G2 + G3): Target + test — after Phase 1
+### Phase 2 (G2 + G3): Target + test - after Phase 1
 - **guide-ui**: Provider presets, target form, connection tester (G2.1-G2.3, G3.1-G3.2)
-- **guide-api**: Guide target endpoint (G2.4), health check (G6.3) — parallel
+- **guide-api**: Guide target endpoint (G2.4), health check (G6.3) - parallel
 
-### Phase 3 (G4): Scenarios — after Phase 2
+### Phase 3 (G4): Scenarios - after Phase 2
 - **guide-ui**: Template browser, customization, creation (G4.1-G4.3)
 
-### Phase 4 (G5 + G6): Execute, results, bookends — after Phase 3
+### Phase 4 (G5 + G6): Execute, results, bookends - after Phase 3
 - **guide-ui**: Execute, mini log viewer, results, welcome, infrastructure, next steps
 
-### Phase 5 (G7): Polish — after Phase 4
+### Phase 5 (G7): Polish - after Phase 4
 - **guide-ui**: Error handling, responsive, animations (G7.1-G7.5)
 - **test-eng**: Full integration test (G7.6)
 
@@ -611,10 +611,10 @@ After all milestones, the guide must:
 1. Load at `/guide` with the wizard shell and 8 steps in the left rail
 2. Step 1: Welcome with feature highlights and prerequisites
 3. Step 2: Infrastructure status with live service checks
-4. Step 3: 6+ provider presets in a grid — select Mock Chatbot — pre-fill form — create target — success banner with ID
-5. Step 4: Auto-run connection test — green success with latency — troubleshooting if fails
-6. Step 5: 12 scenario templates in categorized grid — select template — customize — create scenario — success
-7. Step 6: Launch panel — click Launch — mini log viewer shows live messages — session completes
+4. Step 3: 6+ provider presets in a grid - select Mock Chatbot - pre-fill form - create target - success banner with ID
+5. Step 4: Auto-run connection test - green success with latency - troubleshooting if fails
+6. Step 5: 12 scenario templates in categorized grid - select template - customize - create scenario - success
+7. Step 6: Launch panel - click Launch - mini log viewer shows live messages - session completes
 8. Step 7: Inline metrics: message count, avg response time, tokens, error rate, mini chart
 9. Step 8: Celebration + feature discovery grid + "Run another test"
 10. Progress persists across reloads via localStorage

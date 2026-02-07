@@ -36,7 +36,7 @@ When `testMode` is `true`:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/health` | Health check — returns `{ status, requestsServed }` |
+| `GET` | `/health` | Health check - returns `{ status, requestsServed }` |
 | `POST` | `/v1/chat/completions` | OpenAI-compatible chat completions endpoint |
 | `POST` | `/chat` | Simple chat endpoint (lighter request/response format) |
 | `POST` | `/error` | Always returns HTTP 500 |
@@ -245,7 +245,7 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### E-commerce — List Products
+### E-commerce - List Products
 
 ```bash
 curl -X POST http://localhost:3001/v1/chat/completions \
@@ -257,7 +257,7 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### E-commerce — Compare Products
+### E-commerce - Compare Products
 
 ```bash
 curl -X POST http://localhost:3001/v1/chat/completions \
@@ -268,7 +268,7 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### E-commerce — Reviews
+### E-commerce - Reviews
 
 ```bash
 curl -X POST http://localhost:3001/v1/chat/completions \
@@ -279,7 +279,7 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### Support — FAQ Match
+### Support - FAQ Match
 
 ```bash
 curl -X POST http://localhost:3001/v1/chat/completions \
@@ -290,7 +290,7 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### Code — TypeScript Example
+### Code - TypeScript Example
 
 ```bash
 curl -X POST http://localhost:3001/v1/chat/completions \
@@ -302,10 +302,10 @@ curl -X POST http://localhost:3001/v1/chat/completions \
   }'
 ```
 
-### Rate-Limited — Trigger 429
+### Rate-Limited - Trigger 429
 
 ```bash
-# Send 3 requests to the same session — the 3rd will return 429
+# Send 3 requests to the same session - the 3rd will return 429
 for i in 1 2 3; do
   echo "--- Request $i ---"
   curl -s -o /dev/null -w "HTTP %{http_code}\n" \
@@ -317,7 +317,7 @@ for i in 1 2 3; do
 done
 ```
 
-### Flaky — Observe Random Failures
+### Flaky - Observe Random Failures
 
 ```bash
 # Send 10 requests and observe the mix of successes and failures

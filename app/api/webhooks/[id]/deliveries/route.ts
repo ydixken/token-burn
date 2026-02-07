@@ -59,7 +59,7 @@ export async function GET(
           nextRetryAt: true,
           error: true,
           createdAt: true,
-          // Exclude full payload from list — fetch by ID if needed
+          // Exclude full payload from list - fetch by ID if needed
         },
       }),
       prisma.webhookDelivery.count({ where }),

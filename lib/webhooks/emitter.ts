@@ -98,7 +98,7 @@ export async function emitWebhookEvent(
       }
     }
   } catch (error) {
-    // Log but don't throw — webhook emission must never break session execution
+    // Log but don't throw - webhook emission must never break session execution
     console.error(`Failed to emit webhook event "${event}":`, error);
   }
 }

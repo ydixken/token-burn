@@ -463,7 +463,7 @@ export function createSessionWorker() {
             errorCount: summary.errorCount,
           },
           completedAt: new Date().toISOString(),
-        }).catch(() => {}); // Swallow errors — emitter already logs internally
+        }).catch(() => {}); // Swallow errors - emitter already logs internally
 
         return { success: true, sessionId, summary };
       } catch (error) {
@@ -501,7 +501,7 @@ export function createSessionWorker() {
           status: "FAILED",
           error: (error as Error).message,
           failedAt: new Date().toISOString(),
-        }).catch(() => {}); // Swallow errors — emitter already logs internally
+        }).catch(() => {}); // Swallow errors - emitter already logs internally
 
         throw error;
       }
@@ -813,7 +813,7 @@ async function executeMessage(
 
           const retryResponseTimeMs = Date.now() - retryStart;
 
-          // Success on retry — update context and log
+          // Success on retry - update context and log
           context.conversation.addMessage("assistant", retryResponse.content);
           context.lastResponse = retryResponse.content;
 
@@ -832,18 +832,18 @@ async function executeMessage(
           logger.logMessage(retryEntry);
 
           console.log(`    Retry ${attempt} succeeded (${retryResponseTimeMs}ms)`);
-          return; // Success — exit catch block
+          return; // Success - exit catch block
         } catch (retryError) {
           lastAttemptError = retryError;
           console.error(`    Retry ${attempt} failed: ${(retryError as Error).message}`);
         }
       }
 
-      // All retries exhausted — log and skip (fall through)
+      // All retries exhausted - log and skip (fall through)
       console.error(`    All ${action.maxRetries} retries exhausted, skipping message`);
     }
 
-    // "skip" (default) — continue with next message
+    // "skip" (default) - continue with next message
   }
 }
 

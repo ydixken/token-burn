@@ -11,7 +11,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-Private-grey)]()
 
-Krawall is a full-stack chatbot testing platform for QA engineers, DevOps teams, and AI developers. Configure targets, build test scenarios, fire off sessions, and analyze results — all from a single dashboard.
+Krawall is a full-stack chatbot testing platform for QA engineers, DevOps teams, and AI developers. Configure targets, build test scenarios, fire off sessions, and analyze results - all from a single dashboard.
 
 </div>
 
@@ -24,7 +24,7 @@ Krawall is a full-stack chatbot testing platform for QA engineers, DevOps teams,
 <td width="33%" valign="top">
 
 ### Multi-Protocol
-HTTP/REST, WebSocket, gRPC, and Server-Sent Events — test any chatbot endpoint regardless of protocol.
+HTTP/REST, WebSocket, gRPC, and Server-Sent Events - test any chatbot endpoint regardless of protocol.
 
 </td>
 <td width="33%" valign="top">
@@ -68,50 +68,50 @@ Side-by-side statistical comparison of chatbot responses across different provid
 
 ### Setup & Configuration
 
-- **Interactive Setup Wizard** — 8-step guided configurator with inline connection testing and live session monitoring
-- **Provider Presets** — Pre-configured templates for OpenAI, Anthropic, Gemini, Azure, Ollama, custom HTTP/WS/gRPC
-- **Inline Connection Testing** — Verify endpoints before committing to a configuration
-- **Centralized Settings** — Manage all application configuration from `/settings`
+- **Interactive Setup Wizard** - 8-step guided configurator with inline connection testing and live session monitoring
+- **Provider Presets** - Pre-configured templates for OpenAI, Anthropic, Gemini, Azure, Ollama, custom HTTP/WS/gRPC
+- **Inline Connection Testing** - Verify endpoints before committing to a configuration
+- **Centralized Settings** - Manage all application configuration from `/settings`
 
 ### Scenario Management
 
-- **Visual Flow Builder** — Drag-and-drop editor with message, loop, delay, and conditional steps
-- **12 Pre-built Templates** — Stress tests, edge cases, context testing, rapid fire, branching logic, attack surface patterns
-- **Handlebars Templating** — Dynamic variable substitution with message index, timestamps, last response, and custom variables
-- **YAML Import/Export** — Version-control-friendly scenario format with bulk import
+- **Visual Flow Builder** - Drag-and-drop editor with message, loop, delay, and conditional steps
+- **12 Pre-built Templates** - Stress tests, edge cases, context testing, rapid fire, branching logic, attack surface patterns
+- **Handlebars Templating** - Dynamic variable substitution with message index, timestamps, last response, and custom variables
+- **YAML Import/Export** - Version-control-friendly scenario format with bulk import
 
 ### Execution Engine
 
-- **Async Job Queue** — BullMQ-powered fire-and-forget execution with configurable worker concurrency
-- **Conversation Context** — Stateful session memory with message history, conversation ID tracking, and context windowing
-- **Concurrency Control** — Semaphore-based limiting (1–100 parallel sessions)
-- **Rate Limiting** — Token bucket algorithm with automatic 429 detection and exponential backoff
-- **Configurable Error Handling** — Per-scenario retry policies, timeouts, and error injection for resilience testing
-- **Session Actions** — Restart, cancel, or delete sessions mid-flight
+- **Async Job Queue** - BullMQ-powered fire-and-forget execution with configurable worker concurrency
+- **Conversation Context** - Stateful session memory with message history, conversation ID tracking, and context windowing
+- **Concurrency Control** - Semaphore-based limiting (1–100 parallel sessions)
+- **Rate Limiting** - Token bucket algorithm with automatic 429 detection and exponential backoff
+- **Configurable Error Handling** - Per-scenario retry policies, timeouts, and error injection for resilience testing
+- **Session Actions** - Restart, cancel, or delete sessions mid-flight
 
 ### Monitoring & Analytics
 
-- **Live Dashboard** — Auto-refreshing widgets for active sessions, completion rate, response time, error rate, and token usage
-- **Chart Visualizations** — Response time (line/bar), token distribution (doughnut), error rate trends via Chart.js
-- **Session Replay** — Step-through playback with timeline, anomaly highlighting, and per-message metrics
-- **Quality Scoring** — Automated relevance, coherence, and completeness assessment
-- **Data Export** — CSV and JSON export for metrics and aggregated results
+- **Live Dashboard** - Auto-refreshing widgets for active sessions, completion rate, response time, error rate, and token usage
+- **Chart Visualizations** - Response time (line/bar), token distribution (doughnut), error rate trends via Chart.js
+- **Session Replay** - Step-through playback with timeline, anomaly highlighting, and per-message metrics
+- **Quality Scoring** - Automated relevance, coherence, and completeness assessment
+- **Data Export** - CSV and JSON export for metrics and aggregated results
 
 ### Integrations & Automation
 
-- **Webhook Notifications** — HMAC-SHA256 signed delivery for `session.completed` and `session.failed` events with retry
-- **Batch Execution** — Run the same scenario against multiple targets in parallel with aggregated results
-- **Cron Scheduling** — Standard cron expressions with timezone support for recurring test runs
-- **Plugin System** — Extensible architecture with Multi-Step Auth, OpenAI, Anthropic, and Audit plugins
+- **Webhook Notifications** - HMAC-SHA256 signed delivery for `session.completed` and `session.failed` events with retry
+- **Batch Execution** - Run the same scenario against multiple targets in parallel with aggregated results
+- **Cron Scheduling** - Standard cron expressions with timezone support for recurring test runs
+- **Plugin System** - Extensible architecture with Multi-Step Auth, OpenAI, Anthropic, and Audit plugins
 
 ### Developer Experience
 
-- **API Documentation** — Built-in Swagger/OpenAPI explorer at `/api-docs`
-- **Mock Chatbot Server** — OpenAI-compatible mock with 5 personas (verbose, XML, ecommerce, support, repetitive)
-- **Command Palette** — `Cmd+K` keyboard shortcuts for power users
-- **Worker Auto-Start** — BullMQ workers launch automatically via Next.js `instrumentation.ts` — no separate process
-- **File-Based Logging** — High-performance JSONL format for session data without database bloat
-- **40+ Task Commands** — Comprehensive Taskfile for dev, test, build, database, and Docker operations
+- **API Documentation** - Built-in Swagger/OpenAPI explorer at `/api-docs`
+- **Mock Chatbot Server** - OpenAI-compatible mock with 5 personas (verbose, XML, ecommerce, support, repetitive)
+- **Command Palette** - `Cmd+K` keyboard shortcuts for power users
+- **Worker Auto-Start** - BullMQ workers launch automatically via Next.js `instrumentation.ts` - no separate process
+- **File-Based Logging** - High-performance JSONL format for session data without database bloat
+- **40+ Task Commands** - Comprehensive Taskfile for dev, test, build, database, and Docker operations
 
 ---
 
@@ -200,9 +200,9 @@ All chatbot protocols extend a `BaseConnector` abstract class with a registry pa
 
 ### Worker Pipeline
 
-1. **Session Execution** — Execute test scenarios with connector lifecycle management
-2. **Metrics Aggregation** — Compute P50/P95/P99 percentiles from raw session data
-3. **Webhook Delivery** — HMAC-signed event delivery with exponential backoff retry
+1. **Session Execution** - Execute test scenarios with connector lifecycle management
+2. **Metrics Aggregation** - Compute P50/P95/P99 percentiles from raw session data
+3. **Webhook Delivery** - HMAC-signed event delivery with exponential backoff retry
 
 Workers start automatically via `instrumentation.ts` and shut down gracefully on `SIGTERM`/`SIGINT`.
 
@@ -297,12 +297,12 @@ task worker:status    # Check queue health
 
 ## Security
 
-- **Credential Encryption** — AES-256-GCM at rest for all stored secrets
-- **Input Validation** — Zod schemas on every API endpoint
-- **SQL Injection Prevention** — Prisma parameterized queries
-- **Webhook Signing** — HMAC-SHA256 payload verification
-- **Rate Limiting** — Token bucket per target
-- **Security Headers** — Configured via Next.js middleware
+- **Credential Encryption** - AES-256-GCM at rest for all stored secrets
+- **Input Validation** - Zod schemas on every API endpoint
+- **SQL Injection Prevention** - Prisma parameterized queries
+- **Webhook Signing** - HMAC-SHA256 payload verification
+- **Rate Limiting** - Token bucket per target
+- **Security Headers** - Configured via Next.js middleware
 
 ---
 

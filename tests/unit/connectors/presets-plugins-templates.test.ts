@@ -14,7 +14,7 @@ import { multiStepAuthPlugin } from "@/lib/connectors/plugins/multi-step-auth-pl
  * - Every preset has valid templates that extract correctly from exampleResponse
  * - BaseConnector.applyRequestTemplate() with every preset's request template
  * - BaseConnector.extractResponse() with every preset's example response
- * - Plugin loading — plugins register with ConnectorRegistry
+ * - Plugin loading - plugins register with ConnectorRegistry
  * - Plugin lifecycle hooks
  */
 

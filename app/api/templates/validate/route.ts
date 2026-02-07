@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
       // Validate errorPath
       if (errorPath) {
-        // Error path may not have a value in a success response — just check it's a valid path structure
+        // Error path may not have a value in a success response - just check it's a valid path structure
         const errorValue = getValueAtPath(sample, errorPath);
         results.push({
           field: "responseTemplate.errorPath",

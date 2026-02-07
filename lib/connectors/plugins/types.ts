@@ -39,7 +39,7 @@ export interface ConnectorPlugin {
   /** Connector types this plugin is compatible with */
   compatibleConnectors: string[];
 
-  /** Execution priority — lower runs first. Default 100. Auth plugins use 10. */
+  /** Execution priority - lower runs first. Default 100. Auth plugins use 10. */
   priority?: number;
 
   /** Minimum connector version required (semver) */

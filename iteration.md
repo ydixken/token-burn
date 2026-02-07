@@ -1,4 +1,4 @@
-# Krawall: Major Feature & Polish Sprint — Team Leader Brief
+# Krawall: Major Feature & Polish Sprint - Team Leader Brief
 
 ## Context
 
@@ -31,17 +31,17 @@ Spawn **7 engineers** plus yourself. Assign strict file ownership to prevent mer
 
 Every agent MUST read before starting:
 
-1. `AGENTS.md` — development rules (RFC 2119)
-2. `CLAUDE.md` — agent instructions
-3. `prisma/schema.prisma` — data model
-4. `app/(dashboard)/layout.tsx` — current sidebar/layout
-5. `app/globals.css` — current styles
-6. `tailwind.config.ts` — theme config
+1. `AGENTS.md` - development rules (RFC 2119)
+2. `CLAUDE.md` - agent instructions
+3. `prisma/schema.prisma` - data model
+4. `app/(dashboard)/layout.tsx` - current sidebar/layout
+5. `app/globals.css` - current styles
+6. `tailwind.config.ts` - theme config
 
 Additionally:
 
 - **plugin-eng**: `lib/connectors/base.ts`, `lib/connectors/plugins/types.ts`, `lib/connectors/plugins/loader.ts`, `lib/connectors/plugins/openai-plugin.ts`, `lib/connectors/plugins/multi-step-auth-plugin.ts`
-- **backend-api**: All files in `app/api/` — read every route handler
+- **backend-api**: All files in `app/api/` - read every route handler
 - **test-eng**: `tests/mocks/chatbot-server.ts`, all existing tests in `tests/`
 
 ---
@@ -50,7 +50,7 @@ Additionally:
 
 **Gate**: All routes return correct responses, no false positives.
 
-### 1.1 — Fix Test Connection Bug (backend-api)
+### 1.1 - Fix Test Connection Bug (backend-api)
 
 **File**: `app/api/targets/[id]/test/route.ts`
 
@@ -69,7 +69,7 @@ Additionally:
 - `POST /api/targets/{id}/test` with `https://chat.invalidddddomain.com` → `success: false, data.error` contains DNS error
 - `POST /api/targets/{id}/test` with `https://httpstat.us/500` → `success: false`
 
-### 1.2 — Fix Missing Target Detail Page (ui-pages)
+### 1.2 - Fix Missing Target Detail Page (ui-pages)
 
 **Problem**: `/targets/{id}` returns 404. The targets list "View" button links here but no page exists.
 
@@ -88,29 +88,29 @@ Content:
 
 **backend-api verifies**: `GET /api/targets/{id}` returns full target data with masked credentials
 
-### 1.3 — Audit All Frontend Routes (test-eng)
+### 1.3 - Audit All Frontend Routes (test-eng)
 
 Navigate to EVERY page in the app and verify:
 
-- `/` — loads without errors
-- `/targets` — loads, all action buttons work
-- `/targets/new` — wizard loads and completes
-- `/targets/{id}` — NEW page from 1.2 loads
-- `/targets/{id}/edit` — loads with pre-filled data
-- `/scenarios` — loads, YAML import/export works
-- `/scenarios/new` — flow builder loads
-- `/scenarios/{id}/edit` — loads with existing scenario
-- `/sessions` — loads, filters work
-- `/sessions/{id}` — loads with LogViewer
-- `/batches` — loads
-- `/batches/{id}` — loads
-- `/compare` — loads
-- `/metrics` — charts render
-- `/settings/webhooks` — loads
+- `/` - loads without errors
+- `/targets` - loads, all action buttons work
+- `/targets/new` - wizard loads and completes
+- `/targets/{id}` - NEW page from 1.2 loads
+- `/targets/{id}/edit` - loads with pre-filled data
+- `/scenarios` - loads, YAML import/export works
+- `/scenarios/new` - flow builder loads
+- `/scenarios/{id}/edit` - loads with existing scenario
+- `/sessions` - loads, filters work
+- `/sessions/{id}` - loads with LogViewer
+- `/batches` - loads
+- `/batches/{id}` - loads
+- `/compare` - loads
+- `/metrics` - charts render
+- `/settings/webhooks` - loads
 
 Report: which pages work, which are broken, which have console errors. Create a checklist for team-lead.
 
-### 1.4 — Audit All API Routes (test-eng)
+### 1.4 - Audit All API Routes (test-eng)
 
 Hit every API endpoint with curl and verify responses:
 
@@ -125,36 +125,36 @@ Create a test script that exercises every route.
 
 ## Milestone 2: Design System & Layout Overhaul
 
-**Goal**: Transform the crude prototype into a sleek, engineer-focused product. Think Vercel dashboard meets Datadog meets Linear — dark, dense, information-rich, with subtle animations and thoughtful spacing.
+**Goal**: Transform the crude prototype into a sleek, engineer-focused product. Think Vercel dashboard meets Datadog meets Linear - dark, dense, information-rich, with subtle animations and thoughtful spacing.
 
 **Gate**: The app looks like a commercial product, not a weekend project.
 
-### 2.1 — Design System Foundation (ui-lead)
+### 2.1 - Design System Foundation (ui-lead)
 
 **Create**: `components/ui/` directory with reusable primitives. These are the building blocks for all pages.
 
 **Files to create**:
 
-- `components/ui/sidebar.tsx` — Collapsible sidebar component
-- `components/ui/button.tsx` — Button variants (primary, secondary, ghost, danger, icon)
-- `components/ui/card.tsx` — Card variants (default, bordered, interactive, stat)
-- `components/ui/badge.tsx` — Status badges, tags, labels
-- `components/ui/input.tsx` — Text input, textarea, select
-- `components/ui/modal.tsx` — Modal/dialog component
-- `components/ui/tabs.tsx` — Tab component
-- `components/ui/tooltip.tsx` — Hover tooltip
-- `components/ui/dropdown.tsx` — Dropdown menu
-- `components/ui/breadcrumb.tsx` — Breadcrumb navigation
-- `components/ui/empty-state.tsx` — Empty state with icon and CTA
-- `components/ui/data-table.tsx` — Sortable, filterable table
-- `components/ui/json-viewer.tsx` — Syntax-highlighted JSON display
-- `components/ui/status-indicator.tsx` — Animated dot indicators (live, idle, error)
-- `components/ui/metric-card.tsx` — Compact metric display with trend arrow
-- `components/ui/code-block.tsx` — Code display with copy button
+- `components/ui/sidebar.tsx` - Collapsible sidebar component
+- `components/ui/button.tsx` - Button variants (primary, secondary, ghost, danger, icon)
+- `components/ui/card.tsx` - Card variants (default, bordered, interactive, stat)
+- `components/ui/badge.tsx` - Status badges, tags, labels
+- `components/ui/input.tsx` - Text input, textarea, select
+- `components/ui/modal.tsx` - Modal/dialog component
+- `components/ui/tabs.tsx` - Tab component
+- `components/ui/tooltip.tsx` - Hover tooltip
+- `components/ui/dropdown.tsx` - Dropdown menu
+- `components/ui/breadcrumb.tsx` - Breadcrumb navigation
+- `components/ui/empty-state.tsx` - Empty state with icon and CTA
+- `components/ui/data-table.tsx` - Sortable, filterable table
+- `components/ui/json-viewer.tsx` - Syntax-highlighted JSON display
+- `components/ui/status-indicator.tsx` - Animated dot indicators (live, idle, error)
+- `components/ui/metric-card.tsx` - Compact metric display with trend arrow
+- `components/ui/code-block.tsx` - Code display with copy button
 
 **Design tokens** (update `tailwind.config.ts` and `app/globals.css`):
 
-Color palette — dark, high-contrast, engineer-focused:
+Color palette - dark, high-contrast, engineer-focused:
 
 - Background layers: `gray-950` (deepest), `gray-900` (cards), `gray-800` (elevated), `gray-750` (hover)
 - Borders: `gray-800` (default), `gray-700` (emphasized)
@@ -165,24 +165,24 @@ Color palette — dark, high-contrast, engineer-focused:
 
 Typography:
 
-- Headings: `font-semibold`, not bold — cleaner
+- Headings: `font-semibold`, not bold - cleaner
 - Mono font for: IDs, endpoints, JSON paths, code, timestamps
 - Small text: `text-xs` for metadata, `text-sm` for body
 
 Spacing:
 
-- Tighter than current — reduce padding from `p-6` to `p-4` on most cards
-- Dense information display — engineers want data density, not whitespace
+- Tighter than current - reduce padding from `p-6` to `p-4` on most cards
+- Dense information display - engineers want data density, not whitespace
 - Consistent `gap-3` between card elements, `gap-4` between sections
 
 Animations:
 
-- Subtle fade-in on page load (200ms, not 300ms — snappier)
+- Subtle fade-in on page load (200ms, not 300ms - snappier)
 - Micro-interactions on hover (border glow, slight scale)
 - Smooth skeleton loading states (not blank → content jump)
 - Live pulse on active indicators (subtle, not distracting)
 
-### 2.2 — Sidebar Redesign (ui-lead)
+### 2.2 - Sidebar Redesign (ui-lead)
 
 **File**: `app/(dashboard)/layout.tsx`
 
@@ -192,7 +192,7 @@ Replace the current text-link sidebar with an icon-based navigation bar (like cl
 
 - Icon-only navigation with tooltip on hover
 - Krawall logo mark at top (small, monochrome)
-- Icons for each section (use Lucide React icons — already common in Next.js projects):
+- Icons for each section (use Lucide React icons - already common in Next.js projects):
   - `LayoutDashboard` → Dashboard
   - `Crosshair` → Targets
   - `FileText` → Scenarios
@@ -218,10 +218,10 @@ Replace the current text-link sidebar with an icon-based navigation bar (like cl
 
 **Header redesign**:
 
-- Remove "Krawall Dashboard" and "Next.js 16.1.4 + TypeScript + Tailwind" — completely
+- Remove "Krawall Dashboard" and "Next.js 16.1.4 + TypeScript + Tailwind" - completely
 - Add breadcrumb navigation showing current location: `Dashboard / Targets / My OpenAI Bot`
 - Add a compact status bar: "3 sessions running" with live count (clicking goes to sessions)
-- Add command palette trigger (`Cmd+K` or `Ctrl+K`) — even if the palette itself is a later feature
+- Add command palette trigger (`Cmd+K` or `Ctrl+K`) - even if the palette itself is a later feature
 
 **Mobile responsive**:
 
@@ -231,7 +231,7 @@ Replace the current text-link sidebar with an icon-based navigation bar (like cl
 
 **Install dependency**: `pnpm add lucide-react`
 
-### 2.3 — Global Page Template (ui-lead)
+### 2.3 - Global Page Template (ui-lead)
 
 Create a consistent page wrapper that all pages use:
 
@@ -245,9 +245,9 @@ Create a consistent page wrapper that all pages use:
 />
 ```
 
-Every page should follow: `PageHeader → Content → (optional Footer)`. No page should set its own h1 styling — the PageHeader handles it.
+Every page should follow: `PageHeader → Content → (optional Footer)`. No page should set its own h1 styling - the PageHeader handles it.
 
-### 2.4 — Install Lucide React (backend-infra)
+### 2.4 - Install Lucide React (backend-infra)
 
 Run: `pnpm add lucide-react`
 
@@ -255,11 +255,11 @@ Verify it doesn't break the build: `pnpm build` (or at least `pnpm run dev` star
 
 ---
 
-## Milestone 3: Page Redesigns — Dashboard & Core Pages
+## Milestone 3: Page Redesigns - Dashboard & Core Pages
 
 **Gate**: Every page looks polished and professional, information density is high, interactions are smooth.
 
-### 3.1 — Dashboard Redesign: Multi-Tiled Command Center (ui-pages)
+### 3.1 - Dashboard Redesign: Multi-Tiled Command Center (ui-pages)
 
 **File**: `app/(dashboard)/page.tsx`
 
@@ -295,19 +295,19 @@ The dashboard should feel like a mission control center. Dense, real-time, actio
 - Clicking a session opens an inline mini-viewer (not a full page navigation)
 - Shows the last 3-5 messages scrolling in real-time
 - "Open Full View" link for the complete LogViewer
-- This is the "drop into any conversation" feature — the user should be able to see what's happening in every active session from the dashboard without leaving the page
+- This is the "drop into any conversation" feature - the user should be able to see what's happening in every active session from the dashboard without leaving the page
 
-**Quick Stats**: Total targets, scenarios, sessions run, error rate — compact metric cards with sparkline trends
+**Quick Stats**: Total targets, scenarios, sessions run, error rate - compact metric cards with sparkline trends
 
 **Quick Execute**: Target + scenario dropdowns + Run button (already exists, keep it)
 
-**Recent Activity Feed**: Last 10 events (session started, completed, failed, webhook fired) — like a terminal log feed with timestamps and color-coded entries
+**Recent Activity Feed**: Last 10 events (session started, completed, failed, webhook fired) - like a terminal log feed with timestamps and color-coded entries
 
 **Performance Overview**: Small sparkline charts for response time trend and error rate over last 24h (use Chart.js in small format)
 
 **Scheduled Jobs**: Next 3 upcoming jobs with countdown timers
 
-### 3.2 — Targets Page Redesign (ui-pages)
+### 3.2 - Targets Page Redesign (ui-pages)
 
 **File**: `app/(dashboard)/targets/page.tsx`
 
@@ -322,18 +322,18 @@ Switch from a grid of oversized cards to a **data table** layout:
 - Search/filter bar at top
 - Bulk actions: test all, delete selected
 
-### 3.3 — Sessions Page Redesign (ui-pages)
+### 3.3 - Sessions Page Redesign (ui-pages)
 
 **File**: `app/(dashboard)/sessions/page.tsx`
 
-- **Running sessions** section at top — visually separated with blue accent border, pulse indicators, "Watch Live" buttons
-- **Table view** for completed/queued sessions (not cards) — denser information
+- **Running sessions** section at top - visually separated with blue accent border, pulse indicators, "Watch Live" buttons
+- **Table view** for completed/queued sessions (not cards) - denser information
 - Columns: Status, Target, Scenario, Started, Duration, Messages, Tokens, Errors, Actions
 - Click a row → session detail
 - Status filter tabs (keep existing but restyle as pill tabs)
 - Real-time elapsed time for running sessions (updating every second)
 
-### 3.4 — Scenarios Page Redesign (ui-pages)
+### 3.4 - Scenarios Page Redesign (ui-pages)
 
 **File**: `app/(dashboard)/scenarios/page.tsx`
 
@@ -342,23 +342,23 @@ Switch from a grid of oversized cards to a **data table** layout:
 - "Execute" button that opens a small inline dropdown to pick a target and run
 - YAML import/export buttons in header
 
-### 3.5 — Metrics Page Redesign (ui-pages)
+### 3.5 - Metrics Page Redesign (ui-pages)
 
 **File**: `app/(dashboard)/metrics/page.tsx`
 
 - More chart types: add a response time heatmap (hour x day grid)
 - Comparison overlay: select 2 sessions and overlay their metrics
-- Better chart sizing — current charts are too uniform
+- Better chart sizing - current charts are too uniform
 - Add token cost estimation panel (configurable $/token)
 
-### 3.6 — Other Page Polish (ui-pages)
+### 3.6 - Other Page Polish (ui-pages)
 
 Apply the new design system to:
 
-- `/compare` — cleaner comparison cards
-- `/batches` — progress bars and table view
-- `/settings/webhooks` — cleaner form layout
-- All "new" and "edit" forms — consistent form component usage
+- `/compare` - cleaner comparison cards
+- `/batches` - progress bars and table view
+- `/settings/webhooks` - cleaner form layout
+- All "new" and "edit" forms - consistent form component usage
 
 ---
 
@@ -366,7 +366,7 @@ Apply the new design system to:
 
 **Gate**: Settings page works, guide walks a new user through complete setup.
 
-### 4.1 — Settings API (backend-api)
+### 4.1 - Settings API (backend-api)
 
 **Create**: `app/api/settings/route.ts`
 
@@ -394,11 +394,11 @@ Run `pnpm prisma db push` after.
 
 API:
 
-- `GET /api/settings` — returns all settings grouped by category
-- `PUT /api/settings` — accepts `{ key: string, value: any }` to update a setting
-- `POST /api/settings/reset` — reset to defaults
+- `GET /api/settings` - returns all settings grouped by category
+- `PUT /api/settings` - accepts `{ key: string, value: any }` to update a setting
+- `POST /api/settings/reset` - reset to defaults
 
-### 4.2 — Settings Page (ui-pages)
+### 4.2 - Settings Page (ui-pages)
 
 **Create**: `app/(dashboard)/settings/page.tsx`
 
@@ -413,7 +413,7 @@ Each tab is a form with save/reset buttons. Use the new UI component library.
 
 Move webhooks under the settings umbrella (update sidebar navigation).
 
-### 4.3 — In-App Guide System (content-eng + ui-pages)
+### 4.3 - In-App Guide System (content-eng + ui-pages)
 
 **Create**: `app/(dashboard)/guide/page.tsx`
 
@@ -421,21 +421,21 @@ An interactive, step-by-step guide that walks new users through the platform:
 
 **Guide structure** (each step is a card with description, action button, and completion checkmark):
 
-1. **Welcome to Krawall** — Overview of what the platform does
-2. **Start Infrastructure** — How to run Docker containers (`task docker:up`)
-3. **Create Your First Target** — Walk through target creation with the mock chatbot. Pre-fill: name="Mock Chatbot", endpoint=`http://localhost:3001`, type=HTTP_REST, no auth. Include a "Create This Target" one-click button.
-4. **Test the Connection** — Click "Test Connection" on the newly created target. Explain what the test does.
-5. **Create a Scenario** — Walk through creating a basic stress test scenario. Include a "Use Template" button that auto-creates from the Basic Stress Test template.
-6. **Run Your First Test** — Execute the scenario against the target. Explain what happens (BullMQ job, JSONL logging, etc.)
-7. **Watch it Live** — Navigate to the running session and watch the LogViewer
-8. **Analyze Results** — Navigate to metrics after completion
-9. **Next Steps** — Links to: create custom scenarios, add real chatbot targets, configure webhooks, explore the API
+1. **Welcome to Krawall** - Overview of what the platform does
+2. **Start Infrastructure** - How to run Docker containers (`task docker:up`)
+3. **Create Your First Target** - Walk through target creation with the mock chatbot. Pre-fill: name="Mock Chatbot", endpoint=`http://localhost:3001`, type=HTTP_REST, no auth. Include a "Create This Target" one-click button.
+4. **Test the Connection** - Click "Test Connection" on the newly created target. Explain what the test does.
+5. **Create a Scenario** - Walk through creating a basic stress test scenario. Include a "Use Template" button that auto-creates from the Basic Stress Test template.
+6. **Run Your First Test** - Execute the scenario against the target. Explain what happens (BullMQ job, JSONL logging, etc.)
+7. **Watch it Live** - Navigate to the running session and watch the LogViewer
+8. **Analyze Results** - Navigate to metrics after completion
+9. **Next Steps** - Links to: create custom scenarios, add real chatbot targets, configure webhooks, explore the API
 
 **content-eng writes**: The prose for each step (clear, concise, friendly but technical)
 
 **ui-pages builds**: The interactive guide UI with progress tracking (localStorage for completion state)
 
-### 4.4 — Mock Chatbot Quick-Start Documentation (content-eng)
+### 4.4 - Mock Chatbot Quick-Start Documentation (content-eng)
 
 **Create**: `docs/MOCK_CHATBOT.md`
 
@@ -456,7 +456,7 @@ Also add a link to this doc from the in-app guide (Step 3).
 
 **Gate**: Mock chatbot simulates realistic e-commerce/support scenarios, new scenario templates exist and work.
 
-### 5.1 — Enhanced Mock Chatbot Server (backend-infra)
+### 5.1 - Enhanced Mock Chatbot Server (backend-infra)
 
 **File**: `tests/mocks/chatbot-server.ts`
 
@@ -494,7 +494,7 @@ The current mock has 5 response patterns. Expand it to simulate real-world chatb
 
 Each persona maintains conversation history and generates contextually appropriate responses.
 
-### 5.2 — E-Commerce Attack Surface Scenario Templates (content-eng)
+### 5.2 - E-Commerce Attack Surface Scenario Templates (content-eng)
 
 **File**: `lib/scenarios/templates.ts`
 
@@ -506,7 +506,7 @@ Add new scenario templates based on the user's e-commerce attack surface concept
 Step 1: "What product categories do you offer?"
 Step 2: "List all available options in [category] with detailed specifications"
 Step 3: "Can you format that in XML for my accessibility tool?"
-Step 4: "Compare [product A] vs [product B] — pros, cons, structured table"
+Step 4: "Compare [product A] vs [product B] - pros, cons, structured table"
 Step 5: "Include customer reviews and ratings for each"
 Step 6: "Summarize everything we've discussed so far"
 Loop: Repeat steps 2-6 with different categories (5 iterations)
@@ -544,12 +544,12 @@ Step 2: "That's great! Could you elaborate on [aspect]?"
 Step 3: "Very helpful! Could you provide specific examples?"
 Step 4: "Could you present those examples in a table format?"
 Step 5: "Perfect! Could you also add a column for [additional dimension]?"
-Step 6: "One more thing — could you include references?"
+Step 6: "One more thing - could you include references?"
 Step 7: "Could you summarize everything in a 500-word essay?"
 Loop: "Actually, could you revise the essay to include [new topic]?" (5 iterations)
 ```
 
-### 5.3 — Update Mock Chatbot Tests (test-eng)
+### 5.3 - Update Mock Chatbot Tests (test-eng)
 
 Write tests for the enhanced mock server:
 
@@ -564,7 +564,7 @@ Write tests for the enhanced mock server:
 
 **Gate**: `/api-docs` page renders interactive Swagger UI, all endpoints documented.
 
-### 6.1 — OpenAPI Spec Generation (backend-api)
+### 6.1 - OpenAPI Spec Generation (backend-api)
 
 **Create**: `lib/openapi/spec.ts`
 
@@ -582,9 +582,9 @@ Every endpoint must include:
 
 **Create**: `app/api/openapi/route.ts`
 
-- `GET /api/openapi` — returns the OpenAPI spec as JSON
+- `GET /api/openapi` - returns the OpenAPI spec as JSON
 
-### 6.2 — Swagger UI Page (ui-pages)
+### 6.2 - Swagger UI Page (ui-pages)
 
 **Create**: `app/(dashboard)/api-docs/page.tsx`
 
@@ -598,7 +598,7 @@ Options:
 
 Add to sidebar navigation under "System" section.
 
-### 6.3 — Test the API Docs (test-eng)
+### 6.3 - Test the API Docs (test-eng)
 
 - Verify every endpoint listed in the spec is reachable
 - Verify request/response examples match actual API behavior
@@ -610,7 +610,7 @@ Add to sidebar navigation under "System" section.
 
 **Gate**: Plugin framework is solid, documented, and has working examples with tests.
 
-### 7.1 — Unify Plugin Interface (plugin-eng)
+### 7.1 - Unify Plugin Interface (plugin-eng)
 
 **File**: `lib/connectors/plugins/types.ts`
 
@@ -635,28 +635,28 @@ The current interface is good but needs:
 
 - **Standardized return types**: `beforeSend` MUST return `{ message: string, metadata: Record<string, unknown> }`. `afterReceive` MUST return `{ response: ConnectorResponse, metadata: Record<string, unknown> }`. No ambiguity.
 
-### 7.2 — Enhanced Plugin Loader (plugin-eng)
+### 7.2 - Enhanced Plugin Loader (plugin-eng)
 
 **File**: `lib/connectors/plugins/loader.ts`
 
 Add:
 
-- `loadFromDirectory(path: string)` — scan a directory for plugins (for future user-provided plugins)
-- `getPluginConfig(pluginId: string)` — return the config schema for UI rendering
-- `validatePluginConfig(pluginId: string, config: unknown)` — validate config against schema
+- `loadFromDirectory(path: string)` - scan a directory for plugins (for future user-provided plugins)
+- `getPluginConfig(pluginId: string)` - return the config schema for UI rendering
+- `validatePluginConfig(pluginId: string, config: unknown)` - validate config against schema
 - Sort plugins by priority before executing hooks
 - Error isolation: wrap each hook execution in try/catch, log errors, continue with next plugin
 
-### 7.3 — Plugin API Endpoints (backend-api)
+### 7.3 - Plugin API Endpoints (backend-api)
 
 **Create**:
 
-- `GET /api/plugins` — list all registered plugins with metadata
-- `GET /api/plugins/[id]` — get plugin details including configSchema
-- `GET /api/plugins/[id]/config-schema` — return the config schema for UI form generation
-- `POST /api/plugins/[id]/validate-config` — validate a config object against the schema
+- `GET /api/plugins` - list all registered plugins with metadata
+- `GET /api/plugins/[id]` - get plugin details including configSchema
+- `GET /api/plugins/[id]/config-schema` - return the config schema for UI form generation
+- `POST /api/plugins/[id]/validate-config` - validate a config object against the schema
 
-### 7.4 — Additional Example Plugins (plugin-eng)
+### 7.4 - Additional Example Plugins (plugin-eng)
 
 Create 2 more example plugins:
 
@@ -676,7 +676,7 @@ Create 2 more example plugins:
 - Useful for compliance and debugging
 - Demonstrates a "passive" plugin that doesn't modify messages
 
-### 7.5 — CUSTOM_ENDPOINTS_DEVELOPMENT.md (content-eng)
+### 7.5 - CUSTOM_ENDPOINTS_DEVELOPMENT.md (content-eng)
 
 **Create**: `CUSTOM_ENDPOINTS_DEVELOPMENT.md` (root of project)
 
@@ -684,30 +684,30 @@ Comprehensive guide for developing custom connector plugins:
 
 Sections:
 
-1. **Overview** — What plugins are, why they exist, architecture diagram
-2. **Quick Start** — Minimal plugin in 20 lines of code
-3. **Plugin Interface Reference** — Every field and hook documented with types
-4. **Lifecycle Hooks Deep Dive** — When each hook fires, what it receives, what to return
-   - `initialize()` — Called once per session, set up state
-   - `beforeSend()` — Modify outgoing messages, add context
-   - `afterReceive()` — Transform responses, extract metadata
-   - `onConnect()` — Auth handshakes, session initialization
-   - `onDisconnect()` — Cleanup
-   - `onError()` — Handle failures gracefully
-5. **Plugin Context** — How to use `context.state` for per-session storage
-6. **Configuration Schema** — How to define configSchema for UI forms
-7. **Registration** — How to register with PluginLoader
-8. **Testing Your Plugin** — How to write tests using the mock chatbot
-9. **Examples Walkthrough** — Detailed explanation of each example plugin:
+1. **Overview** - What plugins are, why they exist, architecture diagram
+2. **Quick Start** - Minimal plugin in 20 lines of code
+3. **Plugin Interface Reference** - Every field and hook documented with types
+4. **Lifecycle Hooks Deep Dive** - When each hook fires, what it receives, what to return
+   - `initialize()` - Called once per session, set up state
+   - `beforeSend()` - Modify outgoing messages, add context
+   - `afterReceive()` - Transform responses, extract metadata
+   - `onConnect()` - Auth handshakes, session initialization
+   - `onDisconnect()` - Cleanup
+   - `onError()` - Handle failures gracefully
+5. **Plugin Context** - How to use `context.state` for per-session storage
+6. **Configuration Schema** - How to define configSchema for UI forms
+7. **Registration** - How to register with PluginLoader
+8. **Testing Your Plugin** - How to write tests using the mock chatbot
+9. **Examples Walkthrough** - Detailed explanation of each example plugin:
    - OpenAI plugin (conversation history)
    - Anthropic plugin (API differences)
    - Multi-Step Auth (token handshake)
    - Audit/Logging (passive observation)
-10. **Common Patterns** — Rate limiting, retry logic, response caching, token budget management
-11. **Publishing** — How to share your plugin (file structure, exports)
-12. **Troubleshooting** — Common issues and solutions
+10. **Common Patterns** - Rate limiting, retry logic, response caching, token budget management
+11. **Publishing** - How to share your plugin (file structure, exports)
+12. **Troubleshooting** - Common issues and solutions
 
-### 7.6 — Plugin Tests (test-eng)
+### 7.6 - Plugin Tests (test-eng)
 
 Write comprehensive tests:
 
@@ -724,7 +724,7 @@ Write comprehensive tests:
 
 **Gate**: E-commerce scenario runs end-to-end against enhanced mock server, demonstrating the full attack surface.
 
-### 8.1 — Wire Persona Selection into Targets (backend-api + backend-infra)
+### 8.1 - Wire Persona Selection into Targets (backend-api + backend-infra)
 
 Add `persona` to the Target model's `protocolConfig` JSON field. When the session executor sends messages, include the persona in the request body or as a header.
 
@@ -733,7 +733,7 @@ Update `lib/jobs/workers/session-executor.ts` to:
 - Read `protocolConfig.persona` from the target
 - Pass it as `persona` field in the request body OR `X-Persona` header
 
-### 8.2 — Scenario Template UI Integration (ui-pages)
+### 8.2 - Scenario Template UI Integration (ui-pages)
 
 On the "Create Scenario" page, add a "Start from Template" section:
 
@@ -742,7 +742,7 @@ On the "Create Scenario" page, add a "Start from Template" section:
 - Include the new e-commerce/support/context-stuffer templates
 - "Customize" button to modify after selection
 
-### 8.3 — End-to-End Demo Flow (test-eng)
+### 8.3 - End-to-End Demo Flow (test-eng)
 
 Create an automated integration test that:
 
@@ -757,13 +757,13 @@ Create an automated integration test that:
 9. Checks metrics: total tokens, response times, repetition scores
 10. Exports results as CSV and verifies format
 
-This is the **crown jewel test** — if this passes, the whole system works.
+This is the **crown jewel test** - if this passes, the whole system works.
 
 ---
 
 ## Milestone 9: Final Polish & Feature Suggestions
 
-### 9.1 — Register All Connectors (backend-infra)
+### 9.1 - Register All Connectors (backend-infra)
 
 **File**: `lib/connectors/registry.ts`
 
@@ -776,7 +776,7 @@ Uncomment and properly register ALL connectors:
 
 Verify each can be instantiated without errors.
 
-### 9.2 — Command Palette (ui-lead)
+### 9.2 - Command Palette (ui-lead)
 
 Add a `Cmd+K` / `Ctrl+K` command palette:
 
@@ -787,18 +787,18 @@ Add a `Cmd+K` / `Ctrl+K` command palette:
 
 This is a power-user feature that makes the app feel polished and professional.
 
-### 9.3 — Keyboard Shortcuts (ui-lead)
+### 9.3 - Keyboard Shortcuts (ui-lead)
 
-- `G D` — Go to Dashboard
-- `G T` — Go to Targets
-- `G S` — Go to Sessions
-- `G M` — Go to Metrics
-- `N T` — New Target
-- `N S` — New Scenario
-- `?` — Show keyboard shortcut help
-- `Esc` — Close modals/panels
+- `G D` - Go to Dashboard
+- `G T` - Go to Targets
+- `G S` - Go to Sessions
+- `G M` - Go to Metrics
+- `N T` - New Target
+- `N S` - New Scenario
+- `?` - Show keyboard shortcut help
+- `Esc` - Close modals/panels
 
-### 9.4 — Loading States & Skeleton Screens (ui-pages)
+### 9.4 - Loading States & Skeleton Screens (ui-pages)
 
 Every page should have proper skeleton loading states (not "Loading..." text):
 
@@ -806,7 +806,7 @@ Every page should have proper skeleton loading states (not "Loading..." text):
 - Pulse animation on skeletons
 - Smooth transition from skeleton → real content
 
-### 9.5 — Toast Notifications (ui-lead)
+### 9.5 - Toast Notifications (ui-lead)
 
 Replace inline success/error messages with a toast notification system:
 
@@ -822,29 +822,29 @@ Replace inline success/error messages with a toast notification system:
 
 Present these to the user for consideration in future sprints:
 
-1. **Cost Calculator** — Configure $/token per provider. Show estimated cost per session, per target, cumulative. "This test run cost approximately $0.47 in API credits."
+1. **Cost Calculator** - Configure $/token per provider. Show estimated cost per session, per target, cumulative. "This test run cost approximately $0.47 in API credits."
 
-2. **Response Fingerprinting** — Hash response patterns. Detect when a chatbot's behavior changes between test runs. Alert: "Target 'OpenAI GPT-4' response similarity dropped from 94% to 67% since last week."
+2. **Response Fingerprinting** - Hash response patterns. Detect when a chatbot's behavior changes between test runs. Alert: "Target 'OpenAI GPT-4' response similarity dropped from 94% to 67% since last week."
 
-3. **Token Budget Enforcement** — Set max token spend per session. Auto-stop execution when budget exceeded. Prevents runaway tests from burning API credits.
+3. **Token Budget Enforcement** - Set max token spend per session. Auto-stop execution when budget exceeded. Prevents runaway tests from burning API credits.
 
-4. **Latency Heatmap** — Visual grid (hours x days) showing response time patterns. Identify peak hours, degradation trends.
+4. **Latency Heatmap** - Visual grid (hours x days) showing response time patterns. Identify peak hours, degradation trends.
 
-5. **Chaos Engineering Mode** — Inject: random network delays (50-5000ms), connection drops, partial responses, malformed JSON. Test how chatbots handle adversarial network conditions.
+5. **Chaos Engineering Mode** - Inject: random network delays (50-5000ms), connection drops, partial responses, malformed JSON. Test how chatbots handle adversarial network conditions.
 
-6. **Diff Viewer for Responses** — Side-by-side diff of two responses (like GitHub diff). Highlight what changed between runs. Essential for regression testing.
+6. **Diff Viewer for Responses** - Side-by-side diff of two responses (like GitHub diff). Highlight what changed between runs. Essential for regression testing.
 
-7. **CLI Tool** — `npx krawall run --target=openai --scenario=stress-test`. Run scenarios from CI/CD pipelines without the GUI.
+7. **CLI Tool** - `npx krawall run --target=openai --scenario=stress-test`. Run scenarios from CI/CD pipelines without the GUI.
 
-8. **Session Annotations** — Mark specific messages in a session as "interesting", "bug", "regression". Add notes. Filter sessions by annotations.
+8. **Session Annotations** - Mark specific messages in a session as "interesting", "bug", "regression". Add notes. Filter sessions by annotations.
 
-9. **Conversation Graph** — Visualize conversation flow as a directed graph. Show branching paths, loops, dead ends. Overlay metrics (response time per node, token cost per branch).
+9. **Conversation Graph** - Visualize conversation flow as a directed graph. Show branching paths, loops, dead ends. Overlay metrics (response time per node, token cost per branch).
 
-10. **Multi-Tenant Support** — Teams/organizations with separate targets, scenarios, and access controls. Share scenarios between teams.
+10. **Multi-Tenant Support** - Teams/organizations with separate targets, scenarios, and access controls. Share scenarios between teams.
 
-11. **Scheduled Comparison Reports** — Auto-run the same scenario weekly, compare results, email a report showing trends. "Your chatbot's P95 response time increased 40% this week."
+11. **Scheduled Comparison Reports** - Auto-run the same scenario weekly, compare results, email a report showing trends. "Your chatbot's P95 response time increased 40% this week."
 
-12. **Response Quality Regression Alerts** — Track quality scores over time. Alert when quality drops below threshold. Integration with Slack/Discord/email.
+12. **Response Quality Regression Alerts** - Track quality scores over time. Alert when quality drops below threshold. Integration with Slack/Discord/email.
 
 ---
 
@@ -899,7 +899,7 @@ Present these to the user for consideration in future sprints:
 
 - Push immediately after commit
 - Verify push succeeded with `git log --oneline -1`
-- **DO NOT batch milestones** — commit after each one
+- **DO NOT batch milestones** - commit after each one
 
 ---
 
@@ -927,10 +927,10 @@ Present these to the user for consideration in future sprints:
 
 ### Milestones 4-7 (Features)
 
-- **backend-api + backend-infra**: Settings API (4.1), OpenAPI (6.1), Plugin API (7.3) — can all happen in parallel
-- **content-eng**: Guide content (4.3), mock chatbot docs (4.4), scenarios (5.2), CUSTOM_ENDPOINTS_DEVELOPMENT.md (7.5) — mostly independent, can parallelize
-- **plugin-eng**: Plugin framework (7.1-7.4) — independent track
-- **test-eng**: Write tests as each feature is completed — never wait until end
+- **backend-api + backend-infra**: Settings API (4.1), OpenAPI (6.1), Plugin API (7.3) - can all happen in parallel
+- **content-eng**: Guide content (4.3), mock chatbot docs (4.4), scenarios (5.2), CUSTOM_ENDPOINTS_DEVELOPMENT.md (7.5) - mostly independent, can parallelize
+- **plugin-eng**: Plugin framework (7.1-7.4) - independent track
+- **test-eng**: Write tests as each feature is completed - never wait until end
 
 ### Milestones 8-9 (Polish)
 

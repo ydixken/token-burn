@@ -487,7 +487,7 @@ export default function TemplateDocsPage() {
               <code className="text-gray-300">promptTokens</code>,{" "}
               <code className="text-gray-300">completionTokens</code>, and{" "}
               <code className="text-gray-300">totalTokens</code> from this
-              object. Different APIs use different field names — Krawall
+              object. Different APIs use different field names - Krawall
               normalizes them automatically.
             </p>
             <div className="mt-2 text-xs text-gray-500">

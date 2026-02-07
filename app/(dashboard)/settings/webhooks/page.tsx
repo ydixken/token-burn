@@ -350,7 +350,7 @@ export default function WebhooksPage() {
           {expandedLogs && (
             <div className="border-t border-gray-800 bg-gray-950 p-4">
               <h4 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">
-                Recent Deliveries — {webhooks.find((w) => w.id === expandedLogs)?.name}
+                Recent Deliveries - {webhooks.find((w) => w.id === expandedLogs)?.name}
               </h4>
               {logsLoading === expandedLogs ? (
                 <div className="text-xs text-gray-500 text-center py-4">Loading...</div>

@@ -185,7 +185,7 @@ export function StepResults() {
                 <p>
                   Your chatbot responded in an average of{" "}
                   <span className="text-gray-300">{Math.round(metrics.avgResponseTimeMs)}ms</span>
-                  {metrics.avgResponseTimeMs < 1000 ? " — within normal range." : " — this is on the slower side."}
+                  {metrics.avgResponseTimeMs < 1000 ? " - within normal range." : " - this is on the slower side."}
                 </p>
               )}
               <p>

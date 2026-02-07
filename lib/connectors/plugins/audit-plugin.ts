@@ -55,7 +55,7 @@ export function clearAuditLog(sessionId?: string): void {
  *
  * Passive plugin that records every message sent and received to an in-memory
  * audit log. Captures timestamps, token counts, and response times.
- * Does NOT modify messages or responses — purely observational.
+ * Does NOT modify messages or responses - purely observational.
  */
 const auditPlugin: ConnectorPlugin = {
   id: "audit",
@@ -133,7 +133,7 @@ const auditPlugin: ConnectorPlugin = {
   },
 
   async onDisconnect(context: PluginContext): Promise<void> {
-    // Keep the audit log on disconnect — it should persist for review.
+    // Keep the audit log on disconnect - it should persist for review.
     // Only clear via explicit clearAuditLog() call.
     context.state.lastSendTimestamp = null;
   },

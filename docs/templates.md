@@ -20,8 +20,8 @@ This document covers Krawall's template system: how request and response templat
 
 Templates are the mechanism Krawall uses to communicate with any chatbot or LLM API. Every target needs two templates:
 
-1. **Request Template** — Defines how to build the outgoing API request by injecting the test message into the correct location in the JSON payload.
-2. **Response Template** — Defines how to extract the chatbot's reply (and optionally token usage) from the API response.
+1. **Request Template** - Defines how to build the outgoing API request by injecting the test message into the correct location in the JSON payload.
+2. **Response Template** - Defines how to extract the chatbot's reply (and optionally token usage) from the API response.
 
 Templates use a JSON path syntax to reference nested fields.
 
@@ -230,7 +230,7 @@ curl -X POST http://localhost:3000/api/templates/validate \
 }
 ```
 
-When a path is invalid, the result includes `suggestion` — an array of available paths discovered in the structure (up to 2 levels deep).
+When a path is invalid, the result includes `suggestion` - an array of available paths discovered in the structure (up to 2 levels deep).
 
 See [API.md](API.md#template-validation) for the full endpoint reference.
 
@@ -257,13 +257,13 @@ Presets are pre-configured template bundles for popular LLM providers. They are 
 
 Each preset includes:
 
-- **id** / **name** / **description** — Identification and display.
-- **connectorType** — Protocol (HTTP_REST, WEBSOCKET, GRPC, SSE).
-- **defaultEndpoint** — Pre-filled endpoint URL.
-- **authType** / **authFields** — Authentication method and field definitions for the setup form.
-- **requestTemplate** / **responseTemplate** — Pre-configured templates.
-- **documentation** — Markdown-formatted setup guide.
-- **exampleResponse** — Sample API response for template validation.
+- **id** / **name** / **description** - Identification and display.
+- **connectorType** - Protocol (HTTP_REST, WEBSOCKET, GRPC, SSE).
+- **defaultEndpoint** - Pre-filled endpoint URL.
+- **authType** / **authFields** - Authentication method and field definitions for the setup form.
+- **requestTemplate** / **responseTemplate** - Pre-configured templates.
+- **documentation** - Markdown-formatted setup guide.
+- **exampleResponse** - Sample API response for template validation.
 
 ### Using a Preset
 

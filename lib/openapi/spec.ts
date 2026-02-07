@@ -8,7 +8,7 @@ export function getOpenAPISpec() {
     info: {
       title: "Krawall API",
       description:
-        "REST API for Krawall — a chatbot stress-testing platform for testing conversational AI systems through realistic, high-volume conversation flows.",
+        "REST API for Krawall - a chatbot stress-testing platform for testing conversational AI systems through realistic, high-volume conversation flows.",
       version: "1.0.0",
       contact: {
         name: "Krawall Team",
@@ -211,7 +211,7 @@ export function getOpenAPISpec() {
           responses: {
             "200": { description: "Target deleted" },
             "400": {
-              description: "Cannot delete — target has sessions",
+              description: "Cannot delete - target has sessions",
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/ErrorResponse" },

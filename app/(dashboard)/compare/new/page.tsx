@@ -122,7 +122,7 @@ export default function NewComparisonPage() {
     const target = s.target?.name || "Unknown target";
     const scenario = s.scenario?.name || "Unknown scenario";
     const date = s.completedAt ? new Date(s.completedAt).toLocaleDateString() : "";
-    return `${target} — ${scenario} (${date})`;
+    return `${target} - ${scenario} (${date})`;
   };
 
   const getSessionPreview = (id: string) => {
@@ -170,7 +170,7 @@ export default function NewComparisonPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. GPT-4 vs Claude — Customer Support"
+            placeholder="e.g. GPT-4 vs Claude - Customer Support"
             className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             maxLength={200}
           />

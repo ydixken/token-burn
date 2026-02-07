@@ -8,7 +8,7 @@ Krawall is configured through environment variables. Copy `.env.example` to `.en
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | - | PostgreSQL connection string |
 
 **Format**: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`
 
@@ -24,7 +24,7 @@ DATABASE_URL="postgresql://krawall:S3cureP@ss@db.example.com:5432/krawall?sslmod
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `REDIS_URL` | Yes | — | Redis connection string |
+| `REDIS_URL` | Yes | - | Redis connection string |
 
 ```bash
 # Development
@@ -38,7 +38,7 @@ REDIS_URL="redis://:password@redis.example.com:6379"
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ENCRYPTION_KEY` | Yes | — | 64-character hex string for AES-256-GCM encryption |
+| `ENCRYPTION_KEY` | Yes | - | 64-character hex string for AES-256-GCM encryption |
 
 Used to encrypt sensitive data at rest (target auth credentials, webhook secrets).
 
@@ -77,7 +77,7 @@ Located at `infra/docker-compose.yml`. Default service configuration:
 |---------|-------|------|-------------|
 | PostgreSQL | postgres:16-alpine | 5432 | krawall / krawall |
 | Redis | redis:7-alpine | 6379 | No password |
-| Redis Commander | rediscommander/redis-commander | 8081 | — |
+| Redis Commander | rediscommander/redis-commander | 8081 | - |
 
 To change database credentials, update both `docker-compose.yml` and `DATABASE_URL` in `.env`.
 
@@ -116,7 +116,7 @@ Targets define chatbot endpoints to test. Configured via the UI or API.
 
 | Type | Config Fields | Description |
 |------|---------------|-------------|
-| `NONE` | — | No authentication |
+| `NONE` | - | No authentication |
 | `BEARER` | `{ token }` | Authorization: Bearer header |
 | `API_KEY` | `{ key, headerName }` | Custom header with API key |
 | `BASIC` | `{ username, password }` | HTTP Basic authentication |
