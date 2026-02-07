@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/client";
 import fs from "fs";
 import path from "path";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -24,19 +25,25 @@ export async function GET(
       );
     }
 
-    // Create SSE stream
     const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+
+    const send = (data: object) =>
+      writer.write(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+
+    const close = () => writer.close().catch(() => {});
+
+    // Detached async — runs independently, doesn't block the response
+    (async () => {
+      try {
         // Send initial session status
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({
-            type: "status",
-            status: session.status,
-            startedAt: session.startedAt,
-            completedAt: session.completedAt,
-          })}\n\n`)
-        );
+        await send({
+          type: "status",
+          status: session.status,
+          startedAt: session.startedAt,
+          completedAt: session.completedAt,
+        });
 
         // If session hasn't started yet (no logPath), wait for it
         if (!session.logPath || !fs.existsSync(path.join(session.logPath, "messages.jsonl"))) {
@@ -47,29 +54,21 @@ export async function GET(
                 const updated = await prisma.session.findUnique({ where: { id: sessionId } });
                 if (!updated) {
                   clearInterval(waitInterval);
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ type: "complete", status: "FAILED" })}\n\n`)
-                  );
-                  controller.close();
+                  await send({ type: "complete", status: "FAILED" });
+                  close();
                   return;
                 }
 
-                // Send updated status
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({
-                    type: "status",
-                    status: updated.status,
-                    startedAt: updated.startedAt,
-                  })}\n\n`)
-                );
+                await send({
+                  type: "status",
+                  status: updated.status,
+                  startedAt: updated.startedAt,
+                });
 
                 if (updated.status !== "PENDING" && updated.status !== "QUEUED") {
                   clearInterval(waitInterval);
-                  // Session started or finished - redirect client to reconnect with fresh state
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ type: "reconnect" })}\n\n`)
-                  );
-                  controller.close();
+                  await send({ type: "reconnect" });
+                  close();
                 }
               } catch {
                 // silent
@@ -78,20 +77,18 @@ export async function GET(
 
             request.signal.addEventListener("abort", () => {
               clearInterval(waitInterval);
-              controller.close();
+              close();
             });
             return;
           }
 
           // Session is completed/failed but has no log path
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({
-              type: "complete",
-              status: session.status,
-              completedAt: session.completedAt,
-            })}\n\n`)
-          );
-          controller.close();
+          await send({
+            type: "complete",
+            status: session.status,
+            completedAt: session.completedAt,
+          });
+          close();
           return;
         }
 
@@ -105,12 +102,7 @@ export async function GET(
           for (const line of lines) {
             try {
               const message = JSON.parse(line);
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({
-                  type: "message",
-                  data: message,
-                })}\n\n`)
-              );
+              await send({ type: "message", data: message });
             } catch (parseError) {
               console.error("Failed to parse message:", parseError);
             }
@@ -125,7 +117,7 @@ export async function GET(
           let partialLineBuffer = "";
           let checkInterval: NodeJS.Timeout;
 
-          const checkForUpdates = () => {
+          const checkForUpdates = async () => {
             try {
               const currentSize = fs.statSync(messagesPath).size;
 
@@ -141,18 +133,13 @@ export async function GET(
 
                 const newContent = readBuffer.toString("utf-8");
                 const allLines = (partialLineBuffer + newContent).split("\n");
-                partialLineBuffer = allLines.pop() || ""; // Keep incomplete line for next read
+                partialLineBuffer = allLines.pop() || "";
 
                 for (const line of allLines) {
                   if (line.trim()) {
                     try {
                       const message = JSON.parse(line);
-                      controller.enqueue(
-                        encoder.encode(`data: ${JSON.stringify({
-                          type: "message",
-                          data: message,
-                        })}\n\n`)
-                      );
+                      await send({ type: "message", data: message });
                     } catch (parseError) {
                       console.error("Failed to parse message:", parseError);
                     }
@@ -161,27 +148,22 @@ export async function GET(
               }
 
               // Check if session completed
-              prisma.session.findUnique({ where: { id: sessionId } })
-                .then((updatedSession) => {
-                  if (updatedSession &&
-                      updatedSession.status !== "RUNNING" &&
-                      updatedSession.status !== "QUEUED") {
-                    // Send completion event
-                    controller.enqueue(
-                      encoder.encode(`data: ${JSON.stringify({
-                        type: "complete",
-                        status: updatedSession.status,
-                        completedAt: updatedSession.completedAt,
-                      })}\n\n`)
-                    );
-
-                    clearInterval(checkInterval);
-                    controller.close();
-                  }
-                })
-                .catch((err) => {
-                  console.error("Failed to check session status:", err);
-                });
+              try {
+                const updatedSession = await prisma.session.findUnique({ where: { id: sessionId } });
+                if (updatedSession &&
+                    updatedSession.status !== "RUNNING" &&
+                    updatedSession.status !== "QUEUED") {
+                  await send({
+                    type: "complete",
+                    status: updatedSession.status,
+                    completedAt: updatedSession.completedAt,
+                  });
+                  clearInterval(checkInterval);
+                  close();
+                }
+              } catch (err) {
+                console.error("Failed to check session status:", err);
+              }
             } catch (error) {
               console.error("Error checking for updates:", error);
             }
@@ -193,23 +175,24 @@ export async function GET(
           // Cleanup on client disconnect
           request.signal.addEventListener("abort", () => {
             clearInterval(checkInterval);
-            controller.close();
+            close();
           });
         } else {
           // Session already completed, send completion event
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({
-              type: "complete",
-              status: session.status,
-              completedAt: session.completedAt,
-            })}\n\n`)
-          );
-          controller.close();
+          await send({
+            type: "complete",
+            status: session.status,
+            completedAt: session.completedAt,
+          });
+          close();
         }
-      },
-    });
+      } catch (err) {
+        console.error("Stream error:", err);
+        close();
+      }
+    })();
 
-    return new Response(stream, {
+    return new Response(readable, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",

@@ -132,7 +132,7 @@ export default function SessionDetailPage() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3 h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -225,34 +225,31 @@ export default function SessionDetailPage() {
         </div>
       </div>
 
-      {/* Session Info Cards */}
+      {/* Session Info */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700">
-          <div className="text-[10px] text-gray-400 uppercase tracking-wide">Started</div>
-          <div className="text-sm font-medium text-white truncate">
+        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+          <p className="text-[10px] font-medium text-gray-400">Started</p>
+          <p className="text-sm font-semibold text-gray-100 truncate mt-0.5">
             {new Date(session.startedAt).toLocaleString()}
-          </div>
+          </p>
         </div>
-
         {session.completedAt && (
-          <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wide">Completed</div>
-            <div className="text-sm font-medium text-white truncate">
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Completed</p>
+            <p className="text-sm font-semibold text-gray-100 truncate mt-0.5">
               {new Date(session.completedAt).toLocaleString()}
-            </div>
+            </p>
           </div>
         )}
-
-        <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700">
-          <div className="text-[10px] text-gray-400 uppercase tracking-wide">Target</div>
-          <div className="text-sm font-medium text-white truncate">{session.target.name}</div>
-          <div className="text-[10px] text-gray-500">{session.target.connectorType}</div>
+        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+          <p className="text-[10px] font-medium text-gray-400">Target</p>
+          <p className="text-sm font-semibold text-gray-100 truncate mt-0.5">{session.target.name}</p>
+          <p className="text-[10px] text-gray-500">{session.target.connectorType}</p>
         </div>
-
         {session.scenario && (
-          <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wide">Scenario</div>
-            <div className="text-sm font-medium text-white truncate">{session.scenario.name}</div>
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Scenario</p>
+            <p className="text-sm font-semibold text-gray-100 truncate mt-0.5">{session.scenario.name}</p>
           </div>
         )}
       </div>
@@ -264,39 +261,36 @@ export default function SessionDetailPage() {
 
       {/* Summary Metrics */}
       {session.summaryMetrics && (
-        <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700">
-          <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wide mb-2">Summary</h2>
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-            <div>
-              <div className="text-[10px] text-gray-500">Messages</div>
-              <div className="text-sm font-semibold text-white">
-                {session.summaryMetrics.messageCount || 0}
-              </div>
-            </div>
-            <div>
-              <div className="text-[10px] text-gray-500">Total Tokens</div>
-              <div className="text-sm font-semibold text-white">
-                {(session.summaryMetrics.totalTokens || 0).toLocaleString()}
-              </div>
-            </div>
-            <div>
-              <div className="text-[10px] text-gray-500">Avg Response</div>
-              <div className="text-sm font-semibold text-white">
-                {Math.round(session.summaryMetrics.avgResponseTimeMs || 0)}ms
-              </div>
-            </div>
-            <div>
-              <div className="text-[10px] text-gray-500">P95 Response</div>
-              <div className="text-sm font-semibold text-white">
-                {Math.round(session.summaryMetrics.p95ResponseTimeMs || 0)}ms
-              </div>
-            </div>
-            <div>
-              <div className="text-[10px] text-gray-500">Error Rate</div>
-              <div className="text-sm font-semibold text-white">
-                {(session.summaryMetrics.errorRate || 0).toFixed(2)}%
-              </div>
-            </div>
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Messages</p>
+            <p className="text-sm font-semibold text-gray-100 mt-0.5">
+              {session.summaryMetrics.messageCount || 0}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Total Tokens</p>
+            <p className="text-sm font-semibold text-gray-100 mt-0.5">
+              {(session.summaryMetrics.totalTokens || 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Avg Response</p>
+            <p className="text-sm font-semibold text-gray-100 mt-0.5">
+              {Math.round(session.summaryMetrics.avgResponseTimeMs || 0)}ms
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">P95 Response</p>
+            <p className="text-sm font-semibold text-gray-100 mt-0.5">
+              {Math.round(session.summaryMetrics.p95ResponseTimeMs || 0)}ms
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+            <p className="text-[10px] font-medium text-gray-400">Error Rate</p>
+            <p className="text-sm font-semibold text-gray-100 mt-0.5">
+              {(session.summaryMetrics.errorRate || 0).toFixed(2)}%
+            </p>
           </div>
         </div>
       )}
@@ -325,12 +319,14 @@ export default function SessionDetailPage() {
         </button>
       </div>
 
-      {/* Content based on view mode */}
-      {viewMode === "live" ? (
-        <LogViewer sessionId={sessionId} startedAt={session.startedAt} />
-      ) : (
-        <SessionReplay sessionId={sessionId} />
-      )}
+      {/* Content based on view mode — takes remaining space */}
+      <div className="flex-1 min-h-0">
+        {viewMode === "live" ? (
+          <LogViewer sessionId={sessionId} startedAt={session.startedAt} />
+        ) : (
+          <SessionReplay sessionId={sessionId} />
+        )}
+      </div>
     </div>
   );
 }
