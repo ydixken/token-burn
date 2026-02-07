@@ -19,6 +19,7 @@ export interface WizardState {
   createdSessionId: string | null;
   selectedPresetId: string | null;
   selectedTemplateId: string | null;
+  completedAt: string | null;
 }
 
 export interface NavProps {
@@ -66,6 +67,7 @@ const defaultState: WizardState = {
   createdSessionId: null,
   selectedPresetId: null,
   selectedTemplateId: null,
+  completedAt: null,
 };
 
 function loadState(): WizardState {
@@ -137,6 +139,17 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
           // Network error - keep existing state
         }
       }
+      // Small delay to let the individual setState calls settle
+      setTimeout(() => {
+        setState((prev) => {
+          if (!prev.createdTargetId && !prev.createdScenarioId && prev.completedSteps.length > 0) {
+            const fresh = { ...defaultState };
+            saveState(fresh);
+            return fresh;
+          }
+          return prev;
+        });
+      }, 100);
     })();
   }, []);
 

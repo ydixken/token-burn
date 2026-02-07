@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Radio,
@@ -158,6 +159,8 @@ function QueueIndicator() {
 // ---------------------------------------------------------------------------
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   // Data state
   const [stats, setStats] = useState<DashboardStats>({
     totalTargets: 0,
@@ -360,6 +363,21 @@ export default function DashboardPage() {
     };
     load();
   }, []);
+
+  // Auto-redirect to guide on fresh install
+  useEffect(() => {
+    if (loading) return;
+    if (stats.totalTargets === 0 && stats.totalScenarios === 0) {
+      try {
+        if (sessionStorage.getItem("krawall-fresh-redirect-done")) return;
+        const wizardState = localStorage.getItem("krawall-guide-v2");
+        if (!wizardState || JSON.parse(wizardState).completedSteps?.length === 0) {
+          sessionStorage.setItem("krawall-fresh-redirect-done", "true");
+          router.push("/guide");
+        }
+      } catch { /* silent */ }
+    }
+  }, [loading, stats.totalTargets, stats.totalScenarios, router]);
 
   // -------------------------------------------------------------------------
   // Quick Execute

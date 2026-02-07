@@ -61,6 +61,17 @@ export function StepNext() {
   useEffect(() => {
     markComplete(currentStep);
     setNavProps({ canProceed: false });
+    // Persist completedAt timestamp
+    try {
+      const saved = localStorage.getItem("krawall-guide-v2");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.completedAt) {
+          parsed.completedAt = new Date().toISOString();
+          localStorage.setItem("krawall-guide-v2", JSON.stringify(parsed));
+        }
+      }
+    } catch { /* silent */ }
   }, [currentStep, markComplete, setNavProps]);
 
   return (
