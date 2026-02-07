@@ -458,6 +458,60 @@ export function getOpenAPISpec() {
         },
       },
 
+      "/api/sessions/{id}/messages": {
+        get: {
+          tags: ["Sessions"],
+          summary: "Get session messages (polling endpoint)",
+          description: "Returns session messages for client-side polling. Use the `after` query parameter for incremental fetches.",
+          parameters: [
+            { $ref: "#/components/parameters/SessionId" },
+            {
+              name: "after",
+              in: "query",
+              schema: { type: "integer", default: -1 },
+              description: "Only return messages with index > this value. Use -1 to get all messages.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Session messages with status",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      messages: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/PollingMessage" },
+                      },
+                      status: { type: "string", enum: ["PENDING", "QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"] },
+                      completedAt: { type: "string", format: "date-time", nullable: true },
+                    },
+                  },
+                  example: {
+                    messages: [
+                      {
+                        index: 0,
+                        timestamp: "2026-02-07T08:02:23.424Z",
+                        direction: "sent",
+                        content: "Hello",
+                        responseTimeMs: 781,
+                        success: true,
+                        metadata: {},
+                      },
+                    ],
+                    status: "RUNNING",
+                    completedAt: null,
+                  },
+                },
+              },
+            },
+            "404": { $ref: "#/components/responses/NotFound" },
+            "500": { $ref: "#/components/responses/InternalError" },
+          },
+        },
+      },
+
       // ─── Execution ───
       "/api/execute": {
         post: {
@@ -1160,6 +1214,18 @@ export function getOpenAPISpec() {
               nullable: true,
               properties: { name: { type: "string" } },
             },
+          },
+        },
+        PollingMessage: {
+          type: "object",
+          properties: {
+            index: { type: "integer", description: "Message sequence index" },
+            timestamp: { type: "string", format: "date-time" },
+            direction: { type: "string", enum: ["sent", "received"] },
+            content: { type: "string" },
+            responseTimeMs: { type: "number", nullable: true },
+            success: { type: "boolean" },
+            metadata: { type: "object" },
           },
         },
         ExecuteRequest: {

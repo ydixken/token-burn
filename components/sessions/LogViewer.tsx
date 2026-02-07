@@ -65,7 +65,8 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const lastIndexRef = useRef(-1);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPausedRef = useRef(false);
   const isUserScrolledUpRef = useRef(false);
 
@@ -102,12 +103,55 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
     }
   }, [messages.length]);
 
+  // Poll for new messages
   useEffect(() => {
-    connectToStream();
+    const poll = async () => {
+      try {
+        const res = await fetch(
+          `/api/sessions/${sessionId}/messages?after=${lastIndexRef.current}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+
+        if (data.messages && data.messages.length > 0) {
+          setMessages((prev) => [...prev, ...data.messages]);
+          const maxIndex = Math.max(
+            ...data.messages.map((m: any) => m.index)
+          );
+          lastIndexRef.current = maxIndex;
+
+          if (isPausedRef.current || isUserScrolledUpRef.current) {
+            setNewMessageCount((prev) => prev + data.messages.length);
+          }
+        }
+
+        if (data.status) {
+          setStatus(data.status);
+        }
+
+        if (["COMPLETED", "FAILED", "CANCELLED"].includes(data.status)) {
+          setIsConnected(false);
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+        } else {
+          setIsConnected(true);
+        }
+
+        setError(null);
+      } catch {
+        setError("Connection lost. Retrying...");
+        setIsConnected(false);
+      }
+    };
+
+    poll();
+    pollIntervalRef.current = setInterval(poll, 500);
 
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
       }
     };
   }, [sessionId]);
@@ -118,69 +162,6 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
-  const connectToStream = () => {
-    try {
-      const eventSource = new EventSource(`/api/sessions/${sessionId}/stream`);
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        setIsConnected(true);
-        setError(null);
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          switch (data.type) {
-            case "status":
-              setStatus(data.status);
-              break;
-
-            case "message":
-              setMessages((prev) => [...prev, data.data]);
-              // Track new messages when paused or scrolled up
-              if (isPausedRef.current || isUserScrolledUpRef.current) {
-                setNewMessageCount((prev) => prev + 1);
-              }
-              break;
-
-            case "complete":
-              setStatus(data.status);
-              eventSource.close();
-              setIsConnected(false);
-              break;
-
-            case "reconnect":
-              // Session transitioned out of PENDING/QUEUED - reconnect to get messages
-              eventSource.close();
-              setTimeout(() => connectToStream(), 500);
-              break;
-
-            default:
-              break;
-          }
-        } catch (parseError) {
-          console.error("Failed to parse SSE message:", parseError);
-        }
-      };
-
-      eventSource.onerror = () => {
-        setIsConnected(false);
-        eventSource.close();
-
-        // Only retry if session might still be active
-        if (status === "RUNNING" || status === "QUEUED" || status === "PENDING") {
-          setError("Connection lost. Retrying...");
-          setTimeout(() => connectToStream(), 3000);
-        }
-      };
-    } catch (err) {
-      console.error("Failed to connect to stream:", err);
-      setError("Failed to connect to log stream");
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -211,7 +192,7 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2 h-full">
       {/* Status Bar */}
       <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -279,11 +260,11 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
       )}
 
       {/* Messages Log */}
-      <div className="relative">
+      <div className="relative flex-1 min-h-0">
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="bg-gray-900/50 rounded-lg border border-gray-700 h-[calc(100vh-320px)] min-h-[300px] overflow-y-auto"
+          className="bg-gray-900/50 rounded-lg border border-gray-700 h-full overflow-y-auto"
         >
           <div className="px-3 py-2 space-y-1">
             {messages.length === 0 ? (
@@ -336,8 +317,8 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
                       </div>
                     )}
 
-                    {/* Compact metrics */}
-                    {(message.responseTimeMs || message.tokenUsage) && (
+                    {/* Compact metrics — only on bot responses */}
+                    {message.direction === "received" && (message.responseTimeMs || message.tokenUsage) && (
                       <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-500">
                         {message.responseTimeMs && (
                           <span>{Math.round(message.responseTimeMs)}ms</span>
