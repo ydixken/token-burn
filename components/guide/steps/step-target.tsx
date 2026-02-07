@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProviderCard, MockChatbotCard } from "../shared/provider-card";
 import { JsonPreview } from "../shared/json-preview";
+import { TemplateHelp } from "../shared/template-help";
 import { useWizard } from "../wizard-context";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -335,6 +336,7 @@ export function StepTarget() {
             {/* Request/Response template previews */}
             <JsonPreview data={form.requestTemplate} title="Request Template" />
             <JsonPreview data={form.responseTemplate} title="Response Template" />
+            <TemplateHelp />
           </div>
 
           <div className="flex items-center justify-between">
