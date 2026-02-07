@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 
 interface DashboardStats {
@@ -16,7 +16,17 @@ interface RecentSession {
   startedAt: string | null;
   completedAt: string | null;
   target: { name: string } | null;
+  targetName?: string;
   scenario: { name: string } | null;
+  scenarioName?: string;
+}
+
+interface LiveSession {
+  id: string;
+  targetName: string;
+  scenarioName: string | null;
+  startedAt: string | null;
+  messageCount: number;
 }
 
 interface ScheduledJob {
@@ -46,6 +56,34 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-gray-700 text-gray-400",
 };
 
+function LiveSessionElapsed({ startedAt }: { startedAt: string }) {
+  const [elapsed, setElapsed] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      const start = new Date(startedAt).getTime();
+      const diff = Date.now() - start;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+
+      if (hours > 0) {
+        setElapsed(`${hours}h ${minutes % 60}m ${seconds % 60}s`);
+      } else if (minutes > 0) {
+        setElapsed(`${minutes}m ${seconds % 60}s`);
+      } else {
+        setElapsed(`${seconds}s`);
+      }
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [startedAt]);
+
+  return <span className="font-mono text-blue-400">{elapsed}</span>;
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalTargets: 0,
@@ -54,6 +92,7 @@ export default function DashboardPage() {
     totalTestsRun: 0,
   });
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([]);
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [nextJob, setNextJob] = useState<ScheduledJob | null>(null);
   const [targets, setTargets] = useState<Target[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -66,6 +105,8 @@ export default function DashboardPage() {
   const [executing, setExecuting] = useState(false);
   const [executeResult, setExecuteResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const fetchDashboardData = useCallback(async () => {
     try {
       // Try the dashboard stats endpoint first
@@ -73,18 +114,22 @@ export default function DashboardPage() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         if (statsData.success) {
+          const d = statsData.data;
           setStats({
-            totalTargets: statsData.data.totalTargets ?? 0,
-            totalScenarios: statsData.data.totalScenarios ?? 0,
-            activeSessions: statsData.data.activeSessions ?? 0,
-            totalTestsRun: statsData.data.totalTestsRun ?? 0,
+            totalTargets: d.counts?.targets ?? d.totalTargets ?? 0,
+            totalScenarios: d.counts?.scenarios ?? d.totalScenarios ?? 0,
+            activeSessions: d.counts?.activeSessions ?? d.activeSessions ?? 0,
+            totalTestsRun: d.counts?.totalSessions ?? d.totalTestsRun ?? 0,
           });
 
-          if (statsData.data.recentSessions) {
-            setRecentSessions(statsData.data.recentSessions);
+          if (d.recentSessions) {
+            setRecentSessions(d.recentSessions);
           }
-          if (statsData.data.nextScheduledJob) {
-            setNextJob(statsData.data.nextScheduledJob);
+          if (d.liveSessions) {
+            setLiveSessions(d.liveSessions);
+          }
+          if (d.nextScheduledJob) {
+            setNextJob(d.nextScheduledJob);
           }
 
           setLastUpdated(new Date());
@@ -98,6 +143,28 @@ export default function DashboardPage() {
 
     // Fallback: fetch from individual endpoints
     await fetchFromIndividualEndpoints();
+  }, []);
+
+  // Separate fast refresh for live sessions only (every 3s)
+  const fetchLiveSessions = useCallback(async () => {
+    try {
+      const response = await fetch("/api/dashboard/stats");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.liveSessions) {
+          setLiveSessions(data.data.liveSessions);
+          // Also update active session count
+          if (data.data.liveSessionCount !== undefined) {
+            setStats((prev) => ({
+              ...prev,
+              activeSessions: data.data.counts?.activeSessions ?? data.data.liveSessionCount ?? prev.activeSessions,
+            }));
+          }
+        }
+      }
+    } catch {
+      // silent - main refresh will catch up
+    }
   }, []);
 
   const fetchFromIndividualEndpoints = async () => {
@@ -179,9 +246,19 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDashboardData();
 
+    // Full refresh every 30 seconds
     const interval = setInterval(fetchDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, [fetchDashboardData]);
+
+    // Live sessions fast refresh every 3 seconds
+    liveIntervalRef.current = setInterval(fetchLiveSessions, 3000);
+
+    return () => {
+      clearInterval(interval);
+      if (liveIntervalRef.current) {
+        clearInterval(liveIntervalRef.current);
+      }
+    };
+  }, [fetchDashboardData, fetchLiveSessions]);
 
   // Also fetch targets/scenarios for Quick Execute (always needed)
   useEffect(() => {
@@ -251,6 +328,14 @@ export default function DashboardPage() {
     return `${days}d ago`;
   };
 
+  const getSessionTargetName = (session: RecentSession) => {
+    return session.target?.name || session.targetName || "Unknown Target";
+  };
+
+  const getSessionScenarioName = (session: RecentSession) => {
+    return session.scenario?.name || session.scenarioName || null;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between animate-fadeIn">
@@ -288,6 +373,80 @@ export default function DashboardPage() {
         <StatCard label="Total Tests Run" value={stats.totalTestsRun} loading={loading} href="/sessions" />
       </div>
 
+      {/* Live Sessions Panel */}
+      <div className="bg-gray-800 rounded-lg p-6 border border-blue-700/50">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-white">Live Sessions</h3>
+            <span className="relative flex items-center justify-center">
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                liveSessions.length > 0
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-700 text-gray-400"
+              }`}>
+                {liveSessions.length}
+              </span>
+              {liveSessions.length > 0 && (
+                <span className="absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-30 animate-ping" />
+              )}
+            </span>
+          </div>
+          <Link href="/sessions" className="text-sm text-blue-400 hover:text-blue-300">
+            View all sessions
+          </Link>
+        </div>
+
+        {liveSessions.length === 0 ? (
+          <div className="text-center py-6 text-gray-500 text-sm">
+            No active sessions running
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {liveSessions.map((session) => (
+              <div
+                key={session.id}
+                className="bg-gray-700/50 rounded-lg p-4 border border-blue-800/50 flex items-center justify-between"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                    </span>
+                    <span className="text-sm font-medium text-white truncate">
+                      {session.targetName}
+                    </span>
+                    {session.scenarioName && (
+                      <span className="text-xs text-gray-400 truncate">
+                        / {session.scenarioName}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-400 ml-4">
+                    {session.startedAt && (
+                      <span>
+                        Elapsed: <LiveSessionElapsed startedAt={session.startedAt} />
+                      </span>
+                    )}
+                    <span>{session.messageCount} message{session.messageCount !== 1 ? "s" : ""}</span>
+                  </div>
+                </div>
+                <Link
+                  href={`/sessions/${session.id}`}
+                  className="shrink-0 ml-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                  </span>
+                  Watch Live
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Sessions */}
         <div className="lg:col-span-2 bg-gray-800 rounded-lg p-6 border border-gray-700">
@@ -315,11 +474,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white">
-                        {session.target?.name || "Unknown Target"}
+                        {getSessionTargetName(session)}
                       </span>
-                      {session.scenario && (
+                      {getSessionScenarioName(session) && (
                         <span className="text-xs text-gray-400">
-                          / {session.scenario.name}
+                          / {getSessionScenarioName(session)}
                         </span>
                       )}
                     </div>

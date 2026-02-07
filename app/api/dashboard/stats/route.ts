@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
+import fs from "fs";
+import path from "path";
 
 /**
  * GET /api/dashboard/stats
@@ -22,6 +24,7 @@ export async function GET() {
       recentSessions,
       tokenMetrics,
       responseTimeMetrics,
+      runningSessions,
     ] = await Promise.all([
       // Counts
       prisma.target.count(),
@@ -60,10 +63,43 @@ export async function GET() {
         _avg: { responseTimeMs: true },
         where: { success: true },
       }),
+
+      // Live (RUNNING) sessions with details
+      prisma.session.findMany({
+        where: { status: "RUNNING" },
+        select: {
+          id: true,
+          startedAt: true,
+          logPath: true,
+          target: { select: { name: true } },
+          scenario: { select: { name: true } },
+        },
+      }),
     ]);
 
     const errorRate =
       totalSessions > 0 ? failedSessions / totalSessions : 0;
+
+    // Format live sessions with message counts from JSONL log files
+    const liveSessions = runningSessions.map((s) => {
+      let messageCount = 0;
+      if (s.logPath) {
+        try {
+          const messagesPath = path.join(s.logPath, "messages.jsonl");
+          const content = fs.readFileSync(messagesPath, "utf-8");
+          messageCount = content.trim().split("\n").filter(Boolean).length;
+        } catch {
+          // Log file doesn't exist or isn't readable yet
+        }
+      }
+      return {
+        id: s.id,
+        targetName: s.target.name,
+        scenarioName: s.scenario?.name || null,
+        startedAt: s.startedAt?.toISOString() || null,
+        messageCount,
+      };
+    });
 
     const formattedRecentSessions = recentSessions.map((s) => ({
       id: s.id,
@@ -93,6 +129,8 @@ export async function GET() {
           sessionsLast24h,
         },
         recentSessions: formattedRecentSessions,
+        liveSessionCount: runningSessions.length,
+        liveSessions,
       },
     });
   } catch (error) {

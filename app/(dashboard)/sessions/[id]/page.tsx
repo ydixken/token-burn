@@ -203,7 +203,7 @@ export default function SessionDetailPage() {
 
       {/* Content based on view mode */}
       {viewMode === "live" ? (
-        <LogViewer sessionId={sessionId} />
+        <LogViewer sessionId={sessionId} startedAt={session.startedAt} />
       ) : (
         <SessionReplay sessionId={sessionId} />
       )}
