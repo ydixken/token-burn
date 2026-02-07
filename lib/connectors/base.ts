@@ -84,6 +84,12 @@ export abstract class BaseConnector {
   protected extractResponse(rawResponse: unknown): string {
     const template = this.config.responseTemplate;
 
+    if (!template.responsePath) {
+      throw new ConnectorError(
+        "Response template is missing 'responsePath'. Configure the JSON path to extract the response content."
+      );
+    }
+
     try {
       const content = this.getValueAtPath(rawResponse, template.responsePath);
 
@@ -207,6 +213,8 @@ export abstract class BaseConnector {
    * Helper: Parse JSON path (supports $.foo.bar[0] or foo.bar.0)
    */
   private parsePath(path: string): string[] {
+    if (!path) return [];
+
     // Remove leading $ if present
     const cleanPath = path.startsWith("$.") ? path.slice(2) : path;
 
