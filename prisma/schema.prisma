@@ -135,6 +135,10 @@ model Session {
   // Metrics relation
   metrics       SessionMetric[]
 
+  // Comparison relations
+  comparisonsA  Comparison[] @relation("ComparisonSessionA")
+  comparisonsB  Comparison[] @relation("ComparisonSessionB")
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -196,4 +200,81 @@ model ScheduledJob {
 
   @@index([isEnabled])
   @@index([nextRunAt])
+}
+
+// Comparison: A/B test comparison between two sessions
+model Comparison {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  // The two sessions being compared
+  sessionAId  String
+  sessionA    Session  @relation("ComparisonSessionA", fields: [sessionAId], references: [id])
+  sessionBId  String
+  sessionB    Session  @relation("ComparisonSessionB", fields: [sessionBId], references: [id])
+
+  // Comparison results (computed)
+  results     Json?    // { avgResponseTimeDiff, tokenUsageDiff, errorRateDiff, ... }
+  status      String   @default("pending")  // pending, computing, completed, failed
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionAId])
+  @@index([sessionBId])
+  @@index([status])
+}
+
+// DeliveryStatus enum for webhook deliveries
+enum DeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  RETRYING
+}
+
+// Webhook: Registered webhook endpoint for event notifications
+model Webhook {
+  id          String   @id @default(cuid())
+  name        String
+  url         String   // Delivery endpoint URL
+  events      String[] // e.g. ["session.completed", "session.failed"]
+  secret      String   // HMAC-SHA256 signing key (encrypted at rest)
+  isActive    Boolean  @default(true)
+
+  // Retry configuration
+  retryConfig Json     @default("{\"maxRetries\": 5, \"backoffMs\": 1000, \"backoffMultiplier\": 2}")
+
+  // Relations
+  deliveries  WebhookDelivery[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// WebhookDelivery: Individual delivery attempt record
+model WebhookDelivery {
+  id            String         @id @default(cuid())
+
+  webhook       Webhook        @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  webhookId     String
+
+  event         String         // e.g. "session.completed"
+  payload       Json           // The delivered payload
+
+  status        DeliveryStatus @default(PENDING)
+  statusCode    Int?           // HTTP response code from receiver
+  attempts      Int            @default(0)
+  lastAttemptAt DateTime?
+  nextRetryAt   DateTime?
+  error         String?        // Last error message
+
+  createdAt     DateTime       @default(now())
+
+  @@index([webhookId])
+  @@index([status])
+  @@index([createdAt])
 }
