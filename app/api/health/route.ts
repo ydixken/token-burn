@@ -23,6 +23,11 @@ export async function GET() {
         responseTimeMs: 0,
         error: null as string | null,
       },
+      mockServer: {
+        status: "unknown",
+        responseTimeMs: 0,
+        error: null as string | null,
+      },
     },
   };
 
@@ -54,6 +59,28 @@ export async function GET() {
     health.services.redis.responseTimeMs = Date.now() - redisStartTime;
     health.services.redis.error = (error as Error).message;
     health.status = "unhealthy";
+  }
+
+  // Check mock server health
+  const mockStartTime = Date.now();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const mockRes = await fetch("http://localhost:3001/health", {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    health.services.mockServer = {
+      status: mockRes.ok ? "healthy" : "unhealthy",
+      responseTimeMs: Date.now() - mockStartTime,
+      error: null,
+    };
+  } catch {
+    health.services.mockServer = {
+      status: "unreachable",
+      responseTimeMs: Date.now() - mockStartTime,
+      error: null, // Not an error - mock server is optional
+    };
   }
 
   // Calculate total API response time

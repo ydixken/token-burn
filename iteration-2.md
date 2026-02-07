@@ -20,6 +20,8 @@ The current guide at `/guide` is underdesigned. It's a flat list of collapsible 
 
 ## Team Structure
 
+You have a team of 4 agents (including you as a team lead). Assign work spawning the agents. NEVER work on code yourself. Your role is to delegate, coordinate, and review the agents. Use the following guidelines, there might be more owns needed but this is a starting point:
+
 | Agent | Owns | Focus |
 |-------|------|-------|
 | **guide-ui** | `app/(dashboard)/guide/page.tsx`, `components/guide/**` (new) | Wizard framework, step components, all UI |
