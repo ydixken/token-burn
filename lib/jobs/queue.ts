@@ -70,6 +70,10 @@ export interface ExecutionConfig {
   delayBetweenMs?: number;
   verbosityLevel?: "normal" | "verbose" | "extreme";
   messageTemplates?: Record<string, unknown>;
+  timeout?: number; // session-level timeout in ms
+  messageTimeout?: number; // per-message timeout in ms (default 30000)
+  resetBetweenRepetitions?: boolean; // disconnect/reconnect between reps
+  variableExtractors?: Record<string, string>; // name → JSON path to extract from response
 }
 
 export interface FlowStep {
