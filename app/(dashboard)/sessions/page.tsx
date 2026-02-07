@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Radio, Eye, Activity } from "lucide-react";
+import { Radio, Eye, Activity, RefreshCw, Trash2, Square } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusIndicator } from "@/components/ui/status-indicator";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface Session {
   id: string;
@@ -307,11 +308,71 @@ export default function SessionsPage() {
                         {(session.summaryMetrics?.totalTokens || 0).toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
-                        <Link href={`/sessions/${session.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Button variant="icon" size="sm">
-                            <Eye className="h-3.5 w-3.5" />
-                          </Button>
-                        </Link>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          {(session.status === "RUNNING" || session.status === "QUEUED") && (
+                            <Tooltip content="Cancel">
+                              <Button
+                                variant="icon"
+                                size="sm"
+                                onClick={async () => {
+                                  await fetch(`/api/sessions/${session.id}`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ action: "cancel" }),
+                                  });
+                                  fetchSessions();
+                                }}
+                              >
+                                <Square className="h-3.5 w-3.5" />
+                              </Button>
+                            </Tooltip>
+                          )}
+                          {["COMPLETED", "FAILED", "CANCELLED"].includes(session.status) && (
+                            <>
+                              <Tooltip content="Restart">
+                                <Button
+                                  variant="icon"
+                                  size="sm"
+                                  onClick={async () => {
+                                    const res = await fetch(`/api/sessions/${session.id}`, {
+                                      method: "PATCH",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ action: "restart" }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      router.push(`/sessions/${data.data.sessionId}`);
+                                    }
+                                  }}
+                                >
+                                  <RefreshCw className="h-3.5 w-3.5" />
+                                </Button>
+                              </Tooltip>
+                              <Tooltip content="Delete">
+                                <Button
+                                  variant="icon"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (!confirm("Are you sure you want to delete this session?")) return;
+                                    await fetch(`/api/sessions/${session.id}`, {
+                                      method: "DELETE",
+                                    });
+                                    fetchSessions();
+                                  }}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </Tooltip>
+                            </>
+                          )}
+                          <Tooltip content="View">
+                            <Link href={`/sessions/${session.id}`}>
+                              <Button variant="icon" size="sm">
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </Link>
+                          </Tooltip>
+                        </div>
                       </td>
                     </tr>
                   ))}

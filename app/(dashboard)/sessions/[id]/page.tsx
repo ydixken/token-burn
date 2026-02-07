@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCw, Trash2, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui/tooltip";
 import LogViewer from "@/components/sessions/LogViewer";
 import SessionReplay from "@/components/sessions/SessionReplay";
 
@@ -75,6 +77,7 @@ function QueueStatusBanner() {
 
 export default function SessionDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const sessionId = params.id as string;
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -148,14 +151,78 @@ export default function SessionDetailPage() {
           </p>
         </div>
 
-        {session.summaryMetrics && (
-          <Link
-            href={`/api/metrics/export?sessionId=${sessionId}&format=csv`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Export Metrics
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {(session.status === "RUNNING" || session.status === "QUEUED") && (
+            <Tooltip content="Cancel Session">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={async () => {
+                  await fetch(`/api/sessions/${sessionId}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "cancel" }),
+                  });
+                  fetchSession();
+                }}
+              >
+                <Square className="h-3.5 w-3.5" />
+                Cancel
+              </Button>
+            </Tooltip>
+          )}
+          {["COMPLETED", "FAILED", "CANCELLED"].includes(session.status) && (
+            <>
+              <Tooltip content="Restart Session">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={async () => {
+                    const res = await fetch(`/api/sessions/${sessionId}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "restart" }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      router.push(`/sessions/${data.data.sessionId}`);
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Restart
+                </Button>
+              </Tooltip>
+              <Tooltip content="Delete Session">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this session?")) return;
+                    const res = await fetch(`/api/sessions/${sessionId}`, {
+                      method: "DELETE",
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      router.push("/sessions");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </Button>
+              </Tooltip>
+            </>
+          )}
+          {session.summaryMetrics && (
+            <Link
+              href={`/api/metrics/export?sessionId=${sessionId}&format=csv`}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              Export Metrics
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Session Info Cards */}
@@ -215,13 +282,13 @@ export default function SessionDetailPage() {
             <div>
               <div className="text-sm text-gray-400">Avg Response</div>
               <div className="text-2xl font-bold text-white">
-                {session.summaryMetrics.avgResponseTimeMs || 0}ms
+                {Math.round(session.summaryMetrics.avgResponseTimeMs || 0)}ms
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-400">P95 Response</div>
               <div className="text-2xl font-bold text-white">
-                {session.summaryMetrics.p95ResponseTimeMs || 0}ms
+                {Math.round(session.summaryMetrics.p95ResponseTimeMs || 0)}ms
               </div>
             </div>
             <div>
