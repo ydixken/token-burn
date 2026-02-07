@@ -593,7 +593,7 @@ async function executeFlowStep(
 ): Promise<void> {
   switch (step.type) {
     case "message": {
-      const rawMessage = step.config.message as string;
+      const rawMessage = (step.config.content ?? step.config.message) as string;
       const substituted = substituteTemplate(rawMessage, context, options.customVariables);
       const verboseMessage = applyVerbosity(substituted, options.verbosityLevel);
       await executeMessage(verboseMessage, connector, logger, context, {

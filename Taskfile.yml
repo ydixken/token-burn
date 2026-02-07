@@ -100,32 +100,29 @@ tasks:
   docker:up:
     desc: Start Docker Compose services
     cmds:
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} up -d
-      - echo "✅ Services started"
-      - echo "   PostgreSQL: localhost:5432"
-      - echo "   Redis: localhost:6379"
-      - echo "   Redis Commander: http://localhost:8081"
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d
+      - echo "Services started - PostgreSQL localhost:5432, Redis localhost:6379, Redis Commander http://localhost:8081"
 
   docker:down:
     desc: Stop Docker Compose services
     cmds:
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} down
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} down
       - echo "✅ Services stopped"
 
   docker:logs:
     desc: View Docker Compose logs
     cmds:
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} logs -f
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} logs -f
 
   docker:ps:
     desc: List running Docker containers
     cmds:
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} ps
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} ps
 
   docker:clean:
     desc: Remove Docker volumes (DESTRUCTIVE)
     cmds:
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} down -v
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} down -v
       - echo "✅ Volumes removed"
 
   # Testing
@@ -156,8 +153,8 @@ tasks:
       - task: db:push
       - task: db:seed
       - echo "✅ Setup complete!"
-      - echo "   Run 'task dev' to start development server (workers auto-start)"
-      - echo "   Visit http://localhost:3000/guide for the interactive setup wizard"
+      - echo "Run 'task dev' to start development server (workers auto-start)"
+      - 'echo "Visit http://localhost:3000/guide for the interactive setup wizard"'
 
   # Clean
   clean:
@@ -182,11 +179,11 @@ tasks:
     cmds:
       - echo "🏥 Checking service health..."
       - echo ""
-      - echo "PostgreSQL:"
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T postgres pg_isready -U krawall || echo "❌ Not healthy"
+      - 'echo "PostgreSQL:"'
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T postgres pg_isready -U krawall || echo "❌ Not healthy"
       - echo ""
-      - echo "Redis:"
-      - docker-compose -f {{.DOCKER_COMPOSE_FILE}} exec -T redis redis-cli ping || echo "❌ Not healthy"
+      - 'echo "Redis:"'
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T redis redis-cli ping || echo "❌ Not healthy"
       - echo ""
 
   worker:status:

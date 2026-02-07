@@ -122,6 +122,7 @@ export async function GET(
         // Watch for new messages if session is still running
         if (session.status === "RUNNING" || session.status === "QUEUED") {
           let lastSize = fs.statSync(messagesPath).size;
+          let partialLineBuffer = "";
           let checkInterval: NodeJS.Timeout;
 
           const checkForUpdates = () => {
@@ -129,39 +130,34 @@ export async function GET(
               const currentSize = fs.statSync(messagesPath).size;
 
               if (currentSize > lastSize) {
-                // Read only new content
-                const fileStream = fs.createReadStream(messagesPath, {
-                  start: lastSize,
-                  encoding: "utf-8",
-                });
+                // Read only new bytes synchronously to prevent race condition
+                const fd = fs.openSync(messagesPath, "r");
+                const readBuffer = Buffer.alloc(currentSize - lastSize);
+                fs.readSync(fd, readBuffer, 0, readBuffer.length, lastSize);
+                fs.closeSync(fd);
 
-                let buffer = "";
+                // Update lastSize immediately to prevent duplicate reads
+                lastSize = currentSize;
 
-                fileStream.on("data", (chunk) => {
-                  buffer += chunk;
-                  const lines = buffer.split("\n");
-                  buffer = lines.pop() || ""; // Keep incomplete line in buffer
+                const newContent = readBuffer.toString("utf-8");
+                const allLines = (partialLineBuffer + newContent).split("\n");
+                partialLineBuffer = allLines.pop() || ""; // Keep incomplete line for next read
 
-                  for (const line of lines) {
-                    if (line.trim()) {
-                      try {
-                        const message = JSON.parse(line);
-                        controller.enqueue(
-                          encoder.encode(`data: ${JSON.stringify({
-                            type: "message",
-                            data: message,
-                          })}\n\n`)
-                        );
-                      } catch (parseError) {
-                        console.error("Failed to parse message:", parseError);
-                      }
+                for (const line of allLines) {
+                  if (line.trim()) {
+                    try {
+                      const message = JSON.parse(line);
+                      controller.enqueue(
+                        encoder.encode(`data: ${JSON.stringify({
+                          type: "message",
+                          data: message,
+                        })}\n\n`)
+                      );
+                    } catch (parseError) {
+                      console.error("Failed to parse message:", parseError);
                     }
                   }
-                });
-
-                fileStream.on("end", () => {
-                  lastSize = currentSize;
-                });
+                }
               }
 
               // Check if session completed
@@ -216,8 +212,10 @@ export async function GET(
     return new Response(stream, {
       headers: {
         "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
+        "Cache-Control": "no-cache, no-transform",
         "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Content-Encoding": "none",
       },
     });
   } catch (error) {

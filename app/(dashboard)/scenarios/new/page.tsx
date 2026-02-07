@@ -29,11 +29,11 @@ const CATEGORIES = [
 ];
 
 const VERBOSITY_LEVELS = [
-  { value: 1, label: "1 - Minimal" },
-  { value: 2, label: "2 - Basic" },
-  { value: 3, label: "3 - Normal" },
-  { value: 4, label: "4 - Verbose" },
-  { value: 5, label: "5 - Debug" },
+  { value: "minimal", label: "Minimal" },
+  { value: "basic", label: "Basic" },
+  { value: "normal", label: "Normal" },
+  { value: "verbose", label: "Verbose" },
+  { value: "extreme", label: "Extreme" },
 ];
 
 const CATEGORY_BADGE_COLORS: Record<string, string> = {
@@ -110,14 +110,6 @@ function convertTemplateFlow(flowConfig: any[]): FlowStep[] {
   });
 }
 
-const VERBOSITY_MAP: Record<string, number> = {
-  minimal: 1,
-  basic: 2,
-  normal: 3,
-  verbose: 4,
-  extreme: 5,
-  debug: 5,
-};
 
 export default function NewScenarioPage() {
   const router = useRouter();
@@ -138,7 +130,7 @@ export default function NewScenarioPage() {
   const [repetitions, setRepetitions] = useState(1);
   const [concurrency, setConcurrency] = useState(1);
   const [delayBetweenMs, setDelayBetweenMs] = useState(0);
-  const [verbosityLevel, setVerbosityLevel] = useState(1);
+  const [verbosityLevel, setVerbosityLevel] = useState("normal");
   const [flowSteps, setFlowSteps] = useState<FlowStep[]>([]);
 
   // Error handling state
@@ -172,7 +164,7 @@ export default function NewScenarioPage() {
     setRepetitions(template.repetitions);
     setConcurrency(template.concurrency);
     setDelayBetweenMs(template.delayBetweenMs);
-    setVerbosityLevel(VERBOSITY_MAP[template.verbosityLevel] || 3);
+    setVerbosityLevel(template.verbosityLevel || "normal");
 
     const converted = convertTemplateFlow(template.flowConfig);
     setFlowSteps(converted);
@@ -188,7 +180,7 @@ export default function NewScenarioPage() {
     setRepetitions(1);
     setConcurrency(1);
     setDelayBetweenMs(0);
-    setVerbosityLevel(1);
+    setVerbosityLevel("normal");
     setFlowSteps([]);
     setFlowBuilderKey((k) => k + 1);
     setShowTemplates(true);
@@ -262,6 +254,13 @@ export default function NewScenarioPage() {
 
       if (data.success) {
         router.push("/scenarios");
+      } else if (data.details && Array.isArray(data.details)) {
+        const messages = data.details
+          .map((d: { path?: string[]; message?: string }) =>
+            `${d.path?.join(".") || "unknown"}: ${d.message || "invalid"}`
+          )
+          .join("; ");
+        setError(messages);
       } else {
         setError(data.error || "Failed to create scenario");
       }
@@ -506,7 +505,7 @@ export default function NewScenarioPage() {
                   <label className="block text-xs font-medium text-gray-400 mb-1">Verbosity Level</label>
                   <select
                     value={verbosityLevel}
-                    onChange={(e) => setVerbosityLevel(parseInt(e.target.value))}
+                    onChange={(e) => setVerbosityLevel(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {VERBOSITY_LEVELS.map((v) => (

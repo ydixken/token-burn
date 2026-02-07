@@ -26,7 +26,7 @@ interface ScenarioData {
   repetitions: number;
   concurrency: number;
   delayBetweenMs: number;
-  verbosityLevel: number;
+  verbosityLevel: string;
   isPublic: boolean;
   tags: string[];
   errorHandling?: {
@@ -56,11 +56,11 @@ const CATEGORIES = [
 ];
 
 const VERBOSITY_LEVELS = [
-  { value: 1, label: "1 - Minimal" },
-  { value: 2, label: "2 - Basic" },
-  { value: 3, label: "3 - Normal" },
-  { value: 4, label: "4 - Verbose" },
-  { value: 5, label: "5 - Debug" },
+  { value: "minimal", label: "Minimal" },
+  { value: "basic", label: "Basic" },
+  { value: "normal", label: "Normal" },
+  { value: "verbose", label: "Verbose" },
+  { value: "extreme", label: "Extreme" },
 ];
 
 export default function EditScenarioPage() {
@@ -81,7 +81,7 @@ export default function EditScenarioPage() {
   const [repetitions, setRepetitions] = useState(1);
   const [concurrency, setConcurrency] = useState(1);
   const [delayBetweenMs, setDelayBetweenMs] = useState(0);
-  const [verbosityLevel, setVerbosityLevel] = useState(1);
+  const [verbosityLevel, setVerbosityLevel] = useState("normal");
   const [flowSteps, setFlowSteps] = useState<FlowStep[]>([]);
   const [initialFlowSteps, setInitialFlowSteps] = useState<FlowStep[]>([]);
 
@@ -222,6 +222,13 @@ export default function EditScenarioPage() {
 
       if (data.success) {
         router.push("/scenarios");
+      } else if (data.details && Array.isArray(data.details)) {
+        const messages = data.details
+          .map((d: { path?: string[]; message?: string }) =>
+            `${d.path?.join(".") || "unknown"}: ${d.message || "invalid"}`
+          )
+          .join("; ");
+        setError(messages);
       } else {
         setError(data.error || "Failed to update scenario");
       }
@@ -389,7 +396,7 @@ export default function EditScenarioPage() {
                   <label className="block text-xs font-medium text-gray-400 mb-1">Verbosity Level</label>
                   <select
                     value={verbosityLevel}
-                    onChange={(e) => setVerbosityLevel(parseInt(e.target.value))}
+                    onChange={(e) => setVerbosityLevel(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   >
                     {VERBOSITY_LEVELS.map((v) => (

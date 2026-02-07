@@ -213,7 +213,7 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
   return (
     <div className="space-y-4">
       {/* Status Bar */}
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 flex items-center justify-between">
+      <div className="bg-gray-800 rounded-md px-3 py-2 border border-gray-700 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div>
             <span className="text-sm text-gray-400">Status:</span>
@@ -283,11 +283,11 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="bg-gray-800 rounded-lg border border-gray-700 h-[600px] overflow-y-auto"
+          className="bg-gray-900/50 rounded-lg border border-gray-700 h-[calc(100vh-320px)] min-h-[300px] overflow-y-auto"
         >
-          <div className="p-4 space-y-3">
+          <div className="px-3 py-2 space-y-1">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-500 py-8 text-sm">
                 {status === "PENDING" || status === "QUEUED"
                   ? "Waiting for session to start..."
                   : "No messages yet"}
@@ -296,56 +296,58 @@ export default function LogViewer({ sessionId, startedAt }: LogViewerProps) {
               messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`p-3 rounded-lg ${
-                    message.direction === "sent"
-                      ? "bg-blue-900/20 border border-blue-800"
-                      : "bg-gray-700/50 border border-gray-600"
+                  className={`flex ${
+                    message.direction === "sent" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs font-medium px-2 py-1 rounded ${
-                          message.direction === "sent"
-                            ? "bg-blue-700 text-blue-100"
-                            : "bg-gray-600 text-gray-100"
-                        }`}
-                      >
-                        {message.direction === "sent" ? "SENT" : "RECEIVED"}
+                  <div
+                    className={`relative max-w-[75%] px-2.5 py-1.5 rounded-lg ${
+                      message.direction === "sent"
+                        ? "bg-blue-600/30 border border-blue-700/50 rounded-br-sm"
+                        : "bg-gray-700/60 border border-gray-600/50 rounded-bl-sm"
+                    }`}
+                  >
+                    {/* Header: label + error badge + timestamp */}
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className={`text-[10px] font-medium ${
+                        message.direction === "sent" ? "text-blue-300" : "text-gray-400"
+                      }`}>
+                        {message.direction === "sent" ? "You" : "Bot"}
                       </span>
-
                       {message.success === false && (
-                        <span className="text-xs font-medium px-2 py-1 rounded bg-red-700 text-red-100">
-                          ERROR
+                        <span className="text-[10px] font-medium px-1 py-0.5 rounded bg-red-700/50 text-red-300">
+                          ERR
                         </span>
                       )}
+                      <span className="text-[10px] text-gray-500 ml-auto">
+                        {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      </span>
                     </div>
 
-                    <span className="text-xs text-gray-400">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
+                    {/* Message content */}
+                    <div className="text-xs text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
+                      {message.content}
+                    </div>
+
+                    {/* Error detail */}
+                    {message.error && (
+                      <div className="mt-1 text-[10px] text-red-400 bg-red-900/20 px-1.5 py-1 rounded">
+                        {message.error}
+                      </div>
+                    )}
+
+                    {/* Compact metrics */}
+                    {(message.responseTimeMs || message.tokenUsage) && (
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-500">
+                        {message.responseTimeMs && (
+                          <span>{Math.round(message.responseTimeMs)}ms</span>
+                        )}
+                        {message.tokenUsage?.totalTokens && (
+                          <span>{message.tokenUsage.totalTokens} tok</span>
+                        )}
+                      </div>
+                    )}
                   </div>
-
-                  <div className="text-sm text-gray-200 whitespace-pre-wrap break-words">
-                    {message.content}
-                  </div>
-
-                  {message.error && (
-                    <div className="mt-2 text-xs text-red-400 bg-red-900/20 p-2 rounded">
-                      {message.error}
-                    </div>
-                  )}
-
-                  {(message.responseTimeMs || message.tokenUsage) && (
-                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
-                      {message.responseTimeMs && (
-                        <span>Response: {Math.round(message.responseTimeMs)}ms</span>
-                      )}
-                      {message.tokenUsage?.totalTokens && (
-                        <span>Tokens: {message.tokenUsage.totalTokens}</span>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))
             )}
