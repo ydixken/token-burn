@@ -89,7 +89,7 @@ export default function TargetsPage() {
       setTestResults((prev) => ({
         ...prev,
         [id]: {
-          success: data.success && data.data?.success,
+          success: data.success,
           latencyMs: data.data?.latencyMs,
         },
       }));
