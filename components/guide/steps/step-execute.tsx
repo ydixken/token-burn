@@ -65,8 +65,8 @@ export function StepExecute() {
       } else {
         setError(data.error || data.message || "Failed to launch session");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+    } catch {
+      setError("Network error");
     } finally {
       setLaunching(false);
     }
@@ -142,9 +142,23 @@ export function StepExecute() {
           )}
 
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-400 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span className="text-xs">{error}</span>
+            <div className="animate-slideDown rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-400">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium">Failed to launch test</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {error === "Network error" || error === "Failed to fetch"
+                      ? "Can't reach the server. Is the dev server running?"
+                      : error}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-2 pl-6">
+                <Button variant="ghost" size="sm" onClick={launchTest}>
+                  Try Again
+                </Button>
+              </div>
             </div>
           )}
 

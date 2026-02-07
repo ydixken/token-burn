@@ -85,8 +85,49 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setState(loadState());
+    const restored = loadState();
+    setState(restored);
     setLoaded(true);
+
+    // Verify saved resource IDs still exist
+    (async () => {
+      if (restored.createdTargetId) {
+        try {
+          const res = await fetch("/api/targets");
+          const data = await res.json();
+          if (data.success) {
+            const exists = data.data?.some?.((t: any) => t.id === restored.createdTargetId);
+            if (!exists) {
+              setState((prev) => {
+                const next = { ...prev, createdTargetId: null };
+                saveState(next);
+                return next;
+              });
+            }
+          }
+        } catch {
+          // Network error - keep existing state
+        }
+      }
+      if (restored.createdScenarioId) {
+        try {
+          const res = await fetch("/api/scenarios");
+          const data = await res.json();
+          if (data.success) {
+            const exists = data.data?.some?.((s: any) => s.id === restored.createdScenarioId);
+            if (!exists) {
+              setState((prev) => {
+                const next = { ...prev, createdScenarioId: null };
+                saveState(next);
+                return next;
+              });
+            }
+          }
+        } catch {
+          // Network error - keep existing state
+        }
+      }
+    })();
   }, []);
 
   const persist = useCallback((next: WizardState) => {

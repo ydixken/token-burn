@@ -130,8 +130,8 @@ export function StepTarget() {
           setError(fieldErrors);
         }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+    } catch {
+      setError("Network error");
     } finally {
       setCreating(false);
     }
@@ -343,11 +343,22 @@ export function StepTarget() {
           />
 
           {error && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium">Failed to create target</p>
-                <p className="text-xs text-gray-500 mt-1">{error}</p>
+            <div className="animate-slideDown rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Failed to create target</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {error === "Network error" || error === "Failed to fetch"
+                      ? "Can't reach the server. Is the dev server running?"
+                      : error}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-2 pl-6">
+                <Button variant="ghost" size="sm" onClick={createTarget}>
+                  Try Again
+                </Button>
               </div>
             </div>
           )}

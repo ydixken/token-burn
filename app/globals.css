@@ -130,6 +130,26 @@
   animation: slideUp 200ms ease-out;
 }
 
+/* Step transition animations */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideInLeft { animation: slideInLeft 200ms ease-out; }
+.animate-slideInRight { animation: slideInRight 200ms ease-out; }
+.animate-slideDown { animation: slideDown 200ms ease-out; }
+
 /* Hover card effect */
 .card-hover {
   @apply transition-all duration-200;
