@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mock Socket.IO Chat Widget</title></head>
+<body>
+  <h1>Welcome to Support</h1>
+
+  <button id="support-chat" class="widget-launcher"
+          data-widget="chat"
+          style="position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #E94E77; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 1000;">
+    Jetzt Chatten
+  </button>
+
+  <script>
+    const WS_URL = window.__MOCK_WS_URL__ || 'ws://localhost:9876/socket.io/?EIO=4&transport=websocket';
+
+    document.getElementById('support-chat').addEventListener('click', function() {
+      const ws = new WebSocket(WS_URL);
+
+      ws.onopen = function() {
+        // Socket.IO handshake will come from server
+      };
+
+      ws.onmessage = function(event) {
+        const data = event.data;
+        // Handle Engine.IO ping
+        if (data === '2') {
+          ws.send('3');
+        }
+      };
+    });
+  </script>
+</body>
+</html>

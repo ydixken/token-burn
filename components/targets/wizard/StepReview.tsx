@@ -75,6 +75,7 @@ export default function StepReview({ data, onBack }: StepReviewProps) {
           authConfig: buildAuthConfig(),
           requestTemplate: data.requestTemplate,
           responseTemplate: data.responseTemplate,
+          protocolConfig: data.protocolConfig || undefined,
         }),
       });
 
@@ -235,9 +236,19 @@ export default function StepReview({ data, onBack }: StepReviewProps) {
               <dd className="text-white">{data.authType.replace("_", " ")}</dd>
             </div>
             <div className="col-span-2">
-              <dt className="text-xs text-gray-500">Endpoint</dt>
+              <dt className="text-xs text-gray-500">
+                {data.connectorType === "BROWSER_WEBSOCKET" ? "Page URL" : "Endpoint"}
+              </dt>
               <dd className="text-white font-mono text-xs break-all">{data.endpoint}</dd>
             </div>
+            {data.connectorType === "BROWSER_WEBSOCKET" && data.protocolConfig && (
+              <div className="col-span-2">
+                <dt className="text-xs text-gray-500">Widget Detection</dt>
+                <dd className="text-white text-xs">
+                  {(data.protocolConfig as Record<string, any>)?.widgetDetection?.strategy || "heuristic"} strategy
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
 

@@ -53,6 +53,9 @@ export interface WizardData {
     tokenUsagePath?: string;
     errorPath?: string;
   };
+
+  // Browser WebSocket protocol config (when connectorType is BROWSER_WEBSOCKET)
+  protocolConfig?: Record<string, unknown>;
 }
 
 export const INITIAL_WIZARD_DATA: WizardData = {
@@ -70,4 +73,5 @@ export const INITIAL_WIZARD_DATA: WizardData = {
   responseTemplate: {
     responsePath: "response",
   },
+  protocolConfig: undefined,
 };

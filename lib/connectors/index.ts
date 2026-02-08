@@ -17,9 +17,11 @@ import "./http";
 import "./websocket";
 import "./sse";
 import "./grpc";
+import "./browser-websocket";
 
 // Re-export connector classes for direct usage
 export { HTTPConnector } from "./http";
 export { WebSocketConnector } from "./websocket";
 export { SSEConnector } from "./sse";
 export { gRPCConnector } from "./grpc";
+export { BrowserWebSocketConnector } from "./browser-websocket";

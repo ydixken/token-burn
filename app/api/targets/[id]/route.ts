@@ -7,7 +7,7 @@ import { encrypt, decrypt } from "@/lib/utils/crypto";
 const UpdateTargetSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
-  connectorType: z.enum(["HTTP_REST", "WEBSOCKET", "GRPC", "SSE"]).optional(),
+  connectorType: z.enum(["HTTP_REST", "WEBSOCKET", "GRPC", "SSE", "BROWSER_WEBSOCKET"]).optional(),
   endpoint: z.string().url().optional(),
   authType: z
     .enum(["NONE", "BEARER_TOKEN", "API_KEY", "BASIC_AUTH", "CUSTOM_HEADER", "OAUTH2"])

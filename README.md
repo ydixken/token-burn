@@ -81,6 +81,18 @@ Side-by-side statistical comparison of chatbot responses across different provid
 
 </td>
 </tr>
+<tr>
+<td width="33%" valign="top">
+
+### Browser WebSocket Discovery
+Automatically discovers WebSocket endpoints by navigating to chat pages, detecting widgets, and capturing connections via CDP.
+
+</td>
+<td width="33%" valign="top">
+</td>
+<td width="33%" valign="top">
+</td>
+</tr>
 </table>
 
 <div align="center">
@@ -122,6 +134,7 @@ Side-by-side statistical comparison of chatbot responses across different provid
 - **Conversation Context** - Stateful session memory with message history, conversation ID tracking, and context windowing
 - **Concurrency Control** - Semaphore-based limiting (1–100 parallel sessions)
 - **Rate Limiting** - Token bucket algorithm with automatic 429 detection and exponential backoff
+- **Browser WebSocket Discovery** - Headless browser navigation with heuristic widget detection, WebSocket capture via CDP, and automatic protocol detection (Socket.IO / raw WS)
 - **Configurable Error Handling** - Per-scenario retry policies, timeouts, and error injection for resilience testing
 - **Session Actions** - Restart, cancel, or delete sessions mid-flight
 
@@ -200,7 +213,7 @@ task setup
 | Backend | Next.js API Routes, Prisma ORM, BullMQ, Zod |
 | Database | PostgreSQL 16 |
 | Cache & Queue | Redis 7, BullMQ |
-| Protocols | HTTP/REST (axios), WebSocket (ws), gRPC (grpc-js), SSE (eventsource) |
+| Protocols | HTTP/REST (axios), WebSocket (ws), gRPC (grpc-js), SSE (eventsource), Browser WebSocket (Playwright) |
 | Testing | Vitest, Testing Library, Mock Chatbot Server |
 | DevOps | Docker Compose, GitLab CI/CD, Taskfile, Nginx |
 
@@ -220,6 +233,7 @@ All chatbot protocols extend a `BaseConnector` abstract class with a registry pa
 | WebSocket | `WebSocketConnector` | Bidirectional messaging, auto-reconnect |
 | gRPC | `GRPCConnector` | Proto loading, TLS support |
 | SSE | `SSEConnector` | Streaming response handling |
+| Browser WebSocket | `BrowserWebSocketConnector` | Headless browser discovery, CDP capture, Socket.IO/raw WS |
 
 ### Provider Presets
 

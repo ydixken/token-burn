@@ -15,6 +15,7 @@ enum ConnectorType {
   WEBSOCKET
   GRPC
   SSE
+  BROWSER_WEBSOCKET
 }
 
 // AuthType enum

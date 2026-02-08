@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mock Chat Widget</title></head>
+<body>
+  <h1>Welcome to our website</h1>
+
+  <!-- Simple chat button (heuristic should find this) -->
+  <button id="chat-button" class="chat-launcher"
+          aria-label="Chat with us"
+          style="position: fixed; bottom: 20px; right: 20px; padding: 12px 24px; background: #4A90D9; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 1000;">
+    Start Chat
+  </button>
+
+  <script>
+    // Mock WS server URL (will be replaced in tests)
+    const WS_URL = window.__MOCK_WS_URL__ || 'ws://localhost:9876';
+
+    document.getElementById('chat-button').addEventListener('click', function() {
+      // Open WebSocket connection when chat button is clicked
+      const ws = new WebSocket(WS_URL);
+
+      ws.onopen = function() {
+        // Send initial greeting
+        ws.send(JSON.stringify({ type: 'greeting', message: 'Hello' }));
+      };
+
+      ws.onmessage = function(event) {
+        console.log('Received:', event.data);
+      };
+
+      // Show chat panel
+      const panel = document.createElement('div');
+      panel.id = 'chat-panel';
+      panel.innerHTML = '<div class="chat-messages"></div><input type="text" placeholder="Type a message...">';
+      panel.style.cssText = 'position: fixed; bottom: 80px; right: 20px; width: 300px; height: 400px; background: white; border: 1px solid #ccc; border-radius: 8px; z-index: 1001;';
+      document.body.appendChild(panel);
+    });
+  </script>
+</body>
+</html>

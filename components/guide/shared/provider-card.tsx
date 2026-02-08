@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Wifi, Globe, Radio, Zap, Server } from "lucide-react";
+import { Wifi, Globe, Radio, Zap, Server, Monitor } from "lucide-react";
 import type { ProviderPreset } from "@/lib/connectors/presets";
 
 const CONNECTOR_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -9,6 +9,7 @@ const CONNECTOR_ICONS: Record<string, React.ComponentType<{ className?: string }
   WEBSOCKET: Wifi,
   GRPC: Radio,
   SSE: Zap,
+  BROWSER_WEBSOCKET: Monitor,
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
@@ -21,6 +22,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   websocket: "text-yellow-400",
   grpc: "text-red-400",
   mock: "text-blue-400",
+  browser: "text-violet-400",
 };
 
 interface ProviderCardProps {

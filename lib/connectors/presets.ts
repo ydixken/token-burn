@@ -11,7 +11,7 @@ export interface ProviderPreset {
   name: string;
   description: string;
   icon: string;
-  connectorType: "HTTP_REST" | "WEBSOCKET" | "GRPC" | "SSE";
+  connectorType: "HTTP_REST" | "WEBSOCKET" | "GRPC" | "SSE" | "BROWSER_WEBSOCKET";
   defaultEndpoint: string;
   authType: "NONE" | "BEARER_TOKEN" | "API_KEY" | "BASIC_AUTH" | "CUSTOM_HEADER" | "OAUTH2";
   authFields: AuthField[];
@@ -410,14 +410,14 @@ Install models with \`ollama pull <model>\`:
       },
     ],
     requestTemplate: {
-      messagePath: "",
+      messagePath: "message",
       structure: {
         message: "{{message}}",
       },
     },
     responseTemplate: {
-      responsePath: "",
-      errorPath: "",
+      responsePath: "response",
+      errorPath: "error",
     },
     documentation: `## Custom HTTP Endpoint
 
@@ -548,6 +548,90 @@ Messages are sent as JSON frames.
       content: "Example gRPC response",
       metadata: {
         requestId: "req-123",
+      },
+    },
+  },
+
+  // 9. Browser WebSocket (Auto-Detect)
+  {
+    id: "browser-ws-auto",
+    name: "Browser WebSocket (Auto-Detect)",
+    description: "Discovers WebSocket endpoints by automating browser interactions. Auto-detects protocol.",
+    icon: "browser",
+    connectorType: "BROWSER_WEBSOCKET",
+    defaultEndpoint: "https://",
+    authType: "NONE",
+    authFields: [],
+    requestTemplate: {
+      messagePath: "message",
+      structure: { message: "{{message}}" },
+    },
+    responseTemplate: {
+      responsePath: "data.content",
+    },
+    documentation: `## Browser WebSocket Discovery (Auto-Detect)
+
+### How It Works
+1. Krawall opens the target page in a headless browser (Playwright)
+2. Detects and activates the chat widget using heuristic detection or CSS selectors
+3. Captures outgoing WebSocket connections via Chrome DevTools Protocol (CDP)
+4. Extracts cookies, headers, localStorage, and sessionStorage for authentication
+5. Auto-detects whether the connection uses Socket.IO or raw WebSocket framing
+
+### Configuration
+- **Page URL**: The web page containing the chat widget (not the WS URL)
+- **Widget Detection**: Heuristic (recommended), CSS selector, or scripted interaction steps
+- **WebSocket Filter**: Regex pattern to select the correct WS connection if multiple exist
+- **Browser Settings**: Viewport, user agent, proxy, headless mode
+
+### When to Use
+Use this preset when:
+- You don't know the direct WebSocket URL
+- The chatbot requires cookies or session tokens obtained via browser navigation
+- The widget is embedded in a complex page with dynamic loading`,
+    exampleResponse: {
+      data: {
+        content: "Hello! I'm the chatbot assistant. How can I help you today?",
+      },
+    },
+  },
+
+  // 10. Browser WebSocket (Socket.IO)
+  {
+    id: "browser-ws-socketio",
+    name: "Browser WebSocket (Socket.IO)",
+    description: "Optimized for Socket.IO chatbots with built-in heartbeat and framing support.",
+    icon: "browser",
+    connectorType: "BROWSER_WEBSOCKET",
+    defaultEndpoint: "https://",
+    authType: "NONE",
+    authFields: [],
+    requestTemplate: {
+      messagePath: "message",
+      structure: { message: "{{message}}" },
+    },
+    responseTemplate: {
+      responsePath: "data.content",
+    },
+    documentation: `## Browser WebSocket Discovery (Socket.IO)
+
+### How It Works
+Same as Browser WebSocket Auto-Detect, but forces Socket.IO protocol detection.
+
+### Socket.IO Features
+- Automatic Engine.IO handshake parsing (sid, pingInterval, pingTimeout)
+- Built-in heartbeat (ping/pong) to keep the connection alive
+- Socket.IO v3 and v4 framing support
+- Namespace and event handling
+
+### When to Use
+Use this preset when:
+- You know the chatbot uses Socket.IO
+- The auto-detect preset misidentifies the protocol
+- You need explicit control over Socket.IO version (v3 vs v4)`,
+    exampleResponse: {
+      data: {
+        content: "Hello! I'm the Socket.IO chatbot. How can I help you today?",
       },
     },
   },

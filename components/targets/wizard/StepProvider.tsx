@@ -18,6 +18,7 @@ const PROVIDER_ICONS: Record<string, string> = {
   http: "H",
   websocket: "WS",
   grpc: "gR",
+  browser: "Br",
 };
 
 export default function StepProvider({ data, onUpdate, onNext }: StepProviderProps) {

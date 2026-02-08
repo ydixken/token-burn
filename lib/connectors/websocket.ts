@@ -174,15 +174,11 @@ export class WebSocketConnector extends BaseConnector {
           },
         });
       }
-    } catch (error) {
-      console.error("Failed to parse WebSocket message:", error);
-
-      // Reject all queued messages
-      while (this.messageQueue.length > 0) {
-        const queued = this.messageQueue.shift();
-        if (queued) {
-          queued.reject(error as Error);
-        }
+    } catch {
+      // Silently skip protocol frames (Socket.IO handshake, keepalives, etc.)
+      // Only warn if there are queued messages waiting for a response
+      if (this.messageQueue.length > 0) {
+        console.warn("Skipping unparseable WebSocket frame:", data.substring(0, 100));
       }
     }
   }
@@ -198,6 +194,9 @@ export class WebSocketConnector extends BaseConnector {
         queued.reject(new Error("WebSocket disconnected"));
       }
     }
+
+    // Skip auto-reconnection when managed externally (e.g. BrowserWebSocketConnector)
+    if (this.config.protocolConfig?.noReconnect) return;
 
     // Attempt reconnection if not manual disconnect
     if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {

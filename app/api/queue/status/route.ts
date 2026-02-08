@@ -5,16 +5,28 @@ import {
   sessionQueue,
   metricsQueue,
 } from "@/lib/jobs/queue";
+import {
+  getTokenRefreshQueueStats,
+  tokenRefreshQueue,
+} from "@/lib/jobs/token-refresh/queue";
 
 export async function GET() {
   try {
-    const [sessionStats, metricsStats, sessionWorkers, metricsWorkers] =
-      await Promise.all([
-        getSessionQueueStats(),
-        getMetricsQueueStats(),
-        sessionQueue.getWorkers().catch(() => []),
-        metricsQueue.getWorkers().catch(() => []),
-      ]);
+    const [
+      sessionStats,
+      metricsStats,
+      tokenRefreshStats,
+      sessionWorkers,
+      metricsWorkers,
+      tokenRefreshWorkers,
+    ] = await Promise.all([
+      getSessionQueueStats(),
+      getMetricsQueueStats(),
+      getTokenRefreshQueueStats(),
+      sessionQueue.getWorkers().catch(() => []),
+      metricsQueue.getWorkers().catch(() => []),
+      tokenRefreshQueue.getWorkers().catch(() => []),
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -26,6 +38,10 @@ export async function GET() {
         metricsQueue: {
           ...metricsStats,
           workerRunning: metricsWorkers.length > 0,
+        },
+        tokenRefreshQueue: {
+          ...tokenRefreshStats,
+          workerRunning: tokenRefreshWorkers.length > 0,
         },
       },
     });

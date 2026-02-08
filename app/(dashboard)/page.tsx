@@ -127,6 +127,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function QueueIndicator() {
   const [queued, setQueued] = useState(0);
+  const [refreshActive, setRefreshActive] = useState(0);
 
   useEffect(() => {
     const fetchQueue = async () => {
@@ -136,6 +137,7 @@ function QueueIndicator() {
           const data = await res.json();
           if (data.success) {
             setQueued(data.data.sessionQueue.waiting);
+            setRefreshActive(data.data.tokenRefreshQueue?.active ?? 0);
           }
         }
       } catch { /* silent */ }
@@ -146,12 +148,19 @@ function QueueIndicator() {
     return () => clearInterval(interval);
   }, []);
 
-  if (queued <= 0) return null;
-
   return (
-    <Badge variant="warning" size="sm">
-      {queued} queued
-    </Badge>
+    <>
+      {queued > 0 && (
+        <Badge variant="warning" size="sm">
+          {queued} queued
+        </Badge>
+      )}
+      {refreshActive > 0 && (
+        <Badge variant="info" size="sm">
+          {refreshActive} refreshing
+        </Badge>
+      )}
+    </>
   );
 }
 
