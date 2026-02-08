@@ -85,12 +85,20 @@ Side-by-side statistical comparison of chatbot responses across different provid
 <td width="33%" valign="top">
 
 ### Browser WebSocket Discovery
-Automatically discovers WebSocket endpoints by navigating to chat pages, detecting widgets, and capturing connections via CDP.
+Automatically discovers WebSocket endpoints by navigating to chat pages with heuristic widget detection, WebSocket capture via CDP, Socket.IO auto-detection, and background token refresh.
 
 </td>
 <td width="33%" valign="top">
+
+### Token Refresh
+Background BullMQ workers keep browser-discovered credentials fresh with Redis Pub/Sub hot-swap — no reconnect needed.
+
 </td>
 <td width="33%" valign="top">
+
+### Live Discovery Logs
+Real-time SSE streaming of browser discovery progress with step-by-step timeline and raw response inspection.
+
 </td>
 </tr>
 </table>
@@ -134,7 +142,12 @@ Automatically discovers WebSocket endpoints by navigating to chat pages, detecti
 - **Conversation Context** - Stateful session memory with message history, conversation ID tracking, and context windowing
 - **Concurrency Control** - Semaphore-based limiting (1–100 parallel sessions)
 - **Rate Limiting** - Token bucket algorithm with automatic 429 detection and exponential backoff
-- **Browser WebSocket Discovery** - Headless browser navigation with heuristic widget detection, WebSocket capture via CDP, and automatic protocol detection (Socket.IO / raw WS)
+- **Browser WebSocket Discovery**
+  - *Heuristic Widget Detection* - Three strategies: heuristic (auto-detects widgets using provider patterns for Intercom, Drift, Zendesk, LiveChat, Tawk, HubSpot, Crisp, Tidio, and more + positional matching), selector (direct CSS selector), and steps (ordered browser actions: click, type, wait, evaluate)
+  - *WebSocket Capture via CDP* - Chrome DevTools Protocol captures HTTP upgrade headers and frames for connection replay outside the browser
+  - *Socket.IO Auto-Detection* - Detects Socket.IO by URL patterns, Engine.IO handshake frames, and frame signal analysis; installs dedicated SocketIOHandler for proper framing and heartbeat
+  - *Token Refresh* - BullMQ scheduler with configurable refresh intervals, Redis Pub/Sub notifications for credential hot-swap without disconnecting
+  - *Discovery Caching* - Redis-backed cache with configurable TTL, force-fresh bypass, and full credential snapshots (cookies, headers, localStorage, sessionStorage)
 - **Configurable Error Handling** - Per-scenario retry policies, timeouts, and error injection for resilience testing
 - **Session Actions** - Restart, cancel, or delete sessions mid-flight
 
@@ -233,7 +246,7 @@ All chatbot protocols extend a `BaseConnector` abstract class with a registry pa
 | WebSocket | `WebSocketConnector` | Bidirectional messaging, auto-reconnect |
 | gRPC | `GRPCConnector` | Proto loading, TLS support |
 | SSE | `SSEConnector` | Streaming response handling |
-| Browser WebSocket | `BrowserWebSocketConnector` | Headless browser discovery, CDP capture, Socket.IO/raw WS |
+| Browser WebSocket | `BrowserWebSocketConnector` | Heuristic widget detection, CDP capture, Socket.IO/raw WS, token refresh |
 
 ### Provider Presets
 
@@ -255,8 +268,38 @@ Configurable presets support all authentication methods: **Bearer Token**, **API
 1. **Session Execution** - Execute test scenarios with connector lifecycle management
 2. **Metrics Aggregation** - Compute P50/P95/P99 percentiles from raw session data
 3. **Webhook Delivery** - HMAC-signed event delivery with exponential backoff retry
+4. **Token Refresh** - Background credential refresh for browser-discovered WebSocket sessions with Redis Pub/Sub notification
 
 Workers start automatically via `instrumentation.ts` and shut down gracefully on `SIGTERM`/`SIGINT`.
+
+### Browser Discovery Pipeline
+
+Krawall can automatically discover and connect to WebSocket-based chatbots embedded in web pages — no manual endpoint configuration required.
+
+**How it works:**
+
+1. Playwright launches headless Chromium and navigates to the target page
+2. CDP listener attaches to capture WebSocket upgrade headers
+3. Widget detector locates and activates the chat widget using the configured strategy
+4. WebSocket capture intercepts the resulting connection and collects frames
+5. Protocol detector analyzes frames to determine raw WS vs Socket.IO
+6. Credential extractor harvests cookies, localStorage, and sessionStorage
+7. Result is cached in Redis for reuse within the session TTL
+
+**Widget Detection Strategies:**
+
+| Strategy | Use Case | How It Works |
+|----------|----------|--------------|
+| Heuristic | Unknown widgets (default) | Tries hint-derived selectors, then common provider patterns (Intercom, Drift, Zendesk, etc.), then positional matching |
+| Selector | Known implementations | Clicks a user-provided CSS selector directly |
+| Steps | Complex interactions | Executes ordered browser actions (click, type, wait, evaluate) |
+
+**Supported Protocols:**
+
+| Protocol | Detection | Features |
+|----------|-----------|----------|
+| Raw WebSocket | Default | Direct message relay, auto-reconnect |
+| Socket.IO | URL patterns, handshake analysis, frame signals | Engine.IO heartbeat, namespace support, event framing |
 
 <details>
 <summary><strong>Project Structure</strong></summary>
