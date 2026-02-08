@@ -155,7 +155,7 @@ tasks:
       - echo "⏳ Waiting for services to be healthy..."
       - sleep 5
       - task: db:generate
-      - task: db:push
+      - task: db:migrate
       - task: db:seed
       - pnpm exec playwright install chromium
       - echo "✅ Setup complete!"
