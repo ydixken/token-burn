@@ -20,10 +20,22 @@ export class WidgetDetector {
   private config: BrowserWebSocketProtocolConfig;
   private wsDetected: boolean = false;
   private onWsDetected: (() => void) | null = null;
+  private progressCallback?: (message: string, data?: Record<string, unknown>) => void;
 
   constructor(page: Page, config: BrowserWebSocketProtocolConfig) {
     this.page = page;
     this.config = config;
+  }
+
+  /**
+   * Set a progress callback for reporting detection steps.
+   */
+  setOnProgress(callback: (message: string, data?: Record<string, unknown>) => void): void {
+    this.progressCallback = callback;
+  }
+
+  private emitProgress(message: string, data?: Record<string, unknown>): void {
+    this.progressCallback?.(message, data);
   }
 
   /**
@@ -78,24 +90,36 @@ export class WidgetDetector {
    */
   private async detectHeuristic(): Promise<void> {
     const hints = this.config.widgetDetection.hints;
+    const selectorsTried: Array<{ selector: string; found: boolean }> = [];
 
     // 1. Try hint-derived selectors first
     if (hints) {
       const hintSelectors = buildSelectorsFromHints(hints);
       for (const selector of hintSelectors) {
+        this.emitProgress(`Trying hint selector: ${selector}`, { selector, source: 'hints' });
         const found = await this.tryClick(selector);
-        if (found) return;
+        selectorsTried.push({ selector, found });
+        if (found) {
+          this.emitProgress(`Widget found with hint selector: ${selector}`, { selector });
+          return;
+        }
       }
     }
 
     // 2. Fall back to generic heuristic selectors
     for (const selector of ALL_HEURISTIC_SELECTORS) {
+      this.emitProgress(`Trying generic selector: ${selector}`, { selector, source: 'generic' });
       const found = await this.tryClick(selector);
-      if (found) return;
+      selectorsTried.push({ selector, found });
+      if (found) {
+        this.emitProgress(`Widget found with generic selector: ${selector}`, { selector });
+        return;
+      }
     }
 
     // 3. Try positional filter if position and elementType hints are provided
     if (hints?.position && hints?.elementType) {
+      this.emitProgress('Trying positional matching', { position: hints.position, elementType: hints.elementType });
       const { selector, filterFn } = buildPositionalFilter(hints.position, hints.elementType);
       const viewport = this.page.viewportSize() || { width: 1280, height: 720 };
 
@@ -117,7 +141,33 @@ export class WidgetDetector {
       }
     }
 
-    throw new Error('Heuristic widget detection failed: no widget found');
+    // Collect debug info before throwing
+    let pageTitle = 'unknown';
+    let pageUrl = 'unknown';
+    let iframeCount = 0;
+    try {
+      pageTitle = await this.page.title();
+      pageUrl = this.page.url();
+      iframeCount = this.page.frames().length - 1; // subtract main frame
+    } catch {
+      // Best-effort debug info collection
+    }
+
+    const debugInfo = {
+      pageTitle,
+      pageUrl,
+      iframeCount,
+      selectorsTried: selectorsTried.length,
+      selectorsDetail: selectorsTried,
+    };
+
+    this.emitProgress('Widget detection failed', debugInfo);
+
+    throw new Error(
+      `Heuristic widget detection failed: no widget found. ` +
+      `Tried ${selectorsTried.length} selectors. ` +
+      `Page: "${pageTitle}" (${iframeCount} iframes)`
+    );
   }
 
   /**

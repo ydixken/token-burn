@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import { useTestConnectionStream } from "@/lib/hooks/use-test-connection-stream";
+import { DiscoveryProgressTimeline } from "@/components/discovery-progress-timeline";
 
 interface TargetData {
   id: string;
@@ -92,6 +94,7 @@ export default function TargetDetailPage() {
   const [refreshData, setRefreshData] = useState<TokenRefreshData | null>(null);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [refreshActionLoading, setRefreshActionLoading] = useState(false);
+  const { events: streamEvents, status: streamStatus, result: streamResult, startTest: startStreamTest } = useTestConnectionStream(targetId);
 
   useEffect(() => {
     fetchTarget();
@@ -615,24 +618,36 @@ export default function TargetDetailPage() {
       {/* Test Connection */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h3 className="text-lg font-semibold text-white mb-3">Test Connection</h3>
-        <button
-          onClick={handleTest}
-          disabled={testing}
-          className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            testing
-              ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-              : "bg-emerald-700 hover:bg-emerald-600 text-white"
-          }`}
-        >
-          {testing ? (
-            <>
-              <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-              Testing...
-            </>
-          ) : (
-            "Test Connection"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleTest}
+            disabled={testing}
+            className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors flex items-center gap-2 ${
+              testing
+                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                : "bg-emerald-700 hover:bg-emerald-600 text-white"
+            }`}
+          >
+            {testing ? (
+              <>
+                <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                Testing...
+              </>
+            ) : (
+              "Test Connection"
+            )}
+          </button>
+
+          {target.connectorType === "BROWSER_WEBSOCKET" && (
+            <button
+              onClick={startStreamTest}
+              disabled={streamStatus === "streaming"}
+              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {streamStatus === "streaming" ? "Streaming..." : "Stream Discovery Test"}
+            </button>
           )}
-        </button>
+        </div>
 
         {testResult && (
           <div
@@ -659,6 +674,32 @@ export default function TargetDetailPage() {
             )}
             {testResult.error && (
               <div className="text-red-400 text-xs mt-2">{testResult.error}</div>
+            )}
+          </div>
+        )}
+
+        {/* Streaming Discovery Timeline - Browser WebSocket only */}
+        {target.connectorType === "BROWSER_WEBSOCKET" && (streamEvents.length > 0 || streamStatus === "streaming") && (
+          <DiscoveryProgressTimeline events={streamEvents} status={streamStatus} />
+        )}
+
+        {target.connectorType === "BROWSER_WEBSOCKET" && streamResult && (
+          <div
+            className={`mt-4 rounded-lg border p-4 text-sm ${
+              streamResult.success
+                ? "bg-green-900/20 border-green-800"
+                : "bg-red-900/20 border-red-800"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${streamResult.success ? "bg-green-400" : "bg-red-400"}`} />
+              <span className={streamResult.success ? "text-green-300" : "text-red-300"}>
+                {streamResult.success ? "Discovery Successful" : "Discovery Failed"}
+              </span>
+              <span className="text-xs text-gray-400 ml-auto">{Math.round(streamResult.data.latencyMs)}ms</span>
+            </div>
+            {streamResult.data.error && (
+              <div className="text-red-400 text-xs mt-2">{streamResult.data.error}</div>
             )}
           </div>
         )}

@@ -228,7 +228,7 @@ export function createSessionWorker() {
         };
 
         // Initialize connector with retry
-        connector = ConnectorRegistry.create(target.connectorType, targetId, connectorConfig);
+        connector = await ConnectorRegistry.create(target.connectorType, targetId, connectorConfig);
         await connectWithRetry(connector);
 
         // Initialize session logger
@@ -308,7 +308,7 @@ export function createSessionWorker() {
                 } catch (e) {
                   console.error("Disconnect during reset failed:", e);
                 }
-                connector = ConnectorRegistry.create(target.connectorType, targetId, connectorConfig!);
+                connector = await ConnectorRegistry.create(target.connectorType, targetId, connectorConfig!);
                 await connectWithRetry(connector);
               }
 
@@ -360,7 +360,7 @@ export function createSessionWorker() {
                 } catch (e) {
                   console.error("Disconnect during reset failed:", e);
                 }
-                connector = ConnectorRegistry.create(target.connectorType, targetId, connectorConfig!);
+                connector = await ConnectorRegistry.create(target.connectorType, targetId, connectorConfig!);
                 await connectWithRetry(connector);
               }
 

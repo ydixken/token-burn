@@ -88,6 +88,9 @@ export class BrowserDiscoveryService {
 
       // 6. Create WidgetDetector
       const widgetDetector = new WidgetDetector(page, config);
+      widgetDetector.setOnProgress((message, data) => {
+        onProgress?.(`[Widget] ${message}`);
+      });
 
       // 7. Set up WS detection callback: notify WidgetDetector when WS is captured
       const originalWsListener = page.on.bind(page);

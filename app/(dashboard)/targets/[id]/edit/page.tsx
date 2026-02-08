@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTestConnectionStream } from "@/lib/hooks/use-test-connection-stream";
+import { DiscoveryProgressTimeline } from "@/components/discovery-progress-timeline";
 
 interface TargetData {
   id: string;
@@ -48,6 +50,7 @@ const CONNECTOR_TYPES = [
   { value: "WEBSOCKET", label: "WebSocket" },
   { value: "GRPC", label: "gRPC" },
   { value: "SSE", label: "SSE" },
+  { value: "BROWSER_WEBSOCKET", label: "Browser WebSocket" },
 ];
 
 export default function EditTargetPage() {
@@ -76,6 +79,9 @@ export default function EditTargetPage() {
   const [tokenUsagePath, setTokenUsagePath] = useState("");
   const [errorPath, setErrorPath] = useState("");
   const [isActive, setIsActive] = useState(true);
+
+  // Streaming discovery test
+  const { events: streamEvents, status: streamStatus, result: streamResult, startTest: startStreamTest, reset: resetStream } = useTestConnectionStream(targetId);
 
   // Last test info
   const [lastTestAt, setLastTestAt] = useState<string | null>(null);
@@ -516,6 +522,46 @@ export default function EditTargetPage() {
           </div>
         )}
       </div>
+
+      {/* Discovery Log - Browser WebSocket only */}
+      {connectorType === "BROWSER_WEBSOCKET" && (
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-3">Discovery Log</h3>
+          <p className="text-xs text-gray-500 mb-3">
+            Stream live progress from browser discovery, widget detection, and WebSocket capture.
+          </p>
+          <button
+            onClick={startStreamTest}
+            disabled={streamStatus === "streaming"}
+            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            {streamStatus === "streaming" ? "Running Discovery..." : "Run Discovery Test"}
+          </button>
+
+          <DiscoveryProgressTimeline events={streamEvents} status={streamStatus} />
+
+          {streamResult && (
+            <div
+              className={`mt-4 rounded-lg border p-4 text-sm ${
+                streamResult.success
+                  ? "bg-green-900/20 border-green-800"
+                  : "bg-red-900/20 border-red-800"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${streamResult.success ? "bg-green-400" : "bg-red-400"}`} />
+                <span className={streamResult.success ? "text-green-300" : "text-red-300"}>
+                  {streamResult.success ? "Discovery Successful" : "Discovery Failed"}
+                </span>
+                <span className="text-xs text-gray-400 ml-auto">{Math.round(streamResult.data.latencyMs)}ms</span>
+              </div>
+              {streamResult.data.error && (
+                <div className="text-red-400 text-xs mt-2">{streamResult.data.error}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       {saveError && (

@@ -104,6 +104,7 @@ vi.mock("@/lib/connectors/browser/widget-detector", () => ({
     detect: vi.fn().mockResolvedValue(undefined),
     setWsDetectedCallback: vi.fn(),
     notifyWsDetected: vi.fn(),
+    setOnProgress: vi.fn(),
   })),
 }));
 
@@ -369,6 +370,7 @@ describe("BrowserDiscoveryService", () => {
         detect: vi.fn().mockRejectedValue(new Error("no widget found")),
         setWsDetectedCallback: vi.fn(),
         notifyWsDetected: vi.fn(),
+        setOnProgress: vi.fn(),
       }) as unknown as InstanceType<typeof WidgetDetector>);
 
       await expect(BrowserDiscoveryService.discover(createOptions())).rejects.toThrow(

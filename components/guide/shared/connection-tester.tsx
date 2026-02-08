@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Check, X, Loader2, RefreshCw, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTestConnectionStream } from "@/lib/hooks/use-test-connection-stream";
+import { DiscoveryProgressTimeline } from "@/components/discovery-progress-timeline";
 
 type TestStatus = "idle" | "testing" | "success" | "failure";
 
@@ -10,6 +12,7 @@ interface ConnectionTesterProps {
   targetId: string | null;
   targetName?: string;
   targetEndpoint?: string;
+  connectorType?: string;
   autoRun?: boolean;
   onSuccess?: () => void;
 }
@@ -18,9 +21,12 @@ export function ConnectionTester({
   targetId,
   targetName,
   targetEndpoint,
+  connectorType,
   autoRun = false,
   onSuccess,
 }: ConnectionTesterProps) {
+  const isBrowserWs = connectorType === "BROWSER_WEBSOCKET";
+  const { events: streamEvents, status: streamStatus, result: streamResult, startTest: startStreamTest } = useTestConnectionStream(isBrowserWs ? targetId : null);
   const [status, setStatus] = useState<TestStatus>("idle");
   const [latency, setLatency] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +41,7 @@ export function ConnectionTester({
       const res = await fetch(`/api/targets/${targetId}/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeout: 10000 }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
 
@@ -125,10 +131,22 @@ export function ConnectionTester({
 
       {/* Action buttons */}
       <div className="flex items-center gap-2">
-        {status === "idle" && (
+        {status === "idle" && !isBrowserWs && (
           <Button onClick={runTest}>
             <Wifi className="h-4 w-4 mr-1" />
             Test Connection
+          </Button>
+        )}
+        {status === "idle" && isBrowserWs && streamStatus === "idle" && (
+          <Button onClick={startStreamTest}>
+            <Wifi className="h-4 w-4 mr-1" />
+            Test Discovery
+          </Button>
+        )}
+        {status === "idle" && isBrowserWs && streamStatus === "streaming" && (
+          <Button disabled>
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            Running Discovery...
           </Button>
         )}
         {status === "failure" && (
@@ -144,6 +162,13 @@ export function ConnectionTester({
           </Button>
         )}
       </div>
+
+      {/* Discovery timeline for Browser WebSocket */}
+      {isBrowserWs && (streamEvents.length > 0 || streamStatus === "streaming") && (
+        <div className="w-full max-w-md">
+          <DiscoveryProgressTimeline events={streamEvents} status={streamStatus} />
+        </div>
+      )}
 
       {/* Troubleshooting tips */}
       {status === "failure" && (

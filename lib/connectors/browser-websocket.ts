@@ -51,10 +51,14 @@ export class BrowserWebSocketConnector extends BaseConnector {
     }
 
     // 2. Run browser discovery
+    this.emitProgress("connect", "Starting browser discovery");
     try {
       this.discoveryResult = await BrowserDiscoveryService.discover({
         config: this.protocolConfig,
         targetId: this.targetId,
+        onProgress: (message: string) => {
+          this.emitProgress("discovery", message);
+        },
       });
     } catch (error) {
       throw new ConnectorError(
@@ -67,6 +71,7 @@ export class BrowserWebSocketConnector extends BaseConnector {
     const internalConfig = this.buildInternalConfig(this.discoveryResult);
 
     // 4. Create and connect internal WebSocketConnector
+    this.emitProgress("connect", "Connecting to discovered WebSocket endpoint");
     this.internalConnector = new WebSocketConnector(this.targetId, internalConfig);
     try {
       await this.internalConnector.connect();
@@ -95,6 +100,7 @@ export class BrowserWebSocketConnector extends BaseConnector {
     }
 
     this._connected = true;
+    this.emitProgress("connect", "Connected successfully");
 
     // 6. Subscribe to token refresh notifications if enabled
     if (this.protocolConfig?.session?.tokenRefreshEnabled !== false) {

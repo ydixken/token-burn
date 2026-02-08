@@ -12,6 +12,7 @@ type ConnectorConstructor = new (targetId: string, config: ConnectorConfig) => B
 
 export class ConnectorRegistry {
   private static connectors = new Map<string, ConnectorConstructor>();
+  private static allRegistered = false;
 
   /**
    * Register a connector type
@@ -26,9 +27,14 @@ export class ConnectorRegistry {
   }
 
   /**
-   * Create a connector instance
+   * Create a connector instance.
+   * Automatically registers all built-in connectors on first use if needed.
    */
-  static create(type: ConnectorType, targetId: string, config: ConnectorConfig): BaseConnector {
+  static async create(type: ConnectorType, targetId: string, config: ConnectorConfig): Promise<BaseConnector> {
+    if (!this.allRegistered) {
+      await this.registerAll();
+    }
+
     const ConnectorClass = this.connectors.get(type);
 
     if (!ConnectorClass) {
@@ -71,6 +77,8 @@ export class ConnectorRegistry {
    * Uses dynamic imports to avoid circular dependency issues.
    */
   static async registerAll(): Promise<void> {
+    if (this.allRegistered) return;
+
     const { HTTPConnector } = await import("./http");
     const { WebSocketConnector } = await import("./websocket");
     const { gRPCConnector } = await import("./grpc");
@@ -92,6 +100,8 @@ export class ConnectorRegistry {
     if (!this.isRegistered("BROWSER_WEBSOCKET")) {
       this.register("BROWSER_WEBSOCKET", BrowserWebSocketConnector);
     }
+
+    this.allRegistered = true;
   }
 }
 

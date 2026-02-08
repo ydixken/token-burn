@@ -15,6 +15,30 @@ export abstract class BaseConnector {
   }
 
   /**
+   * Optional progress callback for streaming status updates during connect/test
+   */
+  protected onProgress?: (event: ProgressEvent) => void;
+
+  /**
+   * Set a progress callback that receives structured events during connect/test operations
+   */
+  setOnProgress(callback: (event: ProgressEvent) => void): void {
+    this.onProgress = callback;
+  }
+
+  /**
+   * Emit a progress event if a callback is registered
+   */
+  protected emitProgress(type: string, message: string, data?: Record<string, unknown>): void {
+    this.onProgress?.({
+      type,
+      message,
+      timestamp: new Date(),
+      data,
+    });
+  }
+
+  /**
    * Establish connection to the target endpoint
    */
   abstract connect(): Promise<void>;
@@ -356,4 +380,14 @@ export class ConnectorError extends Error {
     this.originalError = originalError;
     this.statusCode = statusCode;
   }
+}
+
+/**
+ * Progress Event Interface — emitted during connect/test operations
+ */
+export interface ProgressEvent {
+  type: string;
+  message: string;
+  timestamp: Date;
+  data?: Record<string, unknown>;
 }

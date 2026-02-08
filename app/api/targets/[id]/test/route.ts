@@ -12,6 +12,7 @@ const TestTargetSchema = z.object({
 
 const DEFAULT_TEST_MESSAGE = "Hello, this is a connection test.";
 const DEFAULT_TIMEOUT = 10000;
+const BROWSER_WEBSOCKET_TIMEOUT = 60000;
 
 /**
  * POST /api/targets/[id]/test
@@ -28,7 +29,7 @@ export async function POST(
     const validated = TestTargetSchema.parse(body);
 
     const testMessage = validated.testMessage || DEFAULT_TEST_MESSAGE;
-    const timeout = validated.timeout || DEFAULT_TIMEOUT;
+    let timeout = validated.timeout || DEFAULT_TIMEOUT;
 
     // Fetch target
     const target = await prisma.target.findUnique({
@@ -47,6 +48,11 @@ export async function POST(
         { success: false, error: "Target is not active" },
         { status: 400 }
       );
+    }
+
+    // Browser-based connectors need more time for browser launch + discovery
+    if (target.connectorType === "BROWSER_WEBSOCKET" && !validated.timeout) {
+      timeout = BROWSER_WEBSOCKET_TIMEOUT;
     }
 
     // Decrypt auth config
@@ -78,7 +84,7 @@ export async function POST(
     };
 
     // Create connector
-    const connector = ConnectorRegistry.create(
+    const connector = await ConnectorRegistry.create(
       target.connectorType,
       target.id,
       connectorConfig
