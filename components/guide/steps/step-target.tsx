@@ -16,10 +16,15 @@ import { useToast } from "@/components/ui/toast";
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   Check,
   AlertCircle,
+  Info,
 } from "lucide-react";
+import { BrowserWebSocketConfig, defaultBrowserWsConfig } from "@/components/targets/browser-websocket-config";
+import type { BrowserWebSocketProtocolConfig } from "@/lib/connectors/browser/types";
 
 type SubStep = "choose" | "configure" | "review";
 
@@ -73,6 +78,7 @@ interface TargetForm {
     errorPath?: string;
   };
   structureJson: string;
+  protocolConfig?: BrowserWebSocketProtocolConfig;
 }
 
 function presetToForm(preset: ProviderPreset): TargetForm {
@@ -80,6 +86,7 @@ function presetToForm(preset: ProviderPreset): TargetForm {
   for (const field of preset.authFields) {
     authConfig[field.key] = "";
   }
+  const isBrowserWs = preset.connectorType === "BROWSER_WEBSOCKET";
   return {
     name: preset.name === "Mock Chatbot" ? "Mock Chatbot" : `My ${preset.name}`,
     description: preset.description,
@@ -90,8 +97,12 @@ function presetToForm(preset: ProviderPreset): TargetForm {
     requestTemplate: preset.requestTemplate,
     responseTemplate: preset.responseTemplate,
     structureJson: JSON.stringify(preset.requestTemplate.structure || {}, null, 2),
+    protocolConfig: isBrowserWs ? defaultBrowserWsConfig() : undefined,
   };
 }
+
+const isBrowserWsPreset = (id: string | null) =>
+  id === "browser-ws-auto" || id === "browser-ws-socketio";
 
 export function StepTarget() {
   const { selectedPresetId, setSelectedPresetId, setCreatedTargetId, createdTargetId, markComplete, currentStep, goNext, setNavProps } = useWizard();
@@ -133,12 +144,13 @@ export function StepTarget() {
       const payload = {
         name: form.name,
         description: form.description || undefined,
-        endpoint: form.endpoint,
+        endpoint: form.connectorType === "BROWSER_WEBSOCKET" ? form.protocolConfig?.pageUrl || form.endpoint : form.endpoint,
         connectorType: form.connectorType,
         authType: form.authType,
         authConfig: form.authConfig,
         requestTemplate: form.requestTemplate,
         responseTemplate: form.responseTemplate,
+        ...(form.protocolConfig ? { protocolConfig: form.protocolConfig } : {}),
       };
 
       const res = await fetch("/api/targets", {
@@ -291,7 +303,47 @@ export function StepTarget() {
       )}
 
       {/* Sub-step: Configure */}
-      {subStep === "configure" && (
+      {subStep === "configure" && isBrowserWsPreset(selectedPresetId) && form.protocolConfig && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="grid gap-4">
+            <Input
+              label="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="My Browser WebSocket Target"
+            />
+            <Textarea
+              label="Description (optional)"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Describe this target..."
+              rows={2}
+            />
+
+            {/* Browser WebSocket Config */}
+            <BrowserWebSocketConfig
+              config={form.protocolConfig}
+              onChange={(protocolConfig) => setForm({ ...form, protocolConfig })}
+            />
+
+            {/* Help panels */}
+            <BrowserWsHelpPanels />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => setSubStep("choose")}>
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+            <Button size="sm" onClick={() => setSubStep("review")} disabled={!form.name || !form.protocolConfig?.pageUrl}>
+              Review
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {subStep === "configure" && !isBrowserWsPreset(selectedPresetId) && (
         <div className="space-y-4 animate-fadeIn">
           <div className="grid gap-4">
             <Input
@@ -585,7 +637,7 @@ export function StepTarget() {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back
             </Button>
-            <Button size="sm" onClick={() => setSubStep("review")} disabled={!form.name || !form.endpoint || !form.responseTemplate.responsePath}>
+            <Button size="sm" onClick={() => setSubStep("review")} disabled={!form.name || (!isBrowserWsPreset(selectedPresetId) && (!form.endpoint || !form.responseTemplate.responsePath)) || (isBrowserWsPreset(selectedPresetId) && !form.protocolConfig?.pageUrl)}>
               Review
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -665,6 +717,64 @@ export function StepTarget() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+/** Collapsible help panels for Browser WebSocket configuration */
+function BrowserWsHelpPanels() {
+  const [showHow, setShowHow] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+
+  return (
+    <div className="space-y-2">
+      {/* How Browser Discovery Works */}
+      <div className="rounded-lg border border-violet-500/20 bg-violet-500/5">
+        <button
+          type="button"
+          onClick={() => setShowHow(!showHow)}
+          className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-violet-400"
+        >
+          <Info className="h-3.5 w-3.5" />
+          How Browser Discovery Works
+          {showHow ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
+        </button>
+        {showHow && (
+          <div className="px-3 pb-3 text-xs text-gray-400 space-y-1.5">
+            <p>1. Krawall opens the target page in a headless Chromium browser (Playwright).</p>
+            <p>2. It detects the chat widget using your chosen strategy (heuristic, CSS selector, or interaction steps).</p>
+            <p>3. After activating the widget, it monitors all outgoing WebSocket connections via Chrome DevTools Protocol.</p>
+            <p>4. Cookies, headers, localStorage, and sessionStorage are extracted for authentication replay.</p>
+            <p>5. The protocol (Socket.IO or raw WS) is auto-detected from the captured frames.</p>
+            <p>6. Krawall then connects directly to the discovered WebSocket URL with the captured credentials.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Widget Detection Tips */}
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/5">
+        <button
+          type="button"
+          onClick={() => setShowTips(!showTips)}
+          className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-blue-400"
+        >
+          <Info className="h-3.5 w-3.5" />
+          Widget Detection Tips
+          {showTips ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
+        </button>
+        {showTips && (
+          <div className="px-3 pb-3 text-xs text-gray-400 space-y-2">
+            <p className="font-medium text-gray-300">Common Widget Patterns:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li><span className="text-gray-300">Intercom</span> — Usually an iframe with src containing &quot;intercom&quot;. Use <code className="text-violet-400">iframeSrc: [&quot;intercom&quot;]</code></li>
+              <li><span className="text-gray-300">Drift</span> — Look for <code className="text-violet-400">containsId: [&quot;drift-widget&quot;]</code></li>
+              <li><span className="text-gray-300">Zendesk</span> — Try <code className="text-violet-400">containsClass: [&quot;zEWidget&quot;]</code> or iframe src containing &quot;zendesk&quot;</li>
+              <li><span className="text-gray-300">Custom widgets</span> — Check for <code className="text-violet-400">data-*</code> attributes or unique button text</li>
+            </ul>
+            <p className="text-gray-500 pt-1">Tip: Open DevTools on the target page and inspect the chat button to find identifying attributes.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
