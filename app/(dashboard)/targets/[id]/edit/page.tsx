@@ -313,9 +313,6 @@ export default function EditTargetPage() {
             />
             Active
           </label>
-          {saveSuccess && (
-            <span className="text-green-400 text-sm">Saved</span>
-          )}
           <Link
             href="/targets"
             className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm font-medium transition-colors"
@@ -324,10 +321,14 @@ export default function EditTargetPage() {
           </Link>
           <button
             onClick={handleSave}
-            disabled={saving || !name.trim() || !endpoint.trim()}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors"
+            disabled={saving || saveSuccess || !name.trim() || !endpoint.trim()}
+            className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+              saveSuccess
+                ? "bg-green-600 text-white"
+                : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white"
+            }`}
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving..." : saveSuccess ? "Saved" : "Save Changes"}
           </button>
         </div>
       </div>
