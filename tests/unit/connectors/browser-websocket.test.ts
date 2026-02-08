@@ -1,72 +1,110 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { BrowserWebSocketConnector } from "@/lib/connectors/browser-websocket";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ConnectorConfig, HealthStatus } from "@/lib/connectors/base";
 import type { DiscoveryResult } from "@/lib/connectors/browser/types";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoisted mocks — vi.mock factories are hoisted to the top, so all variables
+// they reference must also be hoisted via vi.hoisted().
 // ---------------------------------------------------------------------------
 
-const mockDiscoveryResult: DiscoveryResult = {
-  wssUrl: "wss://chat.test.com/socket.io/?EIO=4&transport=websocket",
-  cookies: [{ name: "session", value: "abc123", domain: ".test.com" }],
-  headers: { Origin: "https://test.com" },
-  localStorage: { token: "jwt-xyz" },
-  sessionStorage: {},
-  capturedFrames: [],
-  detectedProtocol: "socket.io",
-  socketIoConfig: {
-    sid: "test-sid",
-    pingInterval: 25000,
-    pingTimeout: 20000,
-    version: 4,
-  },
-  discoveredAt: new Date(),
-};
+const {
+  mockDiscoveryResult,
+  mockDiscover,
+  mockCloseBrowser,
+  mockWsListeners,
+  mockWs,
+  mockInternalConnect,
+  mockInternalDisconnect,
+  mockInternalSendMessage,
+  mockInternalIsConnected,
+  mockInternalHealthCheck,
+  mockStart,
+  mockStop,
+} = vi.hoisted(() => {
+  const mockDiscoveryResult: DiscoveryResult = {
+    wssUrl: "wss://chat.test.com/socket.io/?EIO=4&transport=websocket",
+    cookies: [{ name: "session", value: "abc123", domain: ".test.com" }],
+    headers: { Origin: "https://test.com" },
+    localStorage: { token: "jwt-xyz" },
+    sessionStorage: {},
+    capturedFrames: [],
+    detectedProtocol: "socket.io" as const,
+    socketIoConfig: {
+      sid: "test-sid",
+      pingInterval: 25000,
+      pingTimeout: 20000,
+      version: 4,
+    },
+    discoveredAt: new Date(),
+  };
 
-// Mock BrowserDiscoveryService
+  const mockDiscover = vi.fn().mockResolvedValue(mockDiscoveryResult);
+  const mockCloseBrowser = vi.fn().mockResolvedValue(undefined);
+
+  const mockWsListeners = new Map<string, Array<(...args: unknown[]) => void>>();
+  const mockWs = {
+    send: vi.fn().mockImplementation((_data: string, cb?: (err?: Error) => void) => {
+      cb?.();
+    }),
+    on: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      if (!mockWsListeners.has(event)) mockWsListeners.set(event, []);
+      mockWsListeners.get(event)!.push(cb);
+    }),
+    removeListener: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      const cbs = mockWsListeners.get(event);
+      if (cbs) {
+        const idx = cbs.indexOf(cb);
+        if (idx >= 0) cbs.splice(idx, 1);
+      }
+    }),
+    readyState: 1,
+    close: vi.fn(),
+    ping: vi.fn(),
+    once: vi.fn(),
+  };
+
+  const mockInternalConnect = vi.fn().mockResolvedValue(undefined);
+  const mockInternalDisconnect = vi.fn().mockResolvedValue(undefined);
+  const mockInternalSendMessage = vi.fn().mockResolvedValue({
+    content: "response from raw WS",
+    metadata: { responseTimeMs: 42 },
+  });
+  const mockInternalIsConnected = vi.fn().mockReturnValue(true);
+  const mockInternalHealthCheck = vi.fn().mockResolvedValue({
+    healthy: true,
+    latencyMs: 10,
+    timestamp: new Date(),
+  });
+
+  const mockStart = vi.fn();
+  const mockStop = vi.fn();
+
+  return {
+    mockDiscoveryResult,
+    mockDiscover,
+    mockCloseBrowser,
+    mockWsListeners,
+    mockWs,
+    mockInternalConnect,
+    mockInternalDisconnect,
+    mockInternalSendMessage,
+    mockInternalIsConnected,
+    mockInternalHealthCheck,
+    mockStart,
+    mockStop,
+  };
+});
+
+// ---------------------------------------------------------------------------
+// vi.mock calls (hoisted to top — only reference hoisted variables)
+// ---------------------------------------------------------------------------
+
 vi.mock("@/lib/connectors/browser/discovery-service", () => ({
   BrowserDiscoveryService: {
-    discover: vi.fn().mockResolvedValue(mockDiscoveryResult),
-    closeBrowser: vi.fn().mockResolvedValue(undefined),
+    discover: mockDiscover,
+    closeBrowser: mockCloseBrowser,
   },
 }));
-
-// Mock WebSocketConnector
-const mockWsListeners = new Map<string, Array<(...args: unknown[]) => void>>();
-const mockWs = {
-  send: vi.fn().mockImplementation((_data: string, cb?: (err?: Error) => void) => {
-    cb?.();
-  }),
-  on: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
-    if (!mockWsListeners.has(event)) mockWsListeners.set(event, []);
-    mockWsListeners.get(event)!.push(cb);
-  }),
-  removeListener: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
-    const cbs = mockWsListeners.get(event);
-    if (cbs) {
-      const idx = cbs.indexOf(cb);
-      if (idx >= 0) cbs.splice(idx, 1);
-    }
-  }),
-  readyState: 1, // WebSocket.OPEN
-  close: vi.fn(),
-  ping: vi.fn(),
-  once: vi.fn(),
-};
-
-const mockInternalConnect = vi.fn().mockResolvedValue(undefined);
-const mockInternalDisconnect = vi.fn().mockResolvedValue(undefined);
-const mockInternalSendMessage = vi.fn().mockResolvedValue({
-  content: "response from raw WS",
-  metadata: { responseTimeMs: 42 },
-});
-const mockInternalIsConnected = vi.fn().mockReturnValue(true);
-const mockInternalHealthCheck = vi.fn().mockResolvedValue({
-  healthy: true,
-  latencyMs: 10,
-  timestamp: new Date(),
-} as HealthStatus);
 
 vi.mock("@/lib/connectors/websocket", () => ({
   WebSocketConnector: vi.fn().mockImplementation(() => ({
@@ -80,25 +118,37 @@ vi.mock("@/lib/connectors/websocket", () => ({
   })),
 }));
 
-// Mock SocketIOHandler
-const mockStart = vi.fn();
-const mockStop = vi.fn();
-
-vi.mock("@/lib/connectors/browser/socketio-handler", () => ({
-  SocketIOHandler: vi.fn().mockImplementation(() => ({
+vi.mock("@/lib/connectors/browser/socketio-handler", () => {
+  const SocketIOHandler = vi.fn().mockImplementation(() => ({
     start: mockStart,
     stop: mockStop,
-  })),
-}));
+  }));
+  // Static methods used by BrowserWebSocketConnector
+  SocketIOHandler.encodeMessage = vi.fn().mockImplementation(
+    (eventName: string, payload: unknown) => `42${JSON.stringify([eventName, payload])}`
+  );
+  SocketIOHandler.isMessageFrame = vi.fn().mockImplementation(
+    (frame: string) => typeof frame === "string" && frame.length >= 3 && frame.startsWith("42")
+  );
+  SocketIOHandler.decodeMessage = vi.fn().mockImplementation((frame: string) => {
+    if (!frame.startsWith("42")) return null;
+    try {
+      const parsed = JSON.parse(frame.slice(2));
+      if (Array.isArray(parsed) && parsed.length >= 1) {
+        return { eventName: parsed[0], data: parsed[1] };
+      }
+    } catch { /* ignore */ }
+    return null;
+  });
+  return { SocketIOHandler };
+});
 
-// Mock CredentialExtractor
 vi.mock("@/lib/connectors/browser/credential-extractor", () => ({
   CredentialExtractor: {
     buildCookieHeader: vi.fn().mockReturnValue("session=abc123"),
   },
 }));
 
-// Mock ConnectorRegistry to prevent side-effect registration
 vi.mock("@/lib/connectors/registry", () => ({
   ConnectorRegistry: {
     register: vi.fn(),
@@ -106,12 +156,18 @@ vi.mock("@/lib/connectors/registry", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Import SUT after mocks are set up
+// ---------------------------------------------------------------------------
+
+import { BrowserWebSocketConnector } from "@/lib/connectors/browser-websocket";
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function createConfig(overrides: Partial<ConnectorConfig> = {}): ConnectorConfig {
   return {
-    endpoint: "https://test.com/chat", // Will be overridden by discovery
+    endpoint: "https://test.com/chat",
     authType: "NONE",
     authConfig: {},
     requestTemplate: { messagePath: "message", structure: { message: "" } },
@@ -133,6 +189,8 @@ describe("BrowserWebSocketConnector", () => {
     vi.clearAllMocks();
     mockWsListeners.clear();
     mockInternalIsConnected.mockReturnValue(true);
+    // Reset the discovery mock to default
+    mockDiscover.mockResolvedValue(mockDiscoveryResult);
   });
 
   // =========================================================================
@@ -144,10 +202,7 @@ describe("BrowserWebSocketConnector", () => {
       const connector = new BrowserWebSocketConnector("target-1", createConfig());
       await connector.connect();
 
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      expect(BrowserDiscoveryService.discover).toHaveBeenCalledWith(
+      expect(mockDiscover).toHaveBeenCalledWith(
         expect.objectContaining({
           targetId: "target-1",
           config: expect.objectContaining({ pageUrl: "https://test.com/chat" }),
@@ -168,10 +223,7 @@ describe("BrowserWebSocketConnector", () => {
     });
 
     it("should NOT start SocketIOHandler when protocol is raw", async () => {
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      vi.mocked(BrowserDiscoveryService.discover).mockResolvedValueOnce({
+      mockDiscover.mockResolvedValueOnce({
         ...mockDiscoveryResult,
         detectedProtocol: "raw",
         socketIoConfig: undefined,
@@ -191,12 +243,7 @@ describe("BrowserWebSocketConnector", () => {
     });
 
     it("should throw ConnectorError when discovery fails", async () => {
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      vi.mocked(BrowserDiscoveryService.discover).mockRejectedValueOnce(
-        new Error("Navigation failed")
-      );
+      mockDiscover.mockRejectedValueOnce(new Error("Navigation failed"));
 
       const connector = new BrowserWebSocketConnector("target-1", createConfig());
       await expect(connector.connect()).rejects.toThrow(/Browser discovery failed/);
@@ -227,10 +274,7 @@ describe("BrowserWebSocketConnector", () => {
       await connector.connect();
       await connector.disconnect();
 
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      expect(BrowserDiscoveryService.closeBrowser).toHaveBeenCalled();
+      expect(mockCloseBrowser).toHaveBeenCalled();
     });
 
     it("should NOT close browser when keepBrowserAlive is true", async () => {
@@ -245,16 +289,11 @@ describe("BrowserWebSocketConnector", () => {
       await connector.connect();
       await connector.disconnect();
 
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      expect(BrowserDiscoveryService.closeBrowser).not.toHaveBeenCalled();
+      expect(mockCloseBrowser).not.toHaveBeenCalled();
     });
 
     it("should handle disconnect when not connected", async () => {
       const connector = new BrowserWebSocketConnector("target-1", createConfig());
-
-      // Should not throw
       await connector.disconnect();
       expect(connector.isConnected()).toBe(false);
     });
@@ -291,10 +330,7 @@ describe("BrowserWebSocketConnector", () => {
 
   describe("sendMessage - raw mode", () => {
     it("should delegate to internal connector in raw mode", async () => {
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      vi.mocked(BrowserDiscoveryService.discover).mockResolvedValueOnce({
+      mockDiscover.mockResolvedValueOnce({
         ...mockDiscoveryResult,
         detectedProtocol: "raw",
         socketIoConfig: undefined,
@@ -318,7 +354,6 @@ describe("BrowserWebSocketConnector", () => {
       // Simulate a response coming back after send
       mockWs.send.mockImplementation((data: string, cb?: (err?: Error) => void) => {
         cb?.();
-        // Simulate receiving a Socket.IO message frame
         setTimeout(() => {
           const listeners = mockWsListeners.get("message") ?? [];
           for (const listener of listeners) {
@@ -382,7 +417,6 @@ describe("BrowserWebSocketConnector", () => {
       const connector = new BrowserWebSocketConnector("target-1", createConfig());
       await connector.connect();
 
-      // Make the internal connector report unhealthy
       mockInternalHealthCheck.mockResolvedValueOnce({
         healthy: false,
         error: "Ping timeout",
@@ -391,16 +425,12 @@ describe("BrowserWebSocketConnector", () => {
 
       // Set discoveredAt to far in the past to simulate expiry
       const internalResult = (connector as unknown as { discoveryResult: DiscoveryResult }).discoveryResult;
-      internalResult.discoveredAt = new Date(Date.now() - 400_000); // 400s ago, > 300s default maxAge
+      internalResult.discoveredAt = new Date(Date.now() - 400_000);
 
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-
-      const health = await connector.healthCheck();
+      await connector.healthCheck();
 
       // Rediscovery should have been attempted (discover called twice: initial + rediscovery)
-      expect(BrowserDiscoveryService.discover).toHaveBeenCalledTimes(2);
+      expect(mockDiscover).toHaveBeenCalledTimes(2);
     });
 
     it("should return unhealthy when rediscovery fails", async () => {
@@ -416,12 +446,7 @@ describe("BrowserWebSocketConnector", () => {
       const internalResult = (connector as unknown as { discoveryResult: DiscoveryResult }).discoveryResult;
       internalResult.discoveredAt = new Date(Date.now() - 400_000);
 
-      const { BrowserDiscoveryService } = await import(
-        "@/lib/connectors/browser/discovery-service"
-      );
-      vi.mocked(BrowserDiscoveryService.discover).mockRejectedValueOnce(
-        new Error("Discovery failed again")
-      );
+      mockDiscover.mockRejectedValueOnce(new Error("Discovery failed again"));
 
       const health = await connector.healthCheck();
 
@@ -475,17 +500,44 @@ describe("BrowserWebSocketConnector", () => {
     });
   });
 
-  // =========================================================================
-  // Auto-registration
-  // =========================================================================
+});
 
-  describe("auto-registration", () => {
-    it("should register with ConnectorRegistry as BROWSER_WEBSOCKET", async () => {
-      const { ConnectorRegistry } = await import("@/lib/connectors/registry");
-      expect(ConnectorRegistry.register).toHaveBeenCalledWith(
-        "BROWSER_WEBSOCKET",
-        BrowserWebSocketConnector
-      );
-    });
+// =========================================================================
+// Auto-registration (outside main describe to avoid clearAllMocks)
+// The registration happens as a module-level side-effect when
+// browser-websocket.ts is first imported.
+// =========================================================================
+
+describe("BrowserWebSocketConnector auto-registration", () => {
+  it("should register with ConnectorRegistry as BROWSER_WEBSOCKET on import", async () => {
+    // Re-import to trigger the side-effect registration again
+    vi.resetModules();
+
+    // Re-apply the registry mock
+    vi.doMock("@/lib/connectors/registry", () => ({
+      ConnectorRegistry: {
+        register: vi.fn(),
+      },
+    }));
+    // Re-apply other mocks needed for the import
+    vi.doMock("@/lib/connectors/browser/discovery-service", () => ({
+      BrowserDiscoveryService: { discover: vi.fn(), closeBrowser: vi.fn() },
+    }));
+    vi.doMock("@/lib/connectors/browser/socketio-handler", () => ({
+      SocketIOHandler: vi.fn(),
+    }));
+    vi.doMock("@/lib/connectors/browser/credential-extractor", () => ({
+      CredentialExtractor: { buildCookieHeader: vi.fn() },
+    }));
+    vi.doMock("@/lib/connectors/websocket", () => ({
+      WebSocketConnector: vi.fn(),
+    }));
+
+    const { BrowserWebSocketConnector: BWC } = await import(
+      "@/lib/connectors/browser-websocket"
+    );
+    const { ConnectorRegistry } = await import("@/lib/connectors/registry");
+
+    expect(ConnectorRegistry.register).toHaveBeenCalledWith("BROWSER_WEBSOCKET", BWC);
   });
 });

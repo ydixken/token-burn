@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { BrowserDiscoveryService } from "@/lib/connectors/browser/discovery-service";
 import type {
   BrowserWebSocketProtocolConfig,
   BrowserDiscoveryOptions,
@@ -7,13 +6,65 @@ import type {
 } from "@/lib/connectors/browser/types";
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Hoisted mocks — vi.mock factories are hoisted to top, so all variables
+// referenced inside must also be hoisted via vi.hoisted().
 // ---------------------------------------------------------------------------
 
-// Shared store for Redis mock
-const redisStore = new Map<string, { value: string; expiry?: number }>();
+const {
+  redisStore,
+  mockPageListeners,
+  mockPage,
+  mockContext,
+  mockBrowser,
+  mockCapturedWs,
+} = vi.hoisted(() => {
+  const redisStore = new Map<string, { value: string; expiry?: number }>();
 
-// Mock Redis
+  const mockPageListeners = new Map<string, Array<(...args: unknown[]) => void>>();
+  const mockPage: Record<string, unknown> = {
+    goto: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+    on: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      if (!mockPageListeners.has(event)) mockPageListeners.set(event, []);
+      mockPageListeners.get(event)!.push(cb);
+      return mockPage;
+    }),
+    removeListener: vi.fn(),
+    context: vi.fn(),
+    _emit(event: string, ...args: unknown[]) {
+      for (const cb of mockPageListeners.get(event) ?? []) cb(...args);
+    },
+  };
+
+  const mockContext = {
+    newPage: vi.fn().mockResolvedValue(mockPage),
+    close: vi.fn().mockResolvedValue(undefined),
+    cookies: vi.fn().mockResolvedValue([{ name: "sid", value: "abc", domain: ".test.com" }]),
+  };
+
+  const mockBrowser = {
+    newContext: vi.fn().mockResolvedValue(mockContext),
+    isConnected: vi.fn().mockReturnValue(true),
+    close: vi.fn().mockResolvedValue(undefined),
+  };
+
+  const mockCapturedWs = {
+    url: "wss://chat.test.com/socket.io/?EIO=4&transport=websocket",
+    frames: [
+      { direction: "received" as const, data: '0{"sid":"test-sid","pingInterval":25000,"pingTimeout":20000}', timestamp: Date.now() },
+      { direction: "received" as const, data: "40", timestamp: Date.now() },
+    ],
+    headers: { Origin: "https://test.com", Cookie: "sid=abc" },
+    createdAt: Date.now(),
+  };
+
+  return { redisStore, mockPageListeners, mockPage, mockContext, mockBrowser, mockCapturedWs };
+});
+
+// ---------------------------------------------------------------------------
+// vi.mock calls
+// ---------------------------------------------------------------------------
+
 vi.mock("@/lib/cache/redis", () => ({
   redis: {
     get: vi.fn(async (key: string) => {
@@ -33,51 +84,11 @@ vi.mock("@/lib/cache/redis", () => ({
   },
 }));
 
-// Mock Playwright
-const mockPageListeners = new Map<string, Array<(...args: unknown[]) => void>>();
-const mockPage = {
-  goto: vi.fn().mockResolvedValue(undefined),
-  close: vi.fn().mockResolvedValue(undefined),
-  on: vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
-    if (!mockPageListeners.has(event)) mockPageListeners.set(event, []);
-    mockPageListeners.get(event)!.push(cb);
-    return mockPage;
-  }),
-  removeListener: vi.fn(),
-  context: vi.fn(),
-  _emit(event: string, ...args: unknown[]) {
-    for (const cb of mockPageListeners.get(event) ?? []) cb(...args);
-  },
-};
-
-const mockContext = {
-  newPage: vi.fn().mockResolvedValue(mockPage),
-  close: vi.fn().mockResolvedValue(undefined),
-  cookies: vi.fn().mockResolvedValue([{ name: "sid", value: "abc", domain: ".test.com" }]),
-};
-
-const mockBrowser = {
-  newContext: vi.fn().mockResolvedValue(mockContext),
-  isConnected: vi.fn().mockReturnValue(true),
-  close: vi.fn().mockResolvedValue(undefined),
-};
-
 vi.mock("playwright", () => ({
   chromium: {
     launch: vi.fn().mockResolvedValue(mockBrowser),
   },
 }));
-
-// Mock WebSocketCapture
-const mockCapturedWs = {
-  url: "wss://chat.test.com/socket.io/?EIO=4&transport=websocket",
-  frames: [
-    { direction: "received" as const, data: '0{"sid":"test-sid","pingInterval":25000,"pingTimeout":20000}', timestamp: Date.now() },
-    { direction: "received" as const, data: "40", timestamp: Date.now() },
-  ],
-  headers: { Origin: "https://test.com", Cookie: "sid=abc" },
-  createdAt: Date.now(),
-};
 
 vi.mock("@/lib/connectors/browser/ws-capture", () => ({
   WebSocketCapture: vi.fn().mockImplementation(() => ({
@@ -88,7 +99,6 @@ vi.mock("@/lib/connectors/browser/ws-capture", () => ({
   })),
 }));
 
-// Mock WidgetDetector
 vi.mock("@/lib/connectors/browser/widget-detector", () => ({
   WidgetDetector: vi.fn().mockImplementation(() => ({
     detect: vi.fn().mockResolvedValue(undefined),
@@ -97,7 +107,6 @@ vi.mock("@/lib/connectors/browser/widget-detector", () => ({
   })),
 }));
 
-// Mock CredentialExtractor
 vi.mock("@/lib/connectors/browser/credential-extractor", () => ({
   CredentialExtractor: {
     extract: vi.fn().mockResolvedValue({
@@ -109,7 +118,6 @@ vi.mock("@/lib/connectors/browser/credential-extractor", () => ({
   },
 }));
 
-// Mock ProtocolDetector
 vi.mock("@/lib/connectors/browser/protocol-detector", () => ({
   ProtocolDetector: {
     detect: vi.fn().mockReturnValue({
@@ -118,6 +126,12 @@ vi.mock("@/lib/connectors/browser/protocol-detector", () => ({
     }),
   },
 }));
+
+// ---------------------------------------------------------------------------
+// Import SUT after mocks
+// ---------------------------------------------------------------------------
+
+import { BrowserDiscoveryService } from "@/lib/connectors/browser/discovery-service";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -172,14 +186,12 @@ describe("BrowserDiscoveryService", () => {
         discoveredAt: new Date("2026-01-01"),
       };
 
-      // Pre-populate cache
       await BrowserDiscoveryService.setCached("target-1", cachedResult, 60_000);
 
       const result = await BrowserDiscoveryService.discover(createOptions());
 
       expect(result.wssUrl).toBe("wss://cached.test.com/ws");
       expect(result.detectedProtocol).toBe("raw");
-      // Browser should NOT have been launched
       const { chromium } = await import("playwright");
       expect(chromium.launch).not.toHaveBeenCalled();
     });
@@ -204,7 +216,7 @@ describe("BrowserDiscoveryService", () => {
         "krawall:discovery:target-1",
         expect.any(String),
         "EX",
-        120 // 120_000ms / 1000 = 120s
+        120
       );
     });
 
@@ -321,19 +333,16 @@ describe("BrowserDiscoveryService", () => {
 
       await BrowserDiscoveryService.discover(createOptions({ config } as Partial<BrowserDiscoveryOptions>));
 
-      // Browser.close should NOT have been called
       expect(mockBrowser.close).not.toHaveBeenCalled();
     });
 
     it("should close browser when keepBrowserAlive is false (default)", async () => {
       await BrowserDiscoveryService.discover(createOptions());
 
-      // closeBrowser should have been called
       expect(mockBrowser.close).toHaveBeenCalled();
     });
 
     it("should handle closeBrowser gracefully when no browser exists", async () => {
-      // Should not throw
       await BrowserDiscoveryService.closeBrowser();
     });
   });
@@ -344,7 +353,9 @@ describe("BrowserDiscoveryService", () => {
 
   describe("error handling", () => {
     it("should throw descriptive error on navigation failure", async () => {
-      mockPage.goto.mockRejectedValueOnce(new Error("net::ERR_CONNECTION_REFUSED"));
+      (mockPage.goto as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error("net::ERR_CONNECTION_REFUSED")
+      );
 
       await expect(BrowserDiscoveryService.discover(createOptions())).rejects.toThrow(
         /Failed to navigate.*net::ERR_CONNECTION_REFUSED/
@@ -379,7 +390,9 @@ describe("BrowserDiscoveryService", () => {
     });
 
     it("should clean up page and context on error", async () => {
-      mockPage.goto.mockRejectedValueOnce(new Error("navigation error"));
+      (mockPage.goto as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error("navigation error")
+      );
 
       await BrowserDiscoveryService.discover(createOptions()).catch(() => {});
 
