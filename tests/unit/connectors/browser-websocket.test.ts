@@ -155,6 +155,12 @@ vi.mock("@/lib/connectors/registry", () => ({
   },
 }));
 
+vi.mock("@/lib/jobs/token-refresh/events", () => ({
+  subscribeTokenRefreshed: vi.fn().mockResolvedValue({
+    unsubscribe: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 // ---------------------------------------------------------------------------
 // Import SUT after mocks are set up
 // ---------------------------------------------------------------------------

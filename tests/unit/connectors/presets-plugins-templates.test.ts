@@ -1,11 +1,27 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { PROVIDER_PRESETS, getAllPresets, getPresetById } from "@/lib/connectors/presets";
 import type { ProviderPreset } from "@/lib/connectors/presets";
 import { BaseConnector, ConnectorConfig } from "@/lib/connectors/base";
-import { ConnectorRegistry } from "@/lib/connectors/registry";
 import { PluginLoader } from "@/lib/connectors/plugins/loader";
 import { openaiPlugin } from "@/lib/connectors/plugins/openai-plugin";
 import { multiStepAuthPlugin } from "@/lib/connectors/plugins/multi-step-auth-plugin";
+
+// Mock Redis to prevent REDIS_URL requirement when browser-websocket auto-registers
+vi.mock("@/lib/cache/redis", () => ({
+  redis: {
+    duplicate: vi.fn().mockReturnValue({
+      on: vi.fn(),
+      subscribe: vi.fn().mockResolvedValue(undefined),
+      unsubscribe: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
+    }),
+    publish: vi.fn().mockResolvedValue(0),
+    status: "ready",
+  },
+  default: {},
+}));
+
+import { ConnectorRegistry } from "@/lib/connectors/registry";
 
 /**
  * Unit tests for Provider Presets, Connector Plugins, and Template logic.
@@ -535,8 +551,8 @@ describe("ConnectorRegistry", () => {
     expect(types).toContain("HTTP_REST");
   });
 
-  it("should throw for unknown connector type", () => {
-    expect(() =>
+  it("should throw for unknown connector type", async () => {
+    await expect(
       ConnectorRegistry.create("UNKNOWN_TYPE" as any, "test", {
         endpoint: "http://localhost",
         authType: "NONE",
@@ -544,7 +560,7 @@ describe("ConnectorRegistry", () => {
         requestTemplate: { messagePath: "message" },
         responseTemplate: { responsePath: "response" },
       })
-    ).toThrow("Unknown connector type: UNKNOWN_TYPE");
+    ).rejects.toThrow("Unknown connector type: UNKNOWN_TYPE");
   });
 });
 
