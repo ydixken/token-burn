@@ -13,9 +13,10 @@ interface TabsProps {
   defaultTab?: string;
   className?: string;
   onChange?: (tabId: string) => void;
+  fillHeight?: boolean;
 }
 
-export function Tabs({ tabs, defaultTab, className = "", onChange }: TabsProps) {
+export function Tabs({ tabs, defaultTab, className = "", onChange, fillHeight }: TabsProps) {
   const [active, setActive] = useState(defaultTab || tabs[0]?.id);
 
   const handleChange = (tabId: string) => {
@@ -24,8 +25,8 @@ export function Tabs({ tabs, defaultTab, className = "", onChange }: TabsProps) 
   };
 
   return (
-    <div className={className}>
-      <div className="flex border-b border-gray-800">
+    <div className={`${fillHeight ? "flex flex-col flex-1 min-h-0" : ""} ${className}`}>
+      <div className="flex border-b border-gray-800 flex-shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -43,7 +44,7 @@ export function Tabs({ tabs, defaultTab, className = "", onChange }: TabsProps) 
           </button>
         ))}
       </div>
-      <div className="pt-4">
+      <div className={fillHeight ? "flex-1 overflow-y-auto pt-4" : "pt-4"}>
         {tabs.find((t) => t.id === active)?.content}
       </div>
     </div>

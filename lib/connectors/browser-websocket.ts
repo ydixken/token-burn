@@ -373,6 +373,7 @@ export class BrowserWebSocketConnector extends BaseConnector {
       authConfig: { headers },
       requestTemplate: this.config.requestTemplate,
       responseTemplate: this.config.responseTemplate,
+      protocolConfig: { noReconnect: true },
       timeout: this.config.timeout,
       retries: this.config.retries,
     };
