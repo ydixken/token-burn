@@ -1,10 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Wifi, Globe, Radio, Zap, Server } from "lucide-react";
+import { Wifi, Globe, Radio, Zap, Server, Monitor } from "lucide-react";
 import type { ProviderPreset } from "@/lib/connectors/presets";
-
-import { Monitor } from "lucide-react";
 
 const CONNECTOR_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   HTTP_REST: Globe,
